@@ -52,13 +52,21 @@ Status legend: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Downloadable PDF session reports
 
 ## Repository & deployments
-- **GitHub:** https://github.com/basel-mahmoud/vivavoce (private) — `main` + tags
-  `v0.1-foundation` … `v0.5-hardening` pushed.
+- **GitHub:** https://github.com/basel-mahmoud/vivavoce (**public**) — `main` + tags
+  `v0.1-foundation` … `v0.5-hardening`.
 - **Vercel project:** `basel-mahmouds-projects/vivavoce` (apps/web).
+- **Live:** https://vivavoce-kappa.vercel.app — public, `health: { db:true, ai:true }`,
+  waitlist persists to a real DB.
 
-| Milestone | Environment | URL | Notes |
-| --------- | ----------- | --- | ----- |
-| M3 site + API | Vercel **production** | https://vivavoce-2cixb4e9m-basel-mahmouds-projects.vercel.app | Live, public (deployment protection off); demo mode until DB/Clerk/Gemini env added |
+### Infrastructure (VivaVoce-owned, isolated from other projects)
+- **Database:** its **own** Neon database `vivavoce` (20 tables, seeded). Shares the
+  Neon *cluster* with other apps but no shared tables/data. _Optional upgrade:_ move
+  to a dedicated Neon project for credential separation.
+- **AI:** Gemini (reused account key — project-agnostic quota).
+- **Auth:** Clerk **not yet wired** — needs a **dedicated VivaVoce Clerk app** (the
+  public site doesn't use Clerk; it's required for the mobile/session API). Until then
+  the app runs in demo mode with on-device evaluation.
 
-> Production runs in **demo mode** (`/api/v1/health` → `services: { db:false, ai:false }`)
-> until `DATABASE_URL`, Clerk, and `GEMINI_API_KEY` are set in Vercel env, then redeploy.
+| Milestone | Environment | URL |
+| --------- | ----------- | --- |
+| M3 site + API | Vercel **production** | https://vivavoce-kappa.vercel.app |
