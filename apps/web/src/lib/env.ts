@@ -6,7 +6,9 @@ import { z } from 'zod';
  * directly elsewhere. Server-only secrets must never be prefixed NEXT_PUBLIC_.
  */
 const serverSchema = z.object({
-  DATABASE_URL: z.string().url(),
+  // Optional so the marketing site can boot in preview without secrets; the DB
+  // client + API routes guard on `dbConfigured` and degrade gracefully.
+  DATABASE_URL: z.string().url().optional(),
   DIRECT_URL: z.string().url().optional(),
   APP_DATABASE_URL: z.string().url().optional(),
 
@@ -48,6 +50,7 @@ function parse() {
 export const env = parse();
 
 export const isProd = env.NODE_ENV === 'production';
+export const dbConfigured = Boolean(env.DATABASE_URL ?? env.APP_DATABASE_URL);
 export const aiConfigured = Boolean(env.GEMINI_API_KEY);
 export const mobileAllowedOrigins = env.MOBILE_ALLOWED_ORIGINS
   ? env.MOBILE_ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)

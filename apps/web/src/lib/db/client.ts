@@ -11,7 +11,12 @@ import * as schema from './schema';
  * Migrations and seeds use a separate direct connection (see migrate.ts) and
  * the owner role; the runtime never runs DDL.
  */
-const connectionString = env.APP_DATABASE_URL ?? env.DATABASE_URL;
+// A syntactically valid placeholder keeps module import safe when the DB is not
+// configured (preview/demo). Routes check `dbConfigured` before issuing queries.
+const connectionString =
+  env.APP_DATABASE_URL ??
+  env.DATABASE_URL ??
+  'postgresql://placeholder:placeholder@localhost:5432/placeholder';
 
 const sql = neon(connectionString);
 

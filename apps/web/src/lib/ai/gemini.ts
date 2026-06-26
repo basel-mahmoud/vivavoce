@@ -158,7 +158,7 @@ interface GeminiApiResponse {
 export function extractJson(raw: string | null): unknown | null {
   if (!raw) return null;
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = (fenced ? fenced[1] : raw).trim();
+  const candidate = (fenced?.[1] ?? raw).trim();
   try {
     return JSON.parse(candidate);
   } catch {

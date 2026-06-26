@@ -5,9 +5,13 @@ import type { NextConfig } from 'next';
  * `'unsafe-inline'` on styles is required by Next's runtime style injection,
  * and Clerk + Vercel Analytics origins are explicitly allow-listed.
  */
+// React's dev build needs eval() for debugging; production never does, so we
+// only loosen script-src outside production.
+const devEval = process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'";
+
 const ContentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://*.clerk.accounts.dev https://challenges.cloudflare.com https://va.vercel-scripts.com",
+  `script-src 'self' 'unsafe-inline'${devEval} https://*.clerk.accounts.dev https://challenges.cloudflare.com https://va.vercel-scripts.com`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
