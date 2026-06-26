@@ -51,7 +51,14 @@ Status legend: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Multilingual evaluation prompts
 - ⬜ Downloadable PDF session reports
 
-## Deployments
-| Milestone | Environment | URL                         |
-| --------- | ----------- | --------------------------- |
-| M3        | Vercel prod | _(record after `vercel --prod`)_ |
+## Repository & deployments
+- **GitHub:** https://github.com/basel-mahmoud/vivavoce (private) — `main` + tags
+  `v0.1-foundation` … `v0.5-hardening` pushed.
+- **Vercel project:** `basel-mahmouds-projects/vivavoce` (apps/web).
+
+| Milestone | Environment | URL | Notes |
+| --------- | ----------- | --- | ----- |
+| M3 site + API | Vercel **production** | https://vivavoce-2cixb4e9m-basel-mahmouds-projects.vercel.app | Live, public (deployment protection off); demo mode until DB/Clerk/Gemini env added |
+
+> Production runs in **demo mode** (`/api/v1/health` → `services: { db:false, ai:false }`)
+> until `DATABASE_URL`, Clerk, and `GEMINI_API_KEY` are set in Vercel env, then redeploy.
