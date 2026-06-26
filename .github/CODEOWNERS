@@ -1,0 +1,14 @@
+# Default owner for everything
+*                   @baselmahmoud
+
+# Surfaces
+/apps/web/          @baselmahmoud
+/apps/mobile/       @baselmahmoud
+/packages/tokens/   @baselmahmoud
+
+# Sensitive areas — extra review
+/apps/web/src/lib/db/        @baselmahmoud
+/apps/web/src/lib/ai/        @baselmahmoud
+/apps/web/src/lib/security/  @baselmahmoud
+/docs/SECURITY.md            @baselmahmoud
+/docs/THREAT-MODEL.md        @baselmahmoud

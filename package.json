@@ -1,0 +1,25 @@
+{
+  "name": "vivavoce",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VivaVoce — a voice-first study sparring app. Practice answering out loud, get structured coaching feedback. Native Expo app + Next.js marketing site & API, on Vercel + Neon + Clerk + Gemini.",
+  "license": "UNLICENSED",
+  "author": "Basel Mahmoud",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "mobile": "npm --prefix apps/mobile run start",
+    "mobile:web": "npm --prefix apps/mobile run web",
+    "mobile:android": "npm --prefix apps/mobile run android",
+    "mobile:typecheck": "cd apps/mobile && npx tsc --noEmit",
+    "web": "npm --prefix apps/web run dev",
+    "web:build": "npm --prefix apps/web run build",
+    "web:lint": "npm --prefix apps/web run lint",
+    "web:typecheck": "npm --prefix apps/web run typecheck",
+    "web:test": "npm --prefix apps/web test",
+    "db:generate": "npm --prefix apps/web run db:generate",
+    "db:migrate": "npm --prefix apps/web run db:migrate",
+    "db:seed": "npm --prefix apps/web run db:seed"
+  }
+}

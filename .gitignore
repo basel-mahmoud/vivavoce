@@ -1,0 +1,50 @@
+# dependencies
+**/node_modules
+.pnp
+.pnp.*
+
+# builds / framework output
+**/.next/
+**/out/
+**/dist/
+**/build/
+**/web-build/
+**/.expo/
+**/expo-env.d.ts
+**/.turbo/
+
+# testing
+**/coverage
+**/playwright-report
+**/test-results
+
+# native
+*.keystore
+*.jks
+**/android/
+**/ios/
+
+# misc
+.DS_Store
+*.pem
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# typescript
+**/*.tsbuildinfo
+**/next-env.d.ts
+
+# env files
+**/.env*
+!**/.env*.example
+
+# vercel
+**/.vercel
+
+# eas
+**/eas-build-*
+
+# local scratch
+/scratch

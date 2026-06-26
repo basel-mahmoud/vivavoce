@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: web (site + api)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit + integration tests
+        run: npm test
+
+      - name: Production dependency audit (fail on high)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: postgres://user:pass@localhost:5432/db
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZHVtbXkuY2xlcmsuYWNjb3VudHMuZGV2JA
+          CLERK_SECRET_KEY: sk_test_dummydummydummydummydummydummy
+          GEMINI_API_KEY: test-key-not-used-in-build
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+  mobile:
+    name: mobile (expo app)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
