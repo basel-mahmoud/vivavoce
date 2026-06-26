@@ -36,6 +36,30 @@ export function heuristicEvaluation(
 
   const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
+  // No detectable speech → everything is zero (don't reward silence with
+  // default conciseness/confidence credit).
+  if (wordCount === 0) {
+    const scores = {
+      correctness: 0,
+      clarity: 0,
+      structure: 0,
+      conciseness: 0,
+      confidence: 0,
+    };
+    return {
+      scores,
+      overall: 0,
+      weakestAxis: 'correctness',
+      summary: 'We could not detect any speech. Try recording again in a quieter spot.',
+      strengths: [],
+      improvements: ['Record again and speak clearly into the microphone.'],
+      improvedAnswer:
+        'Full AI model answers resume automatically when the evaluator is reachable.',
+      suggestedFollowUp: 'Try answering the same question again.',
+      fillerWordRate: 0,
+    };
+  }
+
   // Length sweet-spot ~60-180 words for a spoken answer.
   const lengthScore =
     wordCount === 0 ? 0 : clamp(100 - Math.abs(120 - wordCount) * 0.4);

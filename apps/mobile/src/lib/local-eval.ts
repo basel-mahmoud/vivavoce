@@ -24,6 +24,24 @@ export function localEvaluate(
       : null;
 
   const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+
+  if (wordCount === 0) {
+    return {
+      answerId: `local-${Date.now()}`,
+      source: 'heuristic',
+      scores: { correctness: 0, clarity: 0, structure: 0, conciseness: 0, confidence: 0 },
+      overall: 0,
+      weakestAxis: 'correctness',
+      summary: 'We could not detect any speech — try again in a quieter spot.',
+      strengths: [],
+      improvements: ['Record again and speak clearly into the microphone.'],
+      improvedAnswer: 'Full AI model answers appear when you’re connected.',
+      suggestedFollowUp: 'Try answering the same question again.',
+      fillerWordRate: 0,
+      wordsPerMinute: null,
+    };
+  }
+
   const lengthScore = wordCount === 0 ? 0 : clamp(100 - Math.abs(120 - wordCount) * 0.4);
   const conciseness = clamp(100 - fillerRate * 220);
   const structure = clamp(40 + Math.min(sentences, 6) * 9);

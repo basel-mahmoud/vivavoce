@@ -21,18 +21,17 @@ export function Waveform({
   color?: string;
   seed?: number;
 }) {
-  const heights = useMemo(() => {
-    // Deterministic pseudo-random so SSR and client match (no hydration drift).
-    let s = seed;
-    const rand = () => {
-      s = (s * 9301 + 49297) % 233280;
-      return s / 233280;
-    };
-    return Array.from({ length: bars }, (_, i) => {
-      const envelope = Math.sin((i / bars) * Math.PI); // taper at the ends
-      return 0.18 + envelope * (0.35 + rand() * 0.55);
-    });
-  }, [bars, seed]);
+  const heights = useMemo(
+    () =>
+      Array.from({ length: bars }, (_, i) => {
+        // Deterministic, side-effect-free pseudo-random so SSR and client match.
+        const n = Math.sin((i + 1) * (seed + 1) * 12.9898) * 43758.5453;
+        const rand = n - Math.floor(n); // 0..1
+        const envelope = Math.sin((i / bars) * Math.PI); // taper at the ends
+        return 0.18 + envelope * (0.35 + rand * 0.55);
+      }),
+    [bars, seed],
+  );
 
   return (
     <div

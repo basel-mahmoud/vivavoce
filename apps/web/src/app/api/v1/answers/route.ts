@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     .returning();
 
   // 4. Persist feedback.
-  const [feedback] = await db
+  await db
     .insert(schema.aiFeedback)
     .values({
       tenantId: ctx.tenantId,

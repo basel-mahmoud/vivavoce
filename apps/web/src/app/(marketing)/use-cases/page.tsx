@@ -4,7 +4,6 @@ import { Personas } from '@/components/marketing/Personas';
 import { Container } from '@/components/ui/Container';
 import { Reveal } from '@/components/ui/Reveal';
 import { FinalCTA } from '@/components/marketing/FinalCTA';
-import { personas } from '@/lib/content';
 
 export const metadata: Metadata = {
   title: 'Use cases',
