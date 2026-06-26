@@ -32,7 +32,9 @@ Status legend: ✅ done · 🚧 in progress · ⬜ planned
 - ✅ Voice session engine UI (all states) + feedback view
 - ✅ Progress / analytics, Library, Settings
 - ✅ Clerk Expo auth + secure token cache
-- ⬜ Wire device mic capture + real upload (needs native build / device)
+- ✅ Real device mic capture (expo-audio) → Gemini server-side transcription →
+     evaluation; graceful fallback when mic unavailable. _Needs a dev build on a
+     physical device to exercise end-to-end (can't run in this environment)._
 
 ## M5 — Hardening `v0.5-hardening`
 - ✅ Tests: tokens, AI parsing/fallback, waitlist validation, rate limit
