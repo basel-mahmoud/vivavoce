@@ -93,7 +93,9 @@ export function createApi(getToken: GetToken) {
       clientAnswerKey: string;
       questionId?: string | null;
       questionPrompt: string;
-      transcript: string;
+      transcript?: string;
+      audioBase64?: string;
+      audioMimeType?: string;
       durationMs?: number;
       orderIndex?: number;
     }) =>

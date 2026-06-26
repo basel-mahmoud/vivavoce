@@ -14,6 +14,7 @@ import { FeedbackView } from '@/components/session/FeedbackView';
 import { useTheme } from '@/theme';
 import { useApi } from '@/data/api-context';
 import { useSession } from '@/lib/useSession';
+import { useRecorder } from '@/lib/useRecorder';
 import { haptics } from '@/lib/haptics';
 import { starterDecks, modeName } from '@/data/content';
 
@@ -44,6 +45,22 @@ export default function SessionScreen() {
 
   const { state, elapsedMs, result, error, usedFallback, start, stop, cancel, retry, reset } =
     useSession({ sessionId, questionPrompt: question, api, online: true });
+  const recorder = useRecorder();
+
+  // Drive both the recorder and the session state machine together.
+  const onMicPress = async () => {
+    if (state === 'listening') {
+      const audio = await recorder.stop();
+      await stop(audio);
+    } else {
+      await recorder.start(); // begins real capture; session falls back if it fails
+      start();
+    }
+  };
+  const onCancel = async () => {
+    await recorder.stop();
+    cancel();
+  };
 
   // Best-effort: register the session server-side when authenticated.
   useEffect(() => {
@@ -116,15 +133,12 @@ export default function SessionScreen() {
                 <Waveform bars={36} live height={56} color={c.live} />
               </View>
             )}
-            <RecordButton
-              listening={state === 'listening'}
-              onPress={() => (state === 'listening' ? stop() : start())}
-            />
+            <RecordButton listening={state === 'listening'} onPress={onMicPress} />
             <Text variant="mono" tone="textMuted" style={{ marginTop: space.lg }}>
               {state === 'listening' ? formatTime(elapsedMs) : 'Tap to answer aloud'}
             </Text>
             {state === 'listening' && (
-              <Pressable onPress={cancel} style={{ marginTop: space.md }} hitSlop={8}>
+              <Pressable onPress={onCancel} style={{ marginTop: space.md }} hitSlop={8}>
                 <Text variant="small" tone="textFaint">
                   Cancel
                 </Text>

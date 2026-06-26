@@ -48,4 +48,29 @@ describe('submitAnswerInput', () => {
     });
     expect(res.success).toBe(false);
   });
+
+  const baseAnswer = {
+    sessionId: '00000000-0000-0000-0000-000000000000',
+    clientAnswerKey: 'abcdefgh12345',
+    questionPrompt: 'Q?',
+  };
+
+  it('accepts inline audio instead of a transcript', () => {
+    const res = submitAnswerInput.safeParse({
+      ...baseAnswer,
+      audioBase64: 'AAAA',
+      audioMimeType: 'audio/mp4',
+    });
+    expect(res.success).toBe(true);
+  });
+
+  it('rejects a submission with neither a transcript nor audio', () => {
+    expect(submitAnswerInput.safeParse(baseAnswer).success).toBe(false);
+  });
+
+  it('rejects audio without a (valid) mime type', () => {
+    expect(
+      submitAnswerInput.safeParse({ ...baseAnswer, audioBase64: 'AAAA' }).success,
+    ).toBe(false);
+  });
 });

@@ -30,6 +30,8 @@ export interface GeminiCallOptions {
   retries?: number;
   timeoutMs?: number;
   signal?: AbortSignal;
+  /** Inline audio (base64) for multimodal transcription. */
+  audio?: { data: string; mimeType: string };
 }
 
 const RETRYABLE = new Set([408, 429, 500, 502, 503, 504]);
@@ -59,8 +61,13 @@ export async function generateContent(
   const timeoutMs = opts.timeoutMs ?? env.GEMINI_TIMEOUT_MS;
   const url = `${BASE}/models/${encodeURIComponent(model)}:generateContent`;
 
+  const parts: Array<Record<string, unknown>> = [{ text: prompt }];
+  if (opts.audio) {
+    parts.push({ inline_data: { mime_type: opts.audio.mimeType, data: opts.audio.data } });
+  }
+
   const body = {
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    contents: [{ role: 'user', parts }],
     generationConfig: {
       temperature: opts.temperature ?? 0.4,
       maxOutputTokens: opts.maxOutputTokens ?? 1024,

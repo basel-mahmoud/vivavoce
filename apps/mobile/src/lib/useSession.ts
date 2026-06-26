@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Crypto from 'expo-crypto';
 import type { Api, EvaluationResult } from './api';
+import type { CapturedAudio } from './useRecorder';
 import { localEvaluate } from './local-eval';
 
 /**
@@ -80,44 +81,62 @@ export function useSession({
     setElapsedMs(0);
   }, [clearTimer]);
 
-  const stop = useCallback(async () => {
-    clearTimer();
-    const duration = Date.now() - startedAt.current;
-    setState('processing');
+  const stop = useCallback(
+    async (audio?: CapturedAudio | null) => {
+      clearTimer();
+      setState('processing');
 
-    const transcript = (captureTranscript?.() ?? SIMULATED_ANSWER).trim();
-    if (!transcript) {
-      setError('no_speech');
-      setState('error');
-      return;
-    }
-
-    // Prefer the backend; fall back to on-device heuristic if offline/unconfigured.
-    if (api && online) {
-      const res = await api.submitAnswer({
-        sessionId,
-        clientAnswerKey: answerKey.current,
-        questionPrompt,
-        transcript,
-        durationMs: duration,
-      });
-      if (res.ok) {
-        setResult(res.data.result);
-        setUsedFallback(res.data.result.source === 'heuristic');
-        setState('feedback');
+      // Real-audio path: send to the backend, which transcribes (Gemini) + evaluates.
+      if (audio && api && online) {
+        const res = await api.submitAnswer({
+          sessionId,
+          clientAnswerKey: answerKey.current,
+          questionPrompt,
+          audioBase64: audio.base64,
+          audioMimeType: audio.mimeType,
+          durationMs: audio.durationMs,
+        });
+        if (res.ok) {
+          setResult(res.data.result);
+          setUsedFallback(res.data.result.source === 'heuristic');
+          setState('feedback');
+          return;
+        }
+        // Audio can't be transcribed on-device, so a backend failure is a retry.
+        setError('evaluation_failed');
+        setState('error');
         return;
       }
-      // Backend unreachable → graceful local review rather than a dead end.
+
+      // Fallback path (no mic / simulator / web / offline): use a transcript.
+      const duration = audio?.durationMs ?? Date.now() - startedAt.current;
+      const transcript = (captureTranscript?.() ?? SIMULATED_ANSWER).trim();
+      if (!transcript) {
+        setError('no_speech');
+        setState('error');
+        return;
+      }
+      if (api && online) {
+        const res = await api.submitAnswer({
+          sessionId,
+          clientAnswerKey: answerKey.current,
+          questionPrompt,
+          transcript,
+          durationMs: duration,
+        });
+        if (res.ok) {
+          setResult(res.data.result);
+          setUsedFallback(res.data.result.source === 'heuristic');
+          setState('feedback');
+          return;
+        }
+      }
       setResult(localEvaluate(transcript, duration));
       setUsedFallback(true);
       setState('feedback');
-      return;
-    }
-
-    setResult(localEvaluate(transcript, duration));
-    setUsedFallback(true);
-    setState('feedback');
-  }, [api, online, sessionId, questionPrompt, captureTranscript, clearTimer]);
+    },
+    [api, online, sessionId, questionPrompt, captureTranscript, clearTimer],
+  );
 
   const retry = useCallback(() => {
     setResult(null);

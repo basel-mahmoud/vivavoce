@@ -75,6 +75,39 @@ export async function evaluateAnswer(input: EvaluateInput): Promise<EvaluateOutp
   };
 }
 
+export interface TranscribeOutput {
+  transcript: string | null;
+  usage: UsageRecord;
+}
+
+const TRANSCRIBE_PROMPT =
+  'Transcribe this spoken answer verbatim into plain text. Return only the transcript, with no commentary, labels, or quotation marks. If there is no discernible speech, return an empty string.';
+
+/** Transcribe inline audio via Gemini (multimodal). Never throws; returns null
+ *  transcript on failure so the caller can surface a retry. */
+export async function transcribeAudio(
+  audioBase64: string,
+  mimeType: string,
+): Promise<TranscribeOutput> {
+  const res = await generateContent(TRANSCRIBE_PROMPT, {
+    audio: { data: audioBase64, mimeType },
+    temperature: 0,
+    maxOutputTokens: 1024,
+    retries: 2,
+  });
+  const usage: UsageRecord = {
+    task: 'evaluate', // usage table groups by task; transcription is part of the eval flow
+    model: res.model,
+    status: res.status === 'ok' ? 'ok' : res.status,
+    latencyMs: res.latencyMs,
+    inputTokens: res.inputTokens,
+    outputTokens: res.outputTokens,
+    errorCode: res.errorCode,
+  };
+  const transcript = res.status === 'ok' ? (res.text ?? '').trim() : null;
+  return { transcript: transcript && transcript.length > 0 ? transcript : null, usage };
+}
+
 export interface GenerateQuestionInput {
   mode: string;
   topic: string;

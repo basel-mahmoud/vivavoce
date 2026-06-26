@@ -37,15 +37,35 @@ export const startSessionInput = z.object({
 });
 export type StartSessionInput = z.infer<typeof startSessionInput>;
 
-export const submitAnswerInput = z.object({
-  sessionId: z.string().uuid(),
-  clientAnswerKey: z.string().min(8).max(64),
-  questionId: z.string().uuid().nullable().optional(),
-  questionPrompt: z.string().min(1).max(1000),
-  transcript: z.string().min(1).max(6000),
-  durationMs: z.number().int().positive().max(15 * 60 * 1000).optional(),
-  orderIndex: z.number().int().min(0).max(200).default(0),
-});
+// Common audio MIME types Gemini accepts for inline transcription.
+const audioMimeType = z.enum([
+  'audio/mp4',
+  'audio/aac',
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/wav',
+  'audio/aiff',
+  'audio/ogg',
+  'audio/flac',
+]);
+
+export const submitAnswerInput = z
+  .object({
+    sessionId: z.string().uuid(),
+    clientAnswerKey: z.string().min(8).max(64),
+    questionId: z.string().uuid().nullable().optional(),
+    questionPrompt: z.string().min(1).max(1000),
+    // Provide a client-side transcript OR inline audio to be transcribed server-side.
+    transcript: z.string().min(1).max(6000).optional(),
+    audioBase64: z.string().min(1).max(9_000_000).optional(), // ~6.7MB audio
+    audioMimeType: audioMimeType.optional(),
+    durationMs: z.number().int().positive().max(15 * 60 * 1000).optional(),
+    orderIndex: z.number().int().min(0).max(200).default(0),
+  })
+  .refine((v) => Boolean(v.transcript) || Boolean(v.audioBase64 && v.audioMimeType), {
+    message: 'Provide either a transcript or audioBase64 with audioMimeType',
+    path: ['transcript'],
+  });
 export type SubmitAnswerInput = z.infer<typeof submitAnswerInput>;
 
 export const evaluationResponse = z.object({

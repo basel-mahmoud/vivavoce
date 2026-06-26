@@ -17,7 +17,9 @@
     },
     "android": {
       "package": "app.basel.vivavoce",
-      "permissions": ["RECORD_AUDIO"],
+      "permissions": [
+        "RECORD_AUDIO"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#0C0A09",
         "foregroundImage": "./assets/adaptive-icon.png"
@@ -39,14 +41,17 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 80
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "router": {},
-      "eas": { "projectId": "00000000-0000-0000-0000-000000000000" }
+      "eas": {
+        "projectId": "00000000-0000-0000-0000-000000000000"
+      }
     },
     "owner": "baselmahmoud"
   }

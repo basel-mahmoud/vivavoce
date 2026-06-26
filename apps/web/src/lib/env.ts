@@ -29,12 +29,22 @@ const publicSchema = z.object({
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1).optional(),
 });
 
+/** Treat empty-string env values as absent so `.optional()` applies (an unset
+ *  secret is often `""` in env files, not missing entirely). */
+function clean<T extends Record<string, unknown>>(obj: T): T {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) out[k] = v === '' ? undefined : v;
+  return out as T;
+}
+
 function parse() {
-  const server = serverSchema.safeParse(process.env);
-  const pub = publicSchema.safeParse({
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-  });
+  const server = serverSchema.safeParse(clean(process.env));
+  const pub = publicSchema.safeParse(
+    clean({
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    }),
+  );
   if (!server.success || !pub.success) {
     const issues = [
       ...(server.success ? [] : server.error.issues),

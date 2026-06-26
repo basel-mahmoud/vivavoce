@@ -6,7 +6,7 @@ import { limiters } from '@/lib/security/ratelimit';
 import { audit } from '@/lib/security/audit';
 import { db, schema } from '@/lib/db/client';
 import { getOwnedSession, findAnswerByClientKey } from '@/lib/db/sessions.repo';
-import { evaluateAnswer } from '@/lib/ai';
+import { evaluateAnswer, transcribeAudio } from '@/lib/ai';
 import { estimateWpm } from '@/lib/ai/fallback';
 
 export const runtime = 'nodejs';
@@ -44,7 +44,29 @@ export async function POST(req: NextRequest) {
     if (fb) return ok({ result: toResponse(dup.id, fb), idempotent: true });
   }
 
-  const wpm = estimateWpm(input.durationMs ?? null, input.transcript);
+  // 0. Resolve the transcript: use the client's, or transcribe audio via Gemini.
+  let transcript = input.transcript?.trim() ?? '';
+  if (!transcript && input.audioBase64 && input.audioMimeType) {
+    const t = await transcribeAudio(input.audioBase64, input.audioMimeType);
+    if (!t.transcript) {
+      // Transcription failed or no speech — surface a retry, don't store an empty answer.
+      return errors.badRequest('We could not transcribe that audio. Please try again.', {
+        transcript: 'transcription_failed',
+      });
+    }
+    transcript = t.transcript;
+    await db.insert(schema.modelUsageLogs).values({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      task: 'transcribe',
+      model: t.usage.model,
+      latencyMs: t.usage.latencyMs,
+      status: t.usage.status,
+      errorCode: t.usage.errorCode ?? null,
+    });
+  }
+
+  const wpm = estimateWpm(input.durationMs ?? null, transcript);
 
   // 1. Persist the answer (transcribed) + transcript.
   const [answer] = await db
@@ -65,15 +87,15 @@ export async function POST(req: NextRequest) {
   await db.insert(schema.transcripts).values({
     tenantId: ctx.tenantId,
     answerId: answer!.id,
-    text: input.transcript,
-    wordCount: input.transcript.trim().split(/\s+/).filter(Boolean).length,
+    text: transcript,
+    wordCount: transcript.split(/\s+/).filter(Boolean).length,
   });
 
   // 2. Evaluate (never throws).
   const { evaluation, source, usage } = await evaluateAnswer({
     mode: session.mode,
     question: input.questionPrompt,
-    transcript: input.transcript,
+    transcript,
     wpm,
   });
 
