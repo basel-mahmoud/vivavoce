@@ -1,15 +1,49 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, TextInput } from 'react-native';
 import { router } from 'expo-router';
-import { useSignIn } from '@clerk/clerk-expo';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
+import { useSignIn, useSSO } from '@clerk/clerk-expo';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { Button } from '@/ui/Button';
 import { useTheme } from '@/theme';
 import { isAuthConfigured } from '@/lib/config';
 
-/** Real Clerk email/password sign-in, isolated so the hook only runs when Clerk
- *  is configured. In demo mode we show guidance instead. */
+// Required so the in-app browser closes itself after the OAuth redirect.
+WebBrowser.maybeCompleteAuthSession();
+
+/** Google via Clerk SSO. OAuth covers both sign-in and first-time sign-up. */
+function GoogleButton({ onError }: { onError: (msg: string) => void }) {
+  const { startSSOFlow } = useSSO();
+  const [busy, setBusy] = useState(false);
+
+  const go = useCallback(async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const { createdSessionId, setActive } = await startSSOFlow({
+        strategy: 'oauth_google',
+        redirectUrl: AuthSession.makeRedirectUri({ scheme: 'vivavoce' }),
+      });
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+        router.replace('/(tabs)');
+      } else {
+        // e.g. the user closed the browser mid-flow.
+        onError('Google sign-in was not completed. Try again.');
+      }
+    } catch {
+      onError('Google sign-in failed. You can use email instead.');
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, startSSOFlow, onError]);
+
+  return <Button label="Continue with Google" onPress={go} loading={busy} />;
+}
+
+/** Email/password sign-in via Clerk. */
 function SignInForm() {
   const { signIn, setActive, isLoaded } = useSignIn();
   const { c, space, radius } = useTheme();
@@ -43,7 +77,7 @@ function SignInForm() {
         setError('Additional verification is required. Check your email.');
       }
     } catch {
-      setError('Those details didn’t work. Please try again.');
+      setError('Those details did not work. Please try again.');
     } finally {
       setBusy(false);
     }
@@ -51,6 +85,23 @@ function SignInForm() {
 
   return (
     <View style={{ gap: space.md }}>
+      <GoogleButton onError={setError} />
+
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: space.md,
+          marginVertical: space.sm,
+        }}
+      >
+        <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
+        <Text variant="caption" tone="textFaint">
+          or with email
+        </Text>
+        <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
+      </View>
+
       <TextInput
         style={inputStyle}
         placeholder="you@university.edu"
@@ -77,7 +128,13 @@ function SignInForm() {
           {error}
         </Text>
       ) : null}
-      <Button label="Sign in" onPress={submit} loading={busy} style={{ marginTop: space.sm }} />
+      <Button
+        label="Sign in"
+        variant="secondary"
+        onPress={submit}
+        loading={busy}
+        style={{ marginTop: space.sm }}
+      />
     </View>
   );
 }
@@ -97,9 +154,9 @@ export default function SignIn() {
         <SignInForm />
       ) : (
         <Text variant="small" tone="textMuted">
-          Authentication isn’t configured in this build, so VivaVoce is running in
-          demo mode — your practice stays on this device. Add a Clerk publishable
-          key to enable accounts and cloud sync.
+          Authentication is not configured in this build, so VivaVoce is running
+          in demo mode and your practice stays on this device. Add a Clerk
+          publishable key to enable accounts and cloud sync.
         </Text>
       )}
     </Screen>
