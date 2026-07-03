@@ -26,7 +26,7 @@ function SignInForm() {
     backgroundColor: c.surface,
     paddingHorizontal: space.lg,
     color: c.text,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Archivo_400Regular',
     fontSize: 16,
   } as const;
 

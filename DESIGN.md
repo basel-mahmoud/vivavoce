@@ -1,122 +1,74 @@
-# VivaVoce — Design System: "Ink & Ember"
+# VivaVoce — Design System: "The Practice Room" (v4)
 
-The name is Latin: *viva voce*, "with the living voice" — the oral examination.
-The product should feel like a poised, exacting examiner who is on your side:
-academically sharp, calm under pressure, warm rather than clinical. Not childish
-edtech, not gamified Duolingo energy, not "AI-future" purple slop.
+The product is a sparring partner: playful, decisive, a little loud, never
+corporate. The design system treats every surface as a **board of live tiles**,
+because the strongest thing VivaVoce can show anyone is itself working.
 
-## Direction
+Source of truth: [`packages/tokens`](packages/tokens) → consumed by
+`apps/web/src/app/globals.css` and `apps/mobile/src/theme/index.ts`.
 
-**Editorial academia.** Think a well-set examination paper and a warm reading
-room, rendered with Linear/Vercel-grade restraint. Type does the heavy lifting;
-color is used sparingly and with intent; motion is physical and quiet.
+## Format (the part that is actually different)
 
-Three non-negotiables:
+- **No hero, no section stack.** The web landing is a dense bento board where
+  every tile is a real widget: the live marking engine (mic + Gemini), an
+  auto-touring radar of the five axes, a typewriter viva transcript, a practice
+  heat grid, the modes index, and an inline waitlist.
+- Inner pages open with one loud statement tile, then content on the canvas.
+- Mobile keeps its tab structure; screens are built from the same tile language.
 
-1. **A serif carries the voice.** Display type is a serif (Fraunces) — most
-   study apps default to Inter-everywhere, so a confident serif instantly reads
-   as considered, human, and exam-room serious. UI/body is a clean grotesque.
-2. **One signature accent, earned.** Ember-amber is the sound/voice signal —
-   warmth, "speaking up," a waveform glowing. It appears on the single most
-   important action in any view, never as decoration. Claret is the academic
-   gravitas note, used in tiny doses (rules, marks, seals).
-3. **Paper and ink, both directions.** A warm parchment light mode and a warm
-   near-black dark mode — never cold #000/#fff. Everything is slightly warm.
+## Color
 
-## Color tokens
+Bright porcelain canvas with flat, saturated tiles. No gradients, no glow, no
+glass.
 
-Semantic, theme-aware. Source of truth: [`packages/tokens`](packages/tokens).
+| Token        | Value     | Use                                    |
+| ------------ | --------- | -------------------------------------- |
+| `canvas`     | `#F2F1ED` | page background (true neutral, not cream) |
+| `card`       | `#FBFAF8` | default tile                           |
+| `card-2`     | `#E9E7E1` | inset / hover wash                     |
+| `ink`        | `#161412` | text; the dark tile (`tile-ink`)       |
+| `verm`       | `#FF4D26` | brand accent; the vermilion tile       |
+| `cobalt`     | `#2E45FF` | second brand color; the data tile      |
+| `butter`     | `#FFC838` | tiny highlights (active radar dot)     |
+| `paper`      | `#FBFAF8` | text on dark/saturated tiles           |
 
-### Core ramps (warm, never neutral-grey)
+Contrast rules: ink on canvas/card ≈ 13:1; ink on vermilion ≈ 5.6:1 (body-safe);
+paper on cobalt ≈ 4.9:1; paper on ink ≈ 15:1. Never white text on vermilion at
+body sizes.
 
-| Token            | Light            | Dark             | Use                              |
-| ---------------- | ---------------- | ---------------- | -------------------------------- |
-| `bg`             | `#F7F4ED` paper  | `#0C0A09` ink    | App background                   |
-| `surface`        | `#FFFFFF`        | `#16130F`        | Cards, sheets                    |
-| `surface-2`      | `#F1ECE1`        | `#1F1A14`        | Raised / inset                   |
-| `border`         | `#E4DDCE`        | `#2A241C`        | Hairlines                        |
-| `text`           | `#1A1714`        | `#F4EFE6`        | Primary text                     |
-| `text-muted`     | `#6B6256`        | `#A89F90`        | Secondary text                   |
-| `text-faint`     | `#9A9081`        | `#6E665A`        | Tertiary / captions              |
+## Type
 
-### Accents
+- **Archivo** everywhere. Display = `Archivo Black`, `font-stretch: 118%`,
+  tracking −0.025em (web `.display`; mobile `Archivo_900Black`).
+- **JetBrains Mono** strictly for marks, timers, counters (`.marks`, tabular).
+- No serif anywhere. Emphasis inside a headline = a rotated vermilion chip or
+  weight, never a second family.
 
-| Token            | Value             | Use                                          |
-| ---------------- | ----------------- | -------------------------------------------- |
-| `ember`          | `#D9803B`         | Primary accent — the one important action    |
-| `ember-soft`     | `#F2C28A`         | Ember tint (waveform fills, hover wash)       |
-| `claret`         | `#7C2D3A`         | Academic gravitas — marks, seals, rules       |
-| `sage`           | `#5C7A6B`         | Positive / "strong answer" semantic           |
+## Shape & materials
 
-### Semantic states
-
-`success` → sage · `warning` → ember · `danger` → `#B23A3A` · `info` → a calm
-slate `#52606D`. Recording-live uses a dedicated pulsing `live` = claret-red
-`#B33A3A` so it is never confused with the ember CTA.
-
-### Contrast
-
-All text/background pairs target **WCAG AA (4.5:1)** for body and **3:1** for
-large text and non-text UI. `text` on `bg` ≈ 13:1; `text-muted` on `bg` ≈ 4.7:1.
-Ember is used for *fills with dark text* or *text on dark ink*, never small ember
-text on paper (it fails AA). The audit lives in [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md).
-
-## Typography
-
-| Role        | Family                    | Notes                                   |
-| ----------- | ------------------------- | --------------------------------------- |
-| Display     | **Fraunces** (opsz, soft) | Headlines, hero, big numbers            |
-| UI / body   | **Inter**                 | Everything functional                   |
-| Mono        | **JetBrains Mono**        | Metrics, scores, timers, code-ish data  |
-
-Scale (1.25 major-third, rem): `xs .75 · sm .875 · base 1 · lg 1.125 · xl 1.25 ·
-2xl 1.5 · 3xl 1.875 · 4xl 2.5 · 5xl 3.5 · 6xl 4.75`. Display sizes use Fraunces
-with tight tracking (`-0.02em`) and optical sizing on; body uses Inter at
-`-0.011em`. Line-height: 1.5 body, 1.05–1.15 display.
-
-## Spacing & radius
-
-4px base grid: `1=4 2=8 3=12 4=16 5=20 6=24 8=32 10=40 12=48 16=64 20=80 24=96`.
-Radius: `sm 8 · md 12 · lg 16 · xl 24 · pill 999`. Cards default `lg`; sheets `xl`.
-
-## Elevation
-
-No glow. Soft, warm, layered shadows only (light mode); dark mode uses a 1px
-top inner-highlight + border instead of shadow. Tokens: `e1` subtle, `e2` card,
-`e3` popover, `e4` modal. Example `e2` light: `0 1px 2px rgba(26,23,20,.04), 0
-8px 24px -12px rgba(26,23,20,.12)`.
+- One radius scale: tiles 24px, buttons pill, small elements 8–14px.
+- Tiles: 1px `line` border on light; saturated tiles are borderless blocks.
+- Hover: `tile-lift` (−4px translate + soft tinted shadow), pointer-fine only.
+- Elevation is otherwise flat; hierarchy comes from color blocks and scale.
 
 ## Motion
 
-Physical, quiet, purposeful. Tokens (ms / easing):
+Purposeful only, springs and quints, 140–300ms UI / up to 800ms for data
+draws. Signature moves: the radar polygon drawing in, the score **stamp**
+(scale 1.12 → 1, −2° rotate), the typewriter caret, press scale 0.97 on every
+pressable. Everything honors `prefers-reduced-motion` (static renders, no
+loops).
 
-- `fast 120 · base 200 · slow 360 · deliberate 560`
-- Standard easing `cubic-bezier(.2,.8,.2,1)`; entrances `cubic-bezier(.16,1,.3,1)`.
-- Recording waveform animates continuously while live; everything else animates
-  only on state change.
-- **Respect `prefers-reduced-motion`** everywhere — replace transforms with
-  opacity, kill the looping waveform, keep functionality identical.
+## Voice (copy)
 
-## The voice motif
+Short, blunt, coach-like. "Say it out loud before it counts." "Get marked, not
+graded." No em-dashes anywhere in visible copy. Scores are guidance, not
+grades, and every surface that shows a score says so somewhere honest.
 
-A waveform is the product's signature. It appears as: the record button's living
-core, a thin reactive bar during listening, and a frozen "fingerprint" of a saved
-answer in history. It is generated from amplitude data on mobile and stylized SVG
-on web. It is never a stock decorative blob.
+## Mobile mapping
 
-## Interaction states (every interactive element designs all of these)
-
-`default · hover · active/pressed · focus-visible (2px ember ring, 2px offset) ·
-disabled · loading`. Plus session-specific states below.
-
-## Voice-session states (first-class, fully designed)
-
-`idle → listening → processing → feedback-ready → retry-needed`, with edge
-states `offline · failed-upload · partial-transcript · ai-unavailable`. Each has
-a defined copy, color, icon, motion, and a primary recovery action. See
-[PRODUCT.md](PRODUCT.md) for the state machine.
-
-## Mobile specifics
-
-Haptics on record start/stop and on score reveal (`expo-haptics`). Tap targets
-≥ 44pt. Dynamic-type aware. Dark mode follows system. Honors reduce-motion.
+Same tokens: `bg=canvas`, `surface=card`, `accent=verm`, `gravitas/info=cobalt`,
+dark mode is the same room with lights off (`#121110` base). Record button is
+vermilion; live states use the dedicated `live` red so recording is never
+confused with the CTA. Tap targets ≥ 44pt; haptics accompany record start/stop
+and score reveal.

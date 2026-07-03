@@ -21,7 +21,7 @@
         "RECORD_AUDIO"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#0C0A09",
+        "backgroundColor": "#161412",
         "foregroundImage": "./assets/adaptive-icon.png"
       },
       "predictiveBackGestureEnabled": false
@@ -37,7 +37,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0C0A09",
+          "backgroundColor": "#161412",
           "image": "./assets/splash-icon.png",
           "imageWidth": 80
         }

@@ -72,3 +72,4 @@ Status legend: ✅ done · 🚧 in progress · ⬜ planned
 | Milestone | Environment | URL |
 | --------- | ----------- | --- |
 | M3 site + API | Vercel **production** | https://vivavoce-kappa.vercel.app |
+| v4 "Practice Room" board + live demo | Vercel **production** (git-triggered) | https://vivavoce-kappa.vercel.app |
