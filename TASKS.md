@@ -65,9 +65,10 @@ Status legend: ✅ done · 🚧 in progress · ⬜ planned
   Neon *cluster* with other apps but no shared tables/data. _Optional upgrade:_ move
   to a dedicated Neon project for credential separation.
 - **AI:** Gemini (reused account key — project-agnostic quota).
-- **Auth:** Clerk **not yet wired** — needs a **dedicated VivaVoce Clerk app** (the
-  public site doesn't use Clerk; it's required for the mobile/session API). Until then
-  the app runs in demo mode with on-device evaluation.
+- **Auth:** Clerk — dedicated **VivaVoce** app (`valid-lab-34.clerk.accounts.dev`,
+  dev instance; Email + Google). Keys live in Vercel env, `apps/web/.env.local`,
+  `apps/mobile/.env`, and all `eas.json` profiles. Production Clerk instance
+  (custom domain + DNS) remains a launch-day step.
 
 | Milestone | Environment | URL |
 | --------- | ----------- | --- |

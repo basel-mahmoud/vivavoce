@@ -8,21 +8,28 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://localhost:3000"
+        "EXPO_PUBLIC_API_URL": "http://localhost:3000",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dmFsaWQtbGFiLTM0LmNsZXJrLmFjY291bnRzLmRldiQ"
       }
     },
     "preview": {
       "distribution": "internal",
-      "android": { "buildType": "apk" },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://vivavoce.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://vivavoce-kappa.vercel.app",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dmFsaWQtbGFiLTM0LmNsZXJrLmFjY291bnRzLmRldiQ"
       }
     },
     "production": {
       "autoIncrement": true,
-      "android": { "buildType": "app-bundle" },
+      "android": {
+        "buildType": "app-bundle"
+      },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://vivavoce.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://vivavoce-kappa.vercel.app",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dmFsaWQtbGFiLTM0LmNsZXJrLmFjY291bnRzLmRldiQ"
       }
     }
   },
