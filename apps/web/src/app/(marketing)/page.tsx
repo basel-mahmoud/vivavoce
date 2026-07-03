@@ -1,10 +1,5 @@
-import { Hero } from '@/components/marketing/Hero';
-import { HowItWorks } from '@/components/marketing/HowItWorks';
-import { RubricSection } from '@/components/marketing/RubricSection';
-import { Modes } from '@/components/marketing/Modes';
-import { Personas } from '@/components/marketing/Personas';
-import { Trust } from '@/components/marketing/Trust';
-import { FinalCTA } from '@/components/marketing/FinalCTA';
+import { Board } from '@/components/board/Board';
+import { StepsStrip } from '@/components/marketing/sections';
 import { site } from '@/lib/site';
 
 export default function HomePage() {
@@ -24,13 +19,10 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Hero />
-      <HowItWorks />
-      <RubricSection />
-      <Modes />
-      <Personas />
-      <Trust />
-      <FinalCTA />
+      <div className="pt-2">
+        <Board />
+      </div>
+      <StepsStrip />
     </>
   );
 }

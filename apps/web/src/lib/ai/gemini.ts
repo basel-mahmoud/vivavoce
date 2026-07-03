@@ -70,8 +70,12 @@ export async function generateContent(
     contents: [{ role: 'user', parts }],
     generationConfig: {
       temperature: opts.temperature ?? 0.4,
-      maxOutputTokens: opts.maxOutputTokens ?? 1024,
+      maxOutputTokens: opts.maxOutputTokens ?? 2048,
       ...(opts.json ? { responseMimeType: 'application/json' } : {}),
+      // Gemini 2.5 models spend the output budget on hidden "thinking" tokens
+      // by default, which can leave zero tokens for the answer. Our tasks are
+      // structured marking, not deep reasoning: turn thinking off.
+      ...(model.includes('2.5') ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
     },
     // Keep safety at provider defaults; the prompt enforces our own guardrails.
   };

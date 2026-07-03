@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import { Check } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
-import { Container } from '@/components/ui/Container';
 import { WaitlistForm } from '@/components/site/WaitlistForm';
+import { Reveal } from '@/components/ui/Reveal';
 
 export const metadata: Metadata = {
   title: 'Early access',
@@ -11,35 +10,36 @@ export const metadata: Metadata = {
 };
 
 const perks = [
-  'First access as we open spots — exam dates jump the queue',
-  'Founding-user pricing, locked in for good',
-  'A direct line to shape what we build next',
-];
+  'First access as spots open. Exam dates jump the queue.',
+  'Founding-user pricing, locked in for good.',
+  'A direct line to shape what gets built next.',
+] as const;
 
 export default function WaitlistPage() {
   return (
     <>
       <PageHero
-        kicker="Early access"
-        title="Get in before the exam does"
-        intro="VivaVoce is in private beta. Leave your email and we’ll bring you in as we open spots — students with exams on the calendar first."
+        title="Get in before the exam does."
+        intro="VivaVoce is in private beta. Leave your email and we will bring you in as spots open."
       />
-      <section className="py-16">
-        <Container className="max-w-2xl">
-          <div className="rounded-3xl border border-line bg-surface p-8 sm:p-10">
-            <WaitlistForm />
-            <ul className="mt-8 space-y-3 border-t border-line pt-6">
+      <section className="bg-canvas text-ink">
+        <div className="mx-auto grid w-full max-w-[1400px] gap-12 px-5 pb-24 sm:px-8 lg:grid-cols-[1fr_1.2fr] lg:gap-20">
+          <Reveal>
+            <ul className="flex flex-col gap-6">
               {perks.map((perk) => (
-                <li key={perk} className="flex items-start gap-3 text-sm text-muted">
-                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-sage/15 text-sage">
-                    <Check size={13} />
-                  </span>
-                  {perk}
+                <li key={perk} className="flex items-start gap-4">
+                  <span className="mt-2 h-1.5 w-8 shrink-0 bg-verm" />
+                  <p className="text-lg font-bold leading-snug">{perk}</p>
                 </li>
               ))}
             </ul>
-          </div>
-        </Container>
+          </Reveal>
+          <Reveal delay={0.08}>
+            <div className="tile p-7 sm:p-10">
+              <WaitlistForm />
+            </div>
+          </Reveal>
+        </div>
       </section>
     </>
   );

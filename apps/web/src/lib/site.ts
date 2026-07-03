@@ -1,9 +1,9 @@
 /** Central site config used across metadata, nav, footer, and JSON-LD. */
 export const site = {
   name: 'VivaVoce',
-  tagline: 'Practice out loud. Think clearly under pressure.',
+  tagline: 'Say it out loud before it counts.',
   description:
-    'VivaVoce is a voice-first study sparring app. It asks you questions, listens to your spoken answers, and coaches you on correctness, clarity, structure, conciseness, and confidence — so you can rehearse oral exams, vivas, interviews, and presentations until they feel inevitable.',
+    'VivaVoce is a voice-first study sparring app. It asks real exam questions, listens to your spoken answer, and marks it on correctness, clarity, structure, conciseness, and confidence, so you can rehearse vivas, interviews, and presentations until they feel familiar.',
   url: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
   email: 'hello@vivavoce.app',
   nav: [

@@ -2,9 +2,9 @@
 
 /** Font families. Web loads via next/font; mobile via @expo-google-fonts. */
 export const fonts = {
-  display: 'Fraunces', // serif, opsz + soft axes — the "living voice"
-  ui: 'Inter',
-  mono: 'JetBrains Mono',
+  display: 'Archivo', // Black, expanded width: broadcast-poster voice
+  ui: 'Archivo',
+  mono: 'JetBrains Mono', // marks, timers, scores only
 } as const;
 
 /** Major-third-ish type scale, in rem (web) / pt (mobile reads `.px`). */

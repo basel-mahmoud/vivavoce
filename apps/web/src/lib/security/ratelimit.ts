@@ -53,6 +53,7 @@ class InMemorySlidingWindow implements RateLimiter {
 /** Named limiters tuned per surface. */
 export const limiters = {
   waitlist: new InMemorySlidingWindow(5, 60 * 60 * 1000), // 5 / hour / ip
+  demoEval: new InMemorySlidingWindow(4, 60 * 60 * 1000), // 4 / hour / ip (costs AI tokens)
   evaluate: new InMemorySlidingWindow(30, 60 * 1000), // 30 / min / user
   sessionStart: new InMemorySlidingWindow(20, 60 * 1000),
   generic: new InMemorySlidingWindow(60, 60 * 1000),

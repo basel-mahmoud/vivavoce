@@ -5,14 +5,14 @@ import { Prose } from '@/components/site/Prose';
 export const metadata: Metadata = {
   title: 'Privacy',
   description:
-    'How VivaVoce handles your data — especially your voice recordings and transcripts.',
+    'How VivaVoce handles your data: especially your voice recordings and transcripts.',
 };
 
 export default function PrivacyPage() {
   return (
     <>
       <PageHero
-        kicker="Privacy"
+
         title="Your voice, handled with care"
         intro="Plain-language summary first; the detail follows. Last updated 26 June 2026."
       />
@@ -20,7 +20,7 @@ export default function PrivacyPage() {
         <p>
           VivaVoce is a voice-first study tool, so we think hard about voice data.
           This page explains what we collect, why, how long we keep it, and the
-          controls you have. It is written to be read — not to be survived.
+          controls you have. It is written to be read: not to be survived.
         </p>
 
         <h2>The short version</h2>
@@ -34,20 +34,20 @@ export default function PrivacyPage() {
             or answers to train models for anyone else.
           </li>
           <li>
-            <strong>You’re in control</strong> — export everything or delete your
+            <strong>You’re in control</strong>: export everything or delete your
             account at any time, and deletion is honoured end to end.
           </li>
         </ul>
 
         <h2>What we collect</h2>
         <p>
-          <strong>Account data</strong> — your email and basic profile, handled
-          by our authentication provider (Clerk). <strong>Practice data</strong> —
+          <strong>Account data</strong>: your email and basic profile, handled
+          by our authentication provider (Clerk). <strong>Practice data</strong>:
           the questions you answer, transcripts of your spoken answers, the
           feedback and scores generated for them, and your progress over time.
-          <strong> Voice recordings</strong> — captured to produce a transcript
+          <strong> Voice recordings</strong>: captured to produce a transcript
           and delivery analysis; retained only if you opt in.{' '}
-          <strong>Diagnostic data</strong> — coarse, privacy-preserving telemetry
+          <strong>Diagnostic data</strong>: coarse, privacy-preserving telemetry
           (e.g. whether a session completed) to keep the product reliable. We
           store a salted hash of your IP for abuse prevention, never the raw IP.
         </p>
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
         <h2>Your rights</h2>
         <p>
           You can access and export your data, correct your profile, withdraw
-          consent for audio retention, and request deletion — all from within the
+          consent for audio retention, and request deletion: all from within the
           app, or by emailing{' '}
           <a href="mailto:privacy@vivavoce.app">privacy@vivavoce.app</a>. Depending
           on where you live, you may have additional rights under laws such as the

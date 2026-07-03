@@ -11,7 +11,7 @@ export default function TermsPage() {
   return (
     <>
       <PageHero
-        kicker="Terms"
+
         title="Terms of use"
         intro="The agreement between you and VivaVoce. Last updated 26 June 2026."
       />

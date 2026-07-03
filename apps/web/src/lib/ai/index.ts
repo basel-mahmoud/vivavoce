@@ -46,7 +46,7 @@ export async function evaluateAnswer(input: EvaluateInput): Promise<EvaluateOutp
     wpm: input.wpm ?? null,
   });
 
-  const res = await generateContent(prompt, { json: true, temperature: 0.3, maxOutputTokens: 1200 });
+  const res = await generateContent(prompt, { json: true, temperature: 0.3, maxOutputTokens: 2048 });
   const baseUsage: UsageRecord = {
     task: 'evaluate',
     model: res.model,

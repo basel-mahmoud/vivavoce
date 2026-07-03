@@ -1,61 +1,45 @@
 import type { Metadata } from 'next';
-import { Mail, ShieldAlert, LifeBuoy } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
-import { Container } from '@/components/ui/Container';
+import { Reveal } from '@/components/ui/Reveal';
 import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Contact',
-  description: 'Get in touch with the VivaVoce team — support, privacy, and security.',
+  description: 'Reach the VivaVoce team: support, security, and privacy.',
 };
 
 const channels = [
-  {
-    icon: LifeBuoy,
-    title: 'Support',
-    body: 'Questions, feedback, or trouble with the app.',
-    email: site.email,
-  },
-  {
-    icon: ShieldAlert,
-    title: 'Security',
-    body: 'Report a vulnerability. We support coordinated disclosure.',
-    email: 'security@vivavoce.app',
-  },
-  {
-    icon: Mail,
-    title: 'Privacy',
-    body: 'Data export, deletion, or any privacy request.',
-    email: 'privacy@vivavoce.app',
-  },
-];
+  ['Support', 'Questions, feedback, or trouble with the app.', site.email],
+  ['Security', 'Report a vulnerability. We support coordinated disclosure.', 'security@vivavoce.app'],
+  ['Privacy', 'Data export, deletion, or any privacy request.', 'privacy@vivavoce.app'],
+] as const;
 
 export default function ContactPage() {
   return (
     <>
       <PageHero
-        kicker="Contact"
-        title="We read everything"
-        intro="VivaVoce is built by a small team that cares about getting this right. Reach the right inbox below."
+        title="We read everything."
+        intro="A small team that cares about getting this right. Pick the right inbox and you will hear back quickly."
       />
-      <section className="py-16">
-        <Container className="grid max-w-4xl gap-6 sm:grid-cols-3">
-          {channels.map((c) => (
-            <div key={c.title} className="rounded-2xl border border-line bg-surface p-7">
-              <span className="grid h-11 w-11 place-items-center rounded-xl border border-line text-ember">
-                <c.icon size={20} />
-              </span>
-              <h2 className="mt-5 text-lg font-semibold text-ink">{c.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{c.body}</p>
-              <a
-                href={`mailto:${c.email}`}
-                className="mt-4 inline-block text-sm font-medium text-ember-deep underline-offset-2 hover:underline dark:text-ember"
-              >
-                {c.email}
-              </a>
-            </div>
-          ))}
-        </Container>
+      <section className="bg-canvas text-ink">
+        <div className="mx-auto w-full max-w-[1400px] px-5 pb-24 sm:px-8">
+          <div className="flex max-w-2xl flex-col">
+            {channels.map(([title, body, email], i) => (
+              <Reveal key={title} delay={Math.min(i * 0.05, 0.15)}>
+                <div className="border-t border-line py-8 last:border-b">
+                  <h2 className="text-2xl font-black">{title}</h2>
+                  <p className="mt-2 leading-relaxed text-ink-mut">{body}</p>
+                  <a
+                    href={`mailto:${email}`}
+                    className="mt-3 inline-block font-bold text-verm underline decoration-2 underline-offset-4 hover:text-ink"
+                  >
+                    {email}
+                  </a>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
       </section>
     </>
   );

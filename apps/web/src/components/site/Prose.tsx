@@ -1,10 +1,8 @@
-import { Container } from '@/components/ui/Container';
-
-/** Long-form legal/editorial content with a readable measure and warm rhythm. */
+/** Long-form legal/editorial content with a readable measure (room world). */
 export function Prose({ children }: { children: React.ReactNode }) {
   return (
-    <Container className="py-16">
-      <div className="prose-vv mx-auto max-w-2xl">{children}</div>
-    </Container>
+    <div className="mx-auto w-full max-w-[1400px] px-5 pb-24 sm:px-8">
+      <div className="prose-vv">{children}</div>
+    </div>
   );
 }

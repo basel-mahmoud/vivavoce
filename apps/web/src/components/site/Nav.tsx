@@ -5,70 +5,68 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { site } from '@/lib/site';
 import { Logo } from './Logo';
-import { ThemeToggle } from './ThemeToggle';
-import { ButtonLink } from '@/components/ui/Button';
-import { Container } from '@/components/ui/Container';
 
+/** Simple in-flow bar on the porcelain canvas. Single line, 64px. */
 export function Nav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line/60 bg-bg/80 backdrop-blur-xl">
-      <Container className="flex h-16 items-center justify-between">
-        <Link href="/" aria-label="VivaVoce home" className="rounded-md">
+    <header className="mx-auto w-full max-w-[1360px] px-4 sm:px-6">
+      <div className="flex h-16 items-center justify-between">
+        <Link href="/" aria-label="VivaVoce home" className="pressable text-ink">
           <Logo />
         </Link>
 
-        <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-6 md:flex">
           {site.nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-full px-3.5 py-2 text-sm text-muted transition-colors hover:text-ink hover:bg-surface-2"
+              className="text-sm font-bold text-ink-mut transition-colors duration-150 hover:text-ink"
             >
               {item.label}
             </Link>
           ))}
+          <Link
+            href="/waitlist"
+            className="pressable rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-paper transition-colors duration-150 hover:bg-[#2E2B27]"
+          >
+            Get early access
+          </Link>
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
-          <ThemeToggle />
-          <ButtonLink href="/waitlist" size="sm">
-            Get early access
-          </ButtonLink>
-        </div>
-
-        <div className="flex items-center gap-2 md:hidden">
-          <ThemeToggle />
-          <button
-            type="button"
-            aria-label={open ? 'Close menu' : 'Open menu'}
-            aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
-            className="grid h-10 w-10 place-items-center rounded-full border border-line text-ink"
-          >
-            {open ? <X size={18} /> : <Menu size={18} />}
-          </button>
-        </div>
-      </Container>
+        <button
+          type="button"
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+          className="pressable grid h-11 w-11 cursor-pointer place-items-center text-ink md:hidden"
+        >
+          {open ? <X size={22} /> : <Menu size={22} />}
+        </button>
+      </div>
 
       {open && (
-        <div className="border-t border-line bg-bg md:hidden">
-          <Container className="flex flex-col gap-1 py-4">
+        <div className="tile mb-3 p-5 md:hidden">
+          <div className="flex flex-col">
             {site.nav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 text-base text-ink hover:bg-surface-2"
+                className="py-3 text-lg font-bold text-ink"
               >
                 {item.label}
               </Link>
             ))}
-            <ButtonLink href="/waitlist" className="mt-2" onClick={() => setOpen(false)}>
+            <Link
+              href="/waitlist"
+              onClick={() => setOpen(false)}
+              className="pressable mt-3 rounded-full bg-ink px-5 py-3.5 text-center font-bold text-paper"
+            >
               Get early access
-            </ButtonLink>
-          </Container>
+            </Link>
+          </div>
         </div>
       )}
     </header>

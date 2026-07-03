@@ -11,7 +11,7 @@ export default function AccessibilityPage() {
   return (
     <>
       <PageHero
-        kicker="Accessibility"
+
         title="Built to be used by everyone"
         intro="Accessibility is a first-draft requirement here, not a retrofit. This is where we are and where we’re going."
       />
@@ -33,7 +33,7 @@ export default function AccessibilityPage() {
             confused with the primary action.
           </li>
           <li>
-            All motion honours <strong>prefers-reduced-motion</strong> — including
+            All motion honours <strong>prefers-reduced-motion</strong>: including
             the looping voice waveform, which stops animating.
           </li>
           <li>A skip-to-content link and a logical heading hierarchy on every page.</li>
