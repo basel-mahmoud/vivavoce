@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowUpRight, Lock } from 'lucide-react';
+import { ArrowUpRight, Lock, Smartphone } from 'lucide-react';
 import { DemoTile } from './DemoTile';
 import { RadarTile, StreakTile, TranscriptTile } from './LiveTiles';
 import { WaitlistForm } from '@/components/site/WaitlistForm';
@@ -82,14 +82,23 @@ export function Board() {
               <WaitlistForm />
             </div>
           </div>
-          <Link
-            href="/privacy"
-            className="group mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-ink/80 transition-colors duration-150 hover:text-ink"
-          >
-            <Lock size={14} />
-            Your voice stays yours
-            <ArrowUpRight size={14} className="transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </Link>
+          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2">
+            <a
+              href="/download/apk"
+              className="group inline-flex items-center gap-1.5 text-sm font-bold text-ink transition-colors duration-150 hover:text-paper"
+            >
+              <Smartphone size={14} />
+              Download the Android beta
+              <ArrowUpRight size={14} className="transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </a>
+            <Link
+              href="/privacy"
+              className="group inline-flex items-center gap-1.5 text-sm font-bold text-ink/80 transition-colors duration-150 hover:text-ink"
+            >
+              <Lock size={14} />
+              Your voice stays yours
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -21,7 +21,7 @@ export type SessionState =
   | 'feedback'
   | 'error';
 
-export type SessionError = 'evaluation_failed' | 'no_speech';
+export type SessionError = 'evaluation_failed' | 'no_speech' | 'auth_required';
 
 interface UseSessionArgs {
   sessionId: string;
@@ -102,8 +102,9 @@ export function useSession({
           setState('feedback');
           return;
         }
-        // Audio can't be transcribed on-device, so a backend failure is a retry.
-        setError('evaluation_failed');
+        // Audio can't be transcribed on-device: an anonymous caller needs an
+        // account for server-side marking; anything else is a retry.
+        setError(res.ok === false && res.error.code === 'unauthorized' ? 'auth_required' : 'evaluation_failed');
         setState('error');
         return;
       }

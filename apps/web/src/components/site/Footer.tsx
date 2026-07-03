@@ -7,6 +7,7 @@ const links = [
   { label: 'How it works', href: '/how-it-works' },
   { label: 'Use cases', href: '/use-cases' },
   { label: 'FAQ', href: '/faq' },
+  { label: 'Android beta', href: '/download/apk' },
   { label: 'Contact', href: '/contact' },
   { label: 'Privacy', href: '/privacy' },
   { label: 'Terms', href: '/terms' },

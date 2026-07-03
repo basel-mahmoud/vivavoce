@@ -37,14 +37,22 @@ export default function SessionScreen() {
   const deck = starterDecks.find((d) => d.id === deckId) ?? starterDecks[0]!;
   const questions = deck.questions;
   const [qIndex, setQIndex] = useState(0);
-  const sessionId = useRef(Crypto.randomUUID()).current;
+  // Idempotency key for creating the session; the SERVER id comes back from
+  // startSession and is what answers must be submitted against.
+  const clientSessionKey = useRef(Crypto.randomUUID()).current;
+  const [serverSessionId, setServerSessionId] = useState<string | null>(null);
   const revealed = useRef(false);
 
   const question = questions[qIndex]!;
   const isLast = qIndex >= questions.length - 1;
 
   const { state, elapsedMs, result, error, usedFallback, start, stop, cancel, retry, reset } =
-    useSession({ sessionId, questionPrompt: question, api, online: true });
+    useSession({
+      sessionId: serverSessionId ?? clientSessionKey,
+      questionPrompt: question,
+      api,
+      online: true,
+    });
   const recorder = useRecorder();
 
   // Drive both the recorder and the session state machine together.
@@ -62,14 +70,18 @@ export default function SessionScreen() {
     cancel();
   };
 
-  // Best-effort: register the session server-side when authenticated.
+  // Register the session server-side (idempotent); answers are submitted
+  // against the returned server id. Anonymous callers get 401 and stay local.
   useEffect(() => {
-    if (api) {
-      api
-        .startSession({ mode, deckId: deck.id, clientSessionKey: sessionId })
-        .catch(() => {});
-    }
-  }, [api, mode, deck.id, sessionId]);
+    if (!api) return;
+    api
+      // Starter decks are bundled content, not server rows: no server deck id.
+      .startSession({ mode, deckId: null, clientSessionKey })
+      .then((res) => {
+        if (res.ok) setServerSessionId(res.data.session.id);
+      })
+      .catch(() => {});
+  }, [api, mode, deck.id, clientSessionKey]);
 
   // Haptic on score reveal.
   useEffect(() => {
@@ -194,14 +206,24 @@ export default function SessionScreen() {
               <RefreshCw size={28} color={c.danger} />
             </View>
             <Text variant="title" style={{ textAlign: 'center' }}>
-              {error === 'no_speech' ? 'We didn’t catch that' : 'Something went wrong'}
+              {error === 'no_speech'
+                ? 'We didn’t catch that'
+                : error === 'auth_required'
+                  ? 'Sign in to get marked'
+                  : 'Something went wrong'}
             </Text>
             <Text variant="small" tone="textMuted" style={{ textAlign: 'center', maxWidth: 280 }}>
               {error === 'no_speech'
                 ? 'No speech was detected. Find a quieter spot and try again.'
-                : 'We couldn’t evaluate that answer. Your recording is safe — give it another go.'}
+                : error === 'auth_required'
+                  ? 'Spoken answers are transcribed and marked on our servers, which needs an account. It takes a few seconds with Google.'
+                  : 'We couldn’t evaluate that answer. Your recording is safe. Give it another go.'}
             </Text>
-            <Button label="Try again" onPress={retry} />
+            {error === 'auth_required' ? (
+              <Button label="Sign in" onPress={() => router.push('/(auth)/sign-in')} />
+            ) : (
+              <Button label="Try again" onPress={retry} />
+            )}
           </View>
         )}
       </ScrollView>

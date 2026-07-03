@@ -7,8 +7,10 @@ import {
   Download,
   Trash2,
   LogOut,
+  LogIn,
   User,
 } from 'lucide-react-native';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { Card } from '@/ui/Card';
@@ -16,6 +18,44 @@ import { useTheme } from '@/theme';
 import { useProfile } from '@/data/profile';
 import { isAuthConfigured } from '@/lib/config';
 import { haptics } from '@/lib/haptics';
+
+/** Sign-in entry when signed out; identity + working sign-out when signed in.
+ *  Only rendered when Clerk is configured (hooks need the provider). */
+function AccountRow() {
+  const { c } = useTheme();
+  const { isSignedIn, signOut } = useAuth();
+  const { user } = useUser();
+
+  if (!isSignedIn) {
+    return (
+      <Row
+        icon={<LogIn size={18} color={c.accent} />}
+        label="Sign in"
+        hint="Sync progress and get AI marking"
+        onPress={() => {
+          haptics.tap();
+          router.push('/(auth)/sign-in');
+        }}
+      />
+    );
+  }
+
+  const email = user?.primaryEmailAddress?.emailAddress ?? 'Signed in';
+  return (
+    <Row
+      icon={<LogOut size={18} color={c.textMuted} />}
+      label="Sign out"
+      hint={email}
+      onPress={() => {
+        haptics.tap();
+        Alert.alert('Sign out?', email, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Sign out', style: 'destructive', onPress: () => signOut() },
+        ]);
+      }}
+    />
+  );
+}
 
 function Row({
   icon,
@@ -84,6 +124,7 @@ export default function SettingsScreen() {
         ACCOUNT
       </Text>
       <Card style={{ paddingVertical: space.xs }}>
+        {isAuthConfigured && <AccountRow />}
         <Row icon={<User size={18} color={c.textMuted} />} label="Profile" hint={profile.goal ?? 'Set your goal'} onPress={() => haptics.tap()} />
         <Row icon={<Shield size={18} color={c.textMuted} />} label="Security" hint="Password, sessions, MFA" onPress={() => haptics.tap()} />
         <Row icon={<Bell size={18} color={c.textMuted} />} label="Notifications" hint="Reminders & streaks" onPress={() => haptics.tap()} />
@@ -117,9 +158,6 @@ export default function SettingsScreen() {
       </Text>
       <Card style={{ paddingVertical: space.xs }}>
         <Row icon={<Trash2 size={18} color={c.danger} />} label="Delete account" hint="Right to be forgotten" danger onPress={confirmDelete} />
-        {isAuthConfigured ? (
-          <Row icon={<LogOut size={18} color={c.textMuted} />} label="Sign out" onPress={() => haptics.tap()} />
-        ) : null}
       </Card>
 
       <Text variant="caption" tone="textFaint" style={{ marginTop: space['2xl'], textAlign: 'center' }}>
