@@ -74,3 +74,4 @@ Status legend: ✅ done · 🚧 in progress · ⬜ planned
 | --------- | ----------- | --- |
 | M3 site + API | Vercel **production** | https://vivavoce-kappa.vercel.app |
 | v4 "Practice Room" board + live demo | Vercel **production** (git-triggered) | https://vivavoce-kappa.vercel.app |
+| Android beta APK (EAS build ac945581) | EAS artifact → site `/download/apk` | https://vivavoce-kappa.vercel.app/download/apk |
