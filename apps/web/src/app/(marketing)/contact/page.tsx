@@ -22,7 +22,7 @@ export default function ContactPage() {
         intro="A small team that cares about getting this right. Pick the right inbox and you will hear back quickly."
       />
       <section className="bg-canvas text-ink">
-        <div className="mx-auto w-full max-w-[1400px] px-5 pb-24 sm:px-8">
+        <div className="mx-auto w-full max-w-[1360px] px-4 pt-4 pb-20 sm:px-6">
           <div className="flex max-w-2xl flex-col">
             {channels.map(([title, body, email], i) => (
               <Reveal key={title} delay={Math.min(i * 0.05, 0.15)}>

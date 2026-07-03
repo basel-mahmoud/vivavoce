@@ -23,7 +23,7 @@ export default function WaitlistPage() {
         intro="VivaVoce is in private beta. Leave your email and we will bring you in as spots open."
       />
       <section className="bg-canvas text-ink">
-        <div className="mx-auto grid w-full max-w-[1400px] gap-12 px-5 pb-24 sm:px-8 lg:grid-cols-[1fr_1.2fr] lg:gap-20">
+        <div className="mx-auto grid w-full max-w-[1360px] gap-10 px-4 pt-4 pb-20 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:gap-20">
           <Reveal>
             <ul className="flex flex-col gap-6">
               {perks.map((perk) => (

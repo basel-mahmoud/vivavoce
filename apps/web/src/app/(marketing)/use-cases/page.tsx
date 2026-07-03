@@ -51,48 +51,50 @@ export default function UseCasesPage() {
         intro="Different rooms, one problem: you know the material, but saying it well is its own skill."
       />
 
-      <section className="bg-canvas text-ink">
-        <div className="mx-auto w-full max-w-[1400px] px-5 pb-24 sm:px-8">
-          <div className="grid gap-x-14 gap-y-12 md:grid-cols-2">
-            {cases.map(([title, body], i) => (
-              <Reveal key={title} delay={Math.min(i * 0.05, 0.15)}>
-                <div>
-                  <h2 className="text-2xl font-black">{title}</h2>
-                  <p className="mt-2 max-w-md leading-relaxed text-ink-mut">{body}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+      {/* Who it's for: tiles, aligned to the board grid */}
+      <section className="mx-auto w-full max-w-[1360px] px-4 pb-3 sm:px-6">
+        <div className="grid gap-3 md:grid-cols-2">
+          {cases.map(([title, body], i) => (
+            <Reveal key={title} delay={Math.min(i * 0.05, 0.15)}>
+              <div className="tile tile-lift h-full p-7">
+                <h2 className="text-xl font-black">{title}</h2>
+                <p className="mt-2.5 max-w-xl text-[0.95rem] leading-relaxed text-ink-mut">
+                  {body}
+                </p>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </section>
 
-      <section className="bg-verm text-ink">
-        <div className="mx-auto w-full max-w-[1400px] px-5 py-24 sm:px-8">
-          <Reveal>
-            <h2 className="display max-w-3xl text-[clamp(2rem,4.5vw,3.4rem)]">
+      {/* How a week goes: one ink tile, stories side by side, names on top */}
+      <section className="mx-auto w-full max-w-[1360px] px-4 py-3 sm:px-6">
+        <Reveal>
+          <div className="tile tile-ink p-7 sm:p-10">
+            <h2 className="display max-w-2xl text-[clamp(1.7rem,3.2vw,2.5rem)]">
               How a week of sparring goes.
             </h2>
-          </Reveal>
-          <div className="mt-14 flex flex-col gap-12">
-            {stories.map(([who, body], i) => (
-              <Reveal key={who} delay={Math.min(i * 0.06, 0.18)}>
-                <figure className="max-w-2xl">
-                  <blockquote className="text-lg font-medium leading-relaxed">
+            <div className="mt-10 grid gap-x-10 gap-y-10 md:grid-cols-3">
+              {stories.map(([who, body]) => (
+                <figure key={who}>
+                  <figcaption className="text-base font-black text-verm">{who}</figcaption>
+                  <blockquote className="mt-3 text-[0.95rem] leading-relaxed text-paper-mut">
                     {body}
                   </blockquote>
-                  <figcaption className="mt-3 font-black">{who}</figcaption>
                 </figure>
-              </Reveal>
-            ))}
+              ))}
+            </div>
+            <p className="mt-10 border-t border-line-dark pt-5 text-xs font-semibold text-paper-mut/70">
+              Illustrative scenarios, marked for replacement with real customer
+              stories at launch.
+            </p>
           </div>
-          <p className="mt-12 text-sm font-semibold opacity-60">
-            Illustrative scenarios, marked for replacement with real customer
-            stories at launch.
-          </p>
-        </div>
+        </Reveal>
       </section>
 
-      <WaitlistSection />
+      <div className="pt-3">
+        <WaitlistSection />
+      </div>
     </>
   );
 }

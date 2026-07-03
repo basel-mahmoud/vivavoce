@@ -58,7 +58,7 @@ export default function FaqPage() {
         intro="The things people ask before they trust an app with their voice. If yours is missing, write to us."
       />
       <section className="bg-canvas text-ink">
-        <div className="mx-auto w-full max-w-[1400px] px-5 pb-24 sm:px-8">
+        <div className="mx-auto w-full max-w-[1360px] px-4 pt-4 pb-20 sm:px-6">
           <ul className="max-w-3xl">
             {faqs.map(([q, a]) => (
               <li key={q} className="border-t border-line last:border-b">
