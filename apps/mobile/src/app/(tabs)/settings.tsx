@@ -1,5 +1,6 @@
-import { View, Switch, Pressable, Alert } from 'react-native';
+import { View, Switch, Pressable, Alert, Linking } from 'react-native';
 import { router } from 'expo-router';
+import Constants from 'expo-constants';
 import {
   ChevronRight,
   Shield,
@@ -9,6 +10,10 @@ import {
   LogOut,
   LogIn,
   User,
+  LifeBuoy,
+  Star,
+  FileText,
+  Info,
 } from 'lucide-react-native';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Screen } from '@/ui/Screen';
@@ -151,6 +156,35 @@ export default function SettingsScreen() {
           }
         />
         <Row icon={<Download size={18} color={c.textMuted} />} label="Export my data" hint="Download everything we hold" onPress={() => haptics.tap()} />
+      </Card>
+
+      <Text variant="caption" tone="textFaint" style={{ marginTop: space.xl, marginBottom: space.sm }}>
+        SUPPORT
+      </Text>
+      <Card style={{ paddingVertical: space.xs }}>
+        <Row
+          icon={<LifeBuoy size={18} color={c.textMuted} />}
+          label="Help & support"
+          hint="Guides and contact"
+          onPress={() => Linking.openURL('https://vivavoce-kappa.vercel.app/contact')}
+        />
+        <Row
+          icon={<Star size={18} color={c.textMuted} />}
+          label="Rate VivaVoce"
+          hint="Tell us how it’s going"
+          onPress={() => haptics.tap()}
+        />
+        <Row
+          icon={<FileText size={18} color={c.textMuted} />}
+          label="Privacy & terms"
+          onPress={() => Linking.openURL('https://vivavoce-kappa.vercel.app/privacy')}
+        />
+        <Row
+          icon={<Info size={18} color={c.textMuted} />}
+          label="About"
+          hint={`Version ${Constants.expoConfig?.version ?? '1.0.0'}`}
+          onPress={() => haptics.tap()}
+        />
       </Card>
 
       <Text variant="caption" tone="textFaint" style={{ marginTop: space.xl, marginBottom: space.sm }}>

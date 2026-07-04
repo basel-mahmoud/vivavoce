@@ -36,6 +36,7 @@ function RootStack() {
       <Stack.Screen name="index" />
       <Stack.Screen name="(onboarding)" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="deck/[id]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="session/[id]" options={{ presentation: 'fullScreenModal' }} />
       <Stack.Screen name="(auth)/sign-in" options={{ presentation: 'modal' }} />
     </Stack>
