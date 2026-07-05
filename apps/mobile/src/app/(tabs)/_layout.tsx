@@ -1,9 +1,15 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { Home, Mic, TrendingUp, Library, Settings } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useProfile } from '@/data/profile';
 
 export default function TabsLayout() {
   const { c } = useTheme();
+  const { signedIn, ready } = useProfile();
+
+  // Gate: the tabs are account-only. Signed-out users are bounced to auth.
+  if (ready && signedIn === false) return <Redirect href="/(auth)/sign-in" />;
+
   return (
     <Tabs
       screenOptions={{

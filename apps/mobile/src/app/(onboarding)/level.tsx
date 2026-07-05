@@ -17,13 +17,13 @@ export default function LevelStep() {
 
   return (
     <OnboardingScaffold
-      step={2}
-      total={4}
+      step={4}
+      total={5}
       title="How do you feel speaking out loud?"
       subtitle="This sets your starting difficulty — it adapts as you go."
       onNext={() => {
         update({ level });
-        router.push('/(onboarding)/subjects');
+        router.push('/(onboarding)/consent');
       }}
     >
       {LEVELS.map((l) => (

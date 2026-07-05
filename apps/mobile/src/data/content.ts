@@ -124,6 +124,212 @@ export function subjectByKey(key: string): Subject | undefined {
   return subjects.find((s) => s.key === key);
 }
 
+/* ── Study levels ─────────────────────────────────────────────────────────── */
+
+export type StudyLevelKey = 'school' | 'undergrad' | 'postgrad' | 'professional';
+
+export const studyLevels: { key: StudyLevelKey; label: string; description: string }[] = [
+  { key: 'school', label: 'School / High school', description: 'GCSEs, A-levels, IB, or equivalent.' },
+  { key: 'undergrad', label: 'Undergraduate', description: 'Bachelor’s degree or diploma.' },
+  { key: 'postgrad', label: 'Postgraduate', description: 'Master’s, PhD, or professional doctorate.' },
+  { key: 'professional', label: 'Professional / Career', description: 'Job interviews, board exams, or work.' },
+];
+
+/* ── Exam formats ─────────────────────────────────────────────────────────── */
+
+export type ExamFormatKey =
+  | 'oral_exam'
+  | 'written_exam'
+  | 'viva'
+  | 'interview'
+  | 'presentation'
+  | 'language';
+
+export interface ExamFormat {
+  key: ExamFormatKey;
+  name: string;
+  line: string;
+  icon: 'mic' | 'layers' | 'graduation' | 'zap' | 'timer' | 'repeat';
+  /** Practice mode this format maps onto for a session. */
+  mode: ModeKey;
+  /** Backend goal enum this format contributes to. */
+  goal: 'viva' | 'interview' | 'language' | 'presentation' | 'oral_exam';
+}
+
+export const examFormats: ExamFormat[] = [
+  {
+    key: 'oral_exam',
+    name: 'Oral exam',
+    line: 'Answer examiner questions out loud, on the spot.',
+    icon: 'mic',
+    mode: 'quick',
+    goal: 'oral_exam',
+  },
+  {
+    key: 'viva',
+    name: 'Viva / thesis defence',
+    line: 'Defend your work under chained follow-up questions.',
+    icon: 'layers',
+    mode: 'mock_viva',
+    goal: 'viva',
+  },
+  {
+    key: 'written_exam',
+    name: 'Written exam prep',
+    line: 'Rehearse recall and structure by explaining aloud.',
+    icon: 'repeat',
+    mode: 'flash_recall',
+    goal: 'oral_exam',
+  },
+  {
+    key: 'interview',
+    name: 'Interview',
+    line: 'Behavioural, technical, or admissions questions.',
+    icon: 'zap',
+    mode: 'interview',
+    goal: 'interview',
+  },
+  {
+    key: 'presentation',
+    name: 'Presentation / defence',
+    line: 'Open strong, handle Q&A, and land the point.',
+    icon: 'graduation',
+    mode: 'explain',
+    goal: 'presentation',
+  },
+  {
+    key: 'language',
+    name: 'Language / fluency',
+    line: 'Speak on topics and get marked on clarity and pace.',
+    icon: 'timer',
+    mode: 'rapid_fire',
+    goal: 'language',
+  },
+];
+
+export function formatByKey(key: string): ExamFormat | undefined {
+  return examFormats.find((f) => f.key === key);
+}
+
+/** The backend goal derived from the user's chosen formats (first wins). */
+export function goalFromFormats(keys: string[]): ExamFormat['goal'] {
+  for (const k of keys) {
+    const f = formatByKey(k);
+    if (f) return f.goal;
+  }
+  return 'oral_exam';
+}
+
+/* ── Fields of study (the "major" catalogue) ──────────────────────────────── */
+
+export interface FieldArea {
+  key: string;
+  name: string;
+}
+
+export interface Field {
+  key: string;
+  name: string;
+  area: string; // FieldArea.key
+  /** Practice subjects most relevant to this field (drives calibration). */
+  subjectKeys: string[];
+}
+
+export const fieldAreas: FieldArea[] = [
+  { key: 'health', name: 'Health & Medicine' },
+  { key: 'eng-tech', name: 'Engineering & Technology' },
+  { key: 'natural', name: 'Natural Sciences' },
+  { key: 'social', name: 'Social Sciences' },
+  { key: 'business', name: 'Business & Economics' },
+  { key: 'law-policy', name: 'Law & Policy' },
+  { key: 'humanities', name: 'Humanities & Arts' },
+  { key: 'language', name: 'Languages & Communication' },
+];
+
+export const fields: Field[] = [
+  // Health & Medicine
+  { key: 'medicine', name: 'Medicine (MBBS / MD)', area: 'health', subjectKeys: ['medicine', 'science'] },
+  { key: 'nursing', name: 'Nursing', area: 'health', subjectKeys: ['medicine', 'speaking'] },
+  { key: 'dentistry', name: 'Dentistry', area: 'health', subjectKeys: ['medicine', 'science'] },
+  { key: 'pharmacy', name: 'Pharmacy', area: 'health', subjectKeys: ['medicine', 'science'] },
+  { key: 'veterinary', name: 'Veterinary Science', area: 'health', subjectKeys: ['medicine', 'science'] },
+  { key: 'public-health', name: 'Public Health', area: 'health', subjectKeys: ['science', 'speaking'] },
+  { key: 'physiotherapy', name: 'Physiotherapy', area: 'health', subjectKeys: ['medicine', 'speaking'] },
+  // Engineering & Technology
+  { key: 'cs', name: 'Computer Science', area: 'eng-tech', subjectKeys: ['cs-interview', 'science'] },
+  { key: 'software-eng', name: 'Software Engineering', area: 'eng-tech', subjectKeys: ['cs-interview'] },
+  { key: 'data-science', name: 'Data Science & AI', area: 'eng-tech', subjectKeys: ['cs-interview', 'science'] },
+  { key: 'mech-eng', name: 'Mechanical Engineering', area: 'eng-tech', subjectKeys: ['engineering'] },
+  { key: 'elec-eng', name: 'Electrical Engineering', area: 'eng-tech', subjectKeys: ['engineering', 'science'] },
+  { key: 'civil-eng', name: 'Civil Engineering', area: 'eng-tech', subjectKeys: ['engineering'] },
+  { key: 'chem-eng', name: 'Chemical Engineering', area: 'eng-tech', subjectKeys: ['engineering', 'science'] },
+  { key: 'aero-eng', name: 'Aerospace Engineering', area: 'eng-tech', subjectKeys: ['engineering', 'science'] },
+  { key: 'architecture', name: 'Architecture', area: 'eng-tech', subjectKeys: ['engineering', 'speaking'] },
+  // Natural Sciences
+  { key: 'biology', name: 'Biology', area: 'natural', subjectKeys: ['science', 'medicine'] },
+  { key: 'chemistry', name: 'Chemistry', area: 'natural', subjectKeys: ['science'] },
+  { key: 'physics', name: 'Physics', area: 'natural', subjectKeys: ['science', 'engineering'] },
+  { key: 'mathematics', name: 'Mathematics', area: 'natural', subjectKeys: ['science', 'cs-interview'] },
+  { key: 'environmental', name: 'Environmental Science', area: 'natural', subjectKeys: ['science', 'speaking'] },
+  { key: 'neuroscience', name: 'Neuroscience', area: 'natural', subjectKeys: ['science', 'medicine'] },
+  // Social Sciences
+  { key: 'psychology', name: 'Psychology', area: 'social', subjectKeys: ['science', 'speaking'] },
+  { key: 'sociology', name: 'Sociology', area: 'social', subjectKeys: ['speaking', 'science'] },
+  { key: 'political-science', name: 'Political Science', area: 'social', subjectKeys: ['law', 'speaking'] },
+  { key: 'intl-relations', name: 'International Relations', area: 'social', subjectKeys: ['law', 'speaking'] },
+  { key: 'education', name: 'Education', area: 'social', subjectKeys: ['speaking', 'science'] },
+  { key: 'anthropology', name: 'Anthropology', area: 'social', subjectKeys: ['science', 'speaking'] },
+  // Business & Economics
+  { key: 'business', name: 'Business Administration', area: 'business', subjectKeys: ['business', 'speaking'] },
+  { key: 'mba', name: 'MBA', area: 'business', subjectKeys: ['business', 'speaking'] },
+  { key: 'finance', name: 'Finance', area: 'business', subjectKeys: ['business', 'science'] },
+  { key: 'accounting', name: 'Accounting', area: 'business', subjectKeys: ['business'] },
+  { key: 'economics', name: 'Economics', area: 'business', subjectKeys: ['business', 'science'] },
+  { key: 'marketing', name: 'Marketing', area: 'business', subjectKeys: ['business', 'speaking'] },
+  { key: 'management', name: 'Management', area: 'business', subjectKeys: ['business', 'speaking'] },
+  // Law & Policy
+  { key: 'law', name: 'Law (LLB / JD)', area: 'law-policy', subjectKeys: ['law', 'speaking'] },
+  { key: 'criminology', name: 'Criminology', area: 'law-policy', subjectKeys: ['law', 'science'] },
+  { key: 'public-policy', name: 'Public Policy', area: 'law-policy', subjectKeys: ['law', 'business'] },
+  // Humanities & Arts
+  { key: 'history', name: 'History', area: 'humanities', subjectKeys: ['speaking', 'science'] },
+  { key: 'philosophy', name: 'Philosophy', area: 'humanities', subjectKeys: ['speaking', 'law'] },
+  { key: 'literature', name: 'English / Literature', area: 'humanities', subjectKeys: ['speaking', 'language'] },
+  { key: 'fine-arts', name: 'Fine Arts & Design', area: 'humanities', subjectKeys: ['speaking'] },
+  { key: 'music', name: 'Music', area: 'humanities', subjectKeys: ['speaking'] },
+  { key: 'theology', name: 'Theology & Religion', area: 'humanities', subjectKeys: ['speaking', 'law'] },
+  // Languages & Communication
+  { key: 'linguistics', name: 'Linguistics', area: 'language', subjectKeys: ['language', 'speaking'] },
+  { key: 'modern-languages', name: 'Modern Languages', area: 'language', subjectKeys: ['language', 'speaking'] },
+  { key: 'journalism', name: 'Journalism & Media', area: 'language', subjectKeys: ['speaking', 'language'] },
+  { key: 'communications', name: 'Communications', area: 'language', subjectKeys: ['speaking', 'language'] },
+  { key: 'translation', name: 'Translation & Interpreting', area: 'language', subjectKeys: ['language', 'speaking'] },
+  { key: 'other', name: 'Something else', area: 'language', subjectKeys: ['speaking', 'language'] },
+];
+
+export function fieldByKey(key: string): Field | undefined {
+  return fields.find((f) => f.key === key);
+}
+
+/** Fields grouped by area, for a sectioned picker. */
+export function fieldsGrouped(): { area: FieldArea; fields: Field[] }[] {
+  return fieldAreas
+    .map((area) => ({ area, fields: fields.filter((f) => f.area === area.key) }))
+    .filter((g) => g.fields.length > 0);
+}
+
+/** Subjects to suggest for a chosen field, most relevant first, then the rest. */
+export function subjectsForField(fieldKey: string | null): Subject[] {
+  const field = fieldKey ? fieldByKey(fieldKey) : undefined;
+  if (!field) return subjects;
+  const priority = new Set(field.subjectKeys);
+  return [...subjects].sort((a, b) => {
+    const pa = priority.has(a.key) ? 0 : 1;
+    const pb = priority.has(b.key) ? 0 : 1;
+    return pa - pb;
+  });
+}
+
 /* ── Decks ────────────────────────────────────────────────────────────────── */
 
 export type Difficulty = 'intro' | 'intermediate' | 'advanced' | 'expert';
@@ -431,6 +637,18 @@ export function decksBySubject(subjectKey: string): Deck[] {
   return starterDecks.filter((d) => d.subjectKey === subjectKey);
 }
 export const featuredDecks = starterDecks.filter((d) => d.featured);
+
+/**
+ * Decks calibrated to a user's chosen subjects: their subjects' decks first
+ * (featured within), then the rest, so recommendations reflect onboarding.
+ */
+export function decksForSubjects(subjectKeys: string[]): Deck[] {
+  if (!subjectKeys.length) return featuredDecks;
+  const want = new Set(subjectKeys);
+  const matched = starterDecks.filter((d) => want.has(d.subjectKey));
+  const pool = matched.length ? matched : starterDecks;
+  return [...pool].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
+}
 
 export function estMinutes(deck: Deck, mode: ModeKey = 'mock_viva'): number {
   return Math.max(2, Math.round(deck.questions.length * modeByKey(mode).minutesPerQ));

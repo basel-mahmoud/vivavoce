@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, View, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
@@ -14,12 +14,15 @@ import {
   Archivo_900Black,
 } from '@expo-google-fonts/archivo';
 import { JetBrainsMono_500Medium } from '@expo-google-fonts/jetbrains-mono';
+import { useMemo } from 'react';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import { colors } from '@/theme';
 import { config, isAuthConfigured } from '@/lib/config';
 import { tokenCache } from '@/lib/token-cache';
 import { ProfileProvider } from '@/data/profile';
+import { StatsProvider } from '@/data/stats';
 import { ApiProvider } from '@/data/api-context';
+import { createApi } from '@/lib/api';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -34,32 +37,73 @@ function RootStack() {
       }}
     >
       <Stack.Screen name="index" />
+      <Stack.Screen name="(auth)" />
       <Stack.Screen name="(onboarding)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="deck/[id]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="session/[id]" options={{ presentation: 'fullScreenModal' }} />
-      <Stack.Screen name="(auth)/sign-in" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
 
-/** Bridges Clerk's session token into the API context (Clerk only). */
-function ClerkApiBridge({ children }: { children: React.ReactNode }) {
-  const { getToken } = useAuth();
-  return <ApiProvider getToken={() => getToken()}>{children}</ApiProvider>;
+/**
+ * Bridges Clerk into the app: the API client gets the session token, and the
+ * profile/stats providers get the signed-in state so they know whether the
+ * server is the source of truth. `signedIn` is null until Clerk has loaded, so
+ * the gate can hold on a splash rather than flashing the sign-in screen.
+ */
+function Splash() {
+  const scheme = useColorScheme() === 'light' ? 'light' : 'dark';
+  const c = colors[scheme];
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.bg }}>
+      <ActivityIndicator color={c.accent} />
+    </View>
+  );
+}
+
+function ClerkBridge({ children }: { children: React.ReactNode }) {
+  const { getToken, isSignedIn, isLoaded } = useAuth();
+  const api = useMemo(() => createApi(() => getToken()), [getToken]);
+  // Hold on a splash until Clerk resolves, so `signedIn` handed to the profile
+  // provider is always a real boolean — never a transient null that would be
+  // mistaken for demo mode and briefly bypass the auth gate.
+  if (!isLoaded) return <Splash />;
+  const signedIn = Boolean(isSignedIn);
+  return (
+    <ApiProvider getToken={() => getToken()}>
+      <ProfileProvider api={api} signedIn={signedIn}>
+        <StatsProvider api={api} enabled={signedIn}>
+          {children}
+        </StatsProvider>
+      </ProfileProvider>
+    </ApiProvider>
+  );
+}
+
+/** Demo mode (no Clerk key): local-only profile, no server sync, token-less API. */
+function DemoBridge({ children }: { children: React.ReactNode }) {
+  const api = useMemo(() => createApi(async () => null), []);
+  return (
+    <ApiProvider getToken={async () => null}>
+      <ProfileProvider api={api} signedIn={null}>
+        <StatsProvider api={api} enabled={false}>
+          {children}
+        </StatsProvider>
+      </ProfileProvider>
+    </ApiProvider>
+  );
 }
 
 function Providers({ children }: { children: React.ReactNode }) {
   if (isAuthConfigured) {
     return (
       <ClerkProvider publishableKey={config.clerkPublishableKey} tokenCache={tokenCache}>
-        <ClerkApiBridge>{children}</ClerkApiBridge>
+        <ClerkBridge>{children}</ClerkBridge>
       </ClerkProvider>
     );
   }
-  // Demo mode: no auth provider; API calls run token-less (backend returns 401,
-  // and the app falls back to on-device evaluation).
-  return <ApiProvider getToken={async () => null}>{children}</ApiProvider>;
+  return <DemoBridge>{children}</DemoBridge>;
 }
 
 export default function RootLayout() {
@@ -82,10 +126,8 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <Providers>
-          <ProfileProvider>
-            <RootStack />
-            <StatusBar style="auto" />
-          </ProfileProvider>
+          <RootStack />
+          <StatusBar style="auto" />
         </Providers>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -21,6 +21,7 @@ import { Text } from '@/ui/Text';
 import { Card } from '@/ui/Card';
 import { useTheme } from '@/theme';
 import { useProfile } from '@/data/profile';
+import { fieldByKey } from '@/data/content';
 import { isAuthConfigured } from '@/lib/config';
 import { haptics } from '@/lib/haptics';
 
@@ -115,7 +116,7 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: () => {
             reset();
-            router.replace('/(onboarding)/goal');
+            router.replace('/');
           },
         },
       ],
@@ -130,7 +131,19 @@ export default function SettingsScreen() {
       </Text>
       <Card style={{ paddingVertical: space.xs }}>
         {isAuthConfigured && <AccountRow />}
-        <Row icon={<User size={18} color={c.textMuted} />} label="Profile" hint={profile.goal ?? 'Set your goal'} onPress={() => haptics.tap()} />
+        <Row
+          icon={<User size={18} color={c.textMuted} />}
+          label="Profile"
+          hint={
+            profile.fieldOfStudy
+              ? fieldByKey(profile.fieldOfStudy)?.name ?? 'Your field'
+              : 'Set up your profile'
+          }
+          onPress={() => {
+            haptics.tap();
+            router.push('/(onboarding)/field');
+          }}
+        />
         <Row icon={<Shield size={18} color={c.textMuted} />} label="Security" hint="Password, sessions, MFA" onPress={() => haptics.tap()} />
         <Row icon={<Bell size={18} color={c.textMuted} />} label="Notifications" hint="Reminders & streaks" onPress={() => haptics.tap()} />
       </Card>

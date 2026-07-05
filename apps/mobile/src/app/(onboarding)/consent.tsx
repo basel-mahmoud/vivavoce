@@ -15,8 +15,8 @@ export default function ConsentStep() {
 
   return (
     <OnboardingScaffold
-      step={4}
-      total={4}
+      step={5}
+      total={5}
       title="Your voice, your call"
       subtitle="Practising out loud means we process your speech. Here’s exactly what for — you’re in control, and you can change this any time in Settings."
       nextLabel="Start practising"

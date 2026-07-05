@@ -1,13 +1,15 @@
+import { useCallback, useMemo } from 'react';
 import { View, Pressable, ScrollView } from 'react-native';
-import { router } from 'expo-router';
-import { Flame, Mic, Target, Lightbulb, CalendarClock, ArrowRight } from 'lucide-react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { Flame, Mic, Target, Lightbulb, Sparkles, ArrowRight } from 'lucide-react-native';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { SectionHeader, StatTile, ProgressRing } from '@/ui/kit';
 import { DeckCard } from '@/components/DeckCard';
 import { useTheme } from '@/theme';
-import { featuredDecks, tipOfTheDay, rubricAxes, deckById } from '@/data/content';
-import { stats, weeklyProgress } from '@/data/stats';
+import { tipOfTheDay, rubricAxes, decksForSubjects } from '@/data/content';
+import { useStats, weeklyProgress } from '@/data/stats';
+import { useProfile } from '@/data/profile';
 import { haptics } from '@/lib/haptics';
 
 function greeting() {
@@ -19,8 +21,28 @@ function greeting() {
 
 export default function Home() {
   const { c, space, radius } = useTheme();
+  const { profile } = useProfile();
+  const { stats, refresh } = useStats();
   const tip = tipOfTheDay();
-  const resume = deckById(stats.recent[0]!.deckId) ?? featuredDecks[0]!;
+
+  // Keep the dashboard honest: re-pull stats whenever the tab regains focus
+  // (e.g. right after finishing a session), so the streak reflects reality.
+  useFocusEffect(
+    useCallback(() => {
+      void refresh();
+    }, [refresh]),
+  );
+
+  const recommended = useMemo(() => decksForSubjects(profile.subjects), [profile.subjects]);
+  const resume = recommended[0]!;
+  const weekPct = weeklyProgress(stats.minutesThisWeek);
+
+  const weakest = useMemo(() => {
+    if (!stats.hasData) return null;
+    return (
+      Object.entries(stats.axisAverages).sort((a, b) => a[1] - b[1])[0]?.[0] ?? 'structure'
+    );
+  }, [stats]);
 
   const startQuick = () => {
     haptics.press();
@@ -30,17 +52,17 @@ export default function Home() {
   return (
     <Screen>
       <Text variant="small" tone="textMuted">
-        {greeting()}
+        {greeting()}{profile.displayName ? `, ${profile.displayName}` : ''}
       </Text>
       <Text variant="display" style={{ marginTop: 2 }}>
-        Let’s sharpen up
+        {stats.hasData ? 'Let’s sharpen up' : 'Ready when you are'}
       </Text>
 
       {/* stat row: streak, minutes, weekly goal ring */}
       <View style={{ flexDirection: 'row', gap: space.md, marginTop: space.xl }}>
         <StatTile
           label="Streak"
-          value={`${stats.streakDays}d`}
+          value={`${stats.streak.current}d`}
           icon={<Flame size={14} color={c.accent} />}
         />
         <StatTile label="This week" value={`${stats.minutesThisWeek}m`} />
@@ -56,40 +78,13 @@ export default function Home() {
           }}
         >
           <ProgressRing
-            progress={weeklyProgress()}
+            progress={weekPct}
             size={64}
             stroke={7}
-            label={`${Math.round(weeklyProgress() * 100)}%`}
+            label={`${Math.round(weekPct * 100)}%`}
           />
         </View>
       </View>
-
-      {/* exam countdown */}
-      <Pressable
-        onPress={() => router.push('/(tabs)/progress')}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: space.md,
-          marginTop: space.md,
-          padding: space.lg,
-          borderRadius: radius.lg,
-          backgroundColor: c.gravitas,
-        }}
-      >
-        <CalendarClock size={20} color="#FBFAF8" />
-        <View style={{ flex: 1 }}>
-          <Text variant="bodyMedium" style={{ color: '#FBFAF8' }}>
-            {stats.examName}
-          </Text>
-          <Text variant="small" style={{ color: '#FBFAF8', opacity: 0.8 }}>
-            {stats.examInDays} days away · keep the streak
-          </Text>
-        </View>
-        <Text variant="display2" style={{ color: '#FBFAF8' }}>
-          {stats.examInDays}
-        </Text>
-      </Pressable>
 
       {/* resume / quick start */}
       <Pressable onPress={startQuick} accessibilityRole="button">
@@ -105,7 +100,7 @@ export default function Home() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
             <Mic size={16} color={c.onAccent} />
             <Text variant="caption" style={{ color: c.onAccent }}>
-              PICK UP WHERE YOU LEFT OFF
+              {stats.hasData ? 'PICK UP WHERE YOU LEFT OFF' : 'START YOUR FIRST SESSION'}
             </Text>
           </View>
           <Text variant="title" style={{ color: c.onAccent, marginTop: space.sm }}>
@@ -113,14 +108,14 @@ export default function Home() {
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs, marginTop: space.md }}>
             <Text variant="bodyMedium" style={{ color: c.onAccent }}>
-              Continue
+              {stats.hasData ? 'Continue' : 'Begin'}
             </Text>
             <ArrowRight size={16} color={c.onAccent} />
           </View>
         </View>
       </Pressable>
 
-      {/* focus areas */}
+      {/* focus areas — only real once there's data */}
       <SectionHeader
         title="Focus areas"
         action="Progress"
@@ -136,32 +131,44 @@ export default function Home() {
           padding: space.lg,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-          <Target size={16} color={c.accent} />
-          <Text variant="bodyMedium">Your weakest axis is {stats.weakestAxis}</Text>
-        </View>
-        <View style={{ marginTop: space.md, gap: space.md }}>
-          {rubricAxes.map((a) => {
-            const v = stats.axisAverages[a.key] ?? 0;
-            const band = v >= 80 ? c.success : v >= 65 ? c.accent : c.gravitas;
-            return (
-              <View key={a.key} style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
-                <Text variant="small" style={{ width: 92 }}>
-                  {a.label}
-                </Text>
-                <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden' }}>
-                  <View style={{ height: '100%', width: `${v}%`, backgroundColor: band, borderRadius: 3 }} />
-                </View>
-                <Text variant="mono" tone="textMuted" style={{ width: 26, textAlign: 'right', fontSize: 12 }}>
-                  {v}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
+        {stats.hasData && weakest ? (
+          <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+              <Target size={16} color={c.accent} />
+              <Text variant="bodyMedium">Your weakest axis is {weakest}</Text>
+            </View>
+            <View style={{ marginTop: space.md, gap: space.md }}>
+              {rubricAxes.map((a) => {
+                const v = stats.axisAverages[a.key] ?? 0;
+                const band = v >= 80 ? c.success : v >= 65 ? c.accent : c.gravitas;
+                return (
+                  <View key={a.key} style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+                    <Text variant="small" style={{ width: 92 }}>
+                      {a.label}
+                    </Text>
+                    <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden' }}>
+                      <View style={{ height: '100%', width: `${v}%`, backgroundColor: band, borderRadius: 3 }} />
+                    </View>
+                    <Text variant="mono" tone="textMuted" style={{ width: 26, textAlign: 'right', fontSize: 12 }}>
+                      {v}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </>
+        ) : (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+            <Sparkles size={18} color={c.accent} />
+            <Text variant="small" tone="textMuted" style={{ flex: 1 }}>
+              Answer a few questions out loud and your five-axis breakdown — clarity,
+              structure, confidence and more — shows up here.
+            </Text>
+          </View>
+        )}
       </View>
 
-      {/* recommended decks */}
+      {/* recommended decks — calibrated to the user's subjects */}
       <SectionHeader
         title="Recommended for you"
         action="Library"
@@ -174,7 +181,7 @@ export default function Home() {
         contentContainerStyle={{ gap: space.md, paddingRight: space.xl }}
         style={{ marginHorizontal: -space.xl, paddingHorizontal: space.xl }}
       >
-        {featuredDecks.map((d) => (
+        {recommended.slice(0, 6).map((d) => (
           <DeckCard key={d.id} deck={d} compact />
         ))}
       </ScrollView>

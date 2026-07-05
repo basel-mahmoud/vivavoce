@@ -33,6 +33,54 @@ export interface SessionRecord {
   startedAt: string;
 }
 
+/** Server-side profile (mirrors GET/PATCH /api/v1/me). */
+export interface MeProfile {
+  id: string;
+  email: string;
+  displayName: string | null;
+  goal: string | null;
+  level: string;
+  fieldOfStudy: string | null;
+  studyLevel: string | null;
+  examFormats: string[];
+  subjectKeys: string[];
+  timezone: string;
+  onboarded: boolean;
+}
+
+export interface ProfilePatch {
+  displayName?: string;
+  goal?: string | null;
+  level?: string;
+  fieldOfStudy?: string | null;
+  studyLevel?: string | null;
+  examFormats?: string[];
+  subjectKeys?: string[];
+  timezone?: string;
+  onboarded?: boolean;
+}
+
+/** Real per-user progress (mirrors GET /api/v1/me/stats). */
+export interface UserStats {
+  streak: { current: number; longest: number };
+  overall: number;
+  overallDelta: number;
+  sessionsTotal: number;
+  answersTotal: number;
+  minutesThisWeek: number;
+  axisAverages: Record<string, number>;
+  confidenceTrend: number[];
+  recent: {
+    id: string;
+    deckTitle: string;
+    mode: string;
+    overall: number;
+    weakest: string;
+    when: string;
+  }[];
+  hasData: boolean;
+}
+
 type GetToken = () => Promise<string | null>;
 
 /**
@@ -106,6 +154,16 @@ export function createApi(getToken: GetToken) {
       }),
 
     recentSessions: () => request<{ sessions: SessionRecord[] }>('/api/v1/sessions'),
+
+    getMe: () => request<{ user: MeProfile }>('/api/v1/me'),
+
+    updateMe: (patch: ProfilePatch) =>
+      request<{ user: MeProfile }>('/api/v1/me', {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+      }),
+
+    getStats: () => request<{ stats: UserStats }>('/api/v1/me/stats'),
   };
 }
 
