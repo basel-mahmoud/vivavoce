@@ -30,7 +30,9 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=()' },
+  // Microphone is allowed on our own origin (the live demo's Speak feature and
+  // future voice capture use it); camera and geolocation stay fully disabled.
+  { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=(self)' },
   {
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains; preload',

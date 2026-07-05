@@ -11,7 +11,7 @@ interface SpeechRecognitionLike {
   interimResults: boolean;
   onresult: ((e: SpeechRecognitionEventLike) => void) | null;
   onend: (() => void) | null;
-  onerror: (() => void) | null;
+  onerror: ((e: { error?: string }) => void) | null;
   start(): void;
   stop(): void;
 }
@@ -99,13 +99,26 @@ export function DemoTile() {
       setAnswer((finalRef.current + interim).trimStart());
     };
     rec.onend = () => setPhase((p) => (p === 'listening' ? 'idle' : p));
-    rec.onerror = () => {
+    rec.onerror = (e) => {
       setPhase('idle');
-      setError('The microphone did not cooperate. Type your answer instead.');
+      const reason = e?.error;
+      if (reason === 'not-allowed' || reason === 'service-not-allowed') {
+        setError('Microphone access is blocked. Allow it in your browser, or just type your answer below.');
+      } else if (reason === 'no-speech') {
+        setError('We did not hear anything. Try again, or type your answer.');
+      } else if (reason === 'audio-capture') {
+        setError('No microphone found. Type your answer below instead.');
+      } else {
+        setError('Speech input is not available here. Type your answer below and mark it.');
+      }
     };
-    recRef.current = rec;
-    rec.start();
-    setPhase('listening');
+    try {
+      rec.start();
+      setPhase('listening');
+    } catch {
+      setPhase('idle');
+      setError('Could not start the microphone. Type your answer below instead.');
+    }
   }, [answer]);
 
   useEffect(() => () => recRef.current?.stop(), []);
