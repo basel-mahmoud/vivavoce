@@ -22,5 +22,13 @@ const sql = neon(connectionString);
 
 export const db = drizzle(sql, { schema });
 
+/**
+ * Raw Neon tagged-template client for hand-written aggregation SQL. Interpolated
+ * `${values}` are parameterized by the driver (no string concatenation), so it
+ * is safe from injection. Use only for read-only analytics; all mutations go
+ * through Drizzle. Returns an array of row objects.
+ */
+export const sqlClient = sql;
+
 export type DB = typeof db;
 export { schema };

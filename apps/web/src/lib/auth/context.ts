@@ -15,6 +15,7 @@ export interface AuthContext {
   tenantId: string;
   email: string;
   role: 'learner' | 'coach' | 'org_admin';
+  timezone: string;
 }
 
 const clerkConfigured = Boolean(process.env.CLERK_SECRET_KEY);
@@ -44,6 +45,7 @@ export async function getAuthContext(): Promise<AuthContext | null> {
       tenantId: existing.primaryTenantId,
       email: existing.email,
       role: membership?.role ?? 'learner',
+      timezone: existing.timezone ?? 'UTC',
     };
   }
 
@@ -78,5 +80,5 @@ export async function getAuthContext(): Promise<AuthContext | null> {
     .values({ tenantId: tenant!.id, userId, role: 'learner' })
     .onConflictDoNothing();
 
-  return { userId, clerkUserId, tenantId: tenant!.id, email, role: 'learner' };
+  return { userId, clerkUserId, tenantId: tenant!.id, email, role: 'learner', timezone: 'UTC' };
 }

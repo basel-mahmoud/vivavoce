@@ -122,6 +122,11 @@ export const users = pgTable(
     }),
     goal: goalEnum('goal'),
     level: difficultyEnum('level').default('intermediate'),
+    // Profile calibration captured at onboarding.
+    fieldOfStudy: text('field_of_study'),
+    studyLevel: text('study_level'), // school | undergrad | postgrad | professional
+    examFormats: jsonb('exam_formats').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    subjectKeys: jsonb('subject_keys').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
     locale: text('locale').notNull().default('en'),
     onboardedAt: timestamp('onboarded_at', { withTimezone: true }),
     timezone: text('timezone').notNull().default('UTC'),

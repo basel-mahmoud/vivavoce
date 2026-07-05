@@ -19,6 +19,32 @@ export const waitlistInput = z.object({
 });
 export type WaitlistInput = z.infer<typeof waitlistInput>;
 
+/* ── Profile ──────────────────────────────────────────────────────────────── */
+export const examFormat = z.enum([
+  'oral_exam',
+  'written_exam',
+  'viva',
+  'interview',
+  'presentation',
+  'language',
+]);
+
+export const updateProfileInput = z.object({
+  displayName: z.string().trim().min(1).max(80).optional(),
+  goal: z
+    .enum(['viva', 'interview', 'language', 'presentation', 'oral_exam'])
+    .nullable()
+    .optional(),
+  level: z.enum(['intro', 'intermediate', 'advanced', 'expert']).optional(),
+  fieldOfStudy: z.string().trim().min(1).max(80).nullable().optional(),
+  studyLevel: z.enum(['school', 'undergrad', 'postgrad', 'professional']).nullable().optional(),
+  examFormats: z.array(examFormat).max(6).optional(),
+  subjectKeys: z.array(z.string().trim().min(1).max(60)).max(24).optional(),
+  timezone: z.string().max(64).optional(),
+  onboarded: z.boolean().optional(),
+});
+export type UpdateProfileInput = z.infer<typeof updateProfileInput>;
+
 /* ── Sessions ─────────────────────────────────────────────────────────────── */
 export const sessionMode = z.enum([
   'quick',
