@@ -38,3 +38,12 @@ export const generatedQuestionSchema = z.object({
 });
 
 export type GeneratedQuestion = z.infer<typeof generatedQuestionSchema>;
+
+export const generatedDeckSchema = z.object({
+  title: z.string().min(3).max(80),
+  description: z.string().min(3).max(220),
+  difficulty: z.enum(['intro', 'intermediate', 'advanced', 'expert']),
+  questions: z.array(generatedQuestionSchema).min(4).max(8),
+});
+
+export type GeneratedDeck = z.infer<typeof generatedDeckSchema>;

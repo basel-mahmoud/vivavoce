@@ -83,6 +83,17 @@ export interface UserStats {
   hasData: boolean;
 }
 
+/** An AI-generated deck owned by the caller (mirrors /api/v1/decks). */
+export interface ServerDeck {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: string;
+  tags: string[];
+  createdAt: string;
+  questions: { id: string; prompt: string }[];
+}
+
 type GetToken = () => Promise<string | null>;
 
 /**
@@ -166,6 +177,15 @@ export function createApi(getToken: GetToken) {
       }),
 
     getStats: () => request<{ stats: UserStats }>('/api/v1/me/stats'),
+
+    generateDeck: (body: { topic: string; count?: number }) =>
+      request<{ deck: ServerDeck }>('/api/v1/decks/generate', {
+        method: 'POST',
+        body: JSON.stringify(body),
+        retries: 0, // costs tokens; the user retries deliberately
+      }),
+
+    listDecks: () => request<{ decks: ServerDeck[] }>('/api/v1/decks'),
   };
 }
 

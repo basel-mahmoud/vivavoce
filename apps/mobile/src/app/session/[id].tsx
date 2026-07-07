@@ -18,7 +18,7 @@ import { useApi } from '@/data/api-context';
 import { useSession } from '@/lib/useSession';
 import { useRecorder } from '@/lib/useRecorder';
 import { haptics } from '@/lib/haptics';
-import { starterDecks, modeName } from '@/data/content';
+import { starterDecks, deckById, modeName } from '@/data/content';
 
 function formatTime(ms: number) {
   const total = Math.floor(ms / 1000);
@@ -36,7 +36,7 @@ export default function SessionScreen() {
   const { c, space } = useTheme();
   const api = useApi();
 
-  const deck = starterDecks.find((d) => d.id === deckId) ?? starterDecks[0]!;
+  const deck = deckById(deckId ?? '') ?? starterDecks[0]!;
   const questions = deck.questions;
   const [qIndex, setQIndex] = useState(0);
   // Idempotency key for creating the session; the SERVER id comes back from
@@ -77,8 +77,8 @@ export default function SessionScreen() {
   useEffect(() => {
     if (!api) return;
     api
-      // Starter decks are bundled content, not server rows: no server deck id.
-      .startSession({ mode, deckId: null, clientSessionKey })
+      // Bundled decks have no server row; AI-generated decks do — link them.
+      .startSession({ mode, deckId: deck.serverId ?? null, clientSessionKey })
       .then((res) => {
         if (res.ok) setServerSessionId(res.data.session.id);
       })

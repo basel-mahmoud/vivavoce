@@ -447,6 +447,8 @@ export interface Deck {
   tags: string[];
   questions: string[];
   featured?: boolean;
+  /** Set for AI-generated decks that live server-side (sessions link to it). */
+  serverId?: string;
 }
 
 export const starterDecks: Deck[] = [
@@ -1179,8 +1181,44 @@ export const starterDecks: Deck[] = [
 
 export const allDecks = starterDecks;
 
+/* ── AI-generated decks (server-owned, hydrated per session) ─────────────── */
+
+import type { ServerDeck } from '@/lib/api';
+
+const generatedRegistry = new Map<string, Deck>();
+
+/** Convert + register server decks so deckById / deck detail / sessions all
+ *  work on them exactly like bundled decks. Idempotent. */
+export function registerServerDecks(serverDecks: ServerDeck[]): Deck[] {
+  const registered = serverDecks.map((s) => {
+    const deck: Deck = {
+      id: s.id,
+      serverId: s.id,
+      title: s.title,
+      subject: 'AI deck',
+      subjectKey: 'ai',
+      difficulty: (['intro', 'intermediate', 'advanced', 'expert'] as const).includes(
+        s.difficulty as Difficulty,
+      )
+        ? (s.difficulty as Difficulty)
+        : 'intermediate',
+      description: s.description,
+      tags: s.tags,
+      questions: s.questions.map((q) => q.prompt),
+    };
+    generatedRegistry.set(deck.id, deck);
+    return deck;
+  });
+  return registered;
+}
+
+/** The caller's AI decks, newest-first as delivered by the API. */
+export function generatedDecks(): Deck[] {
+  return [...generatedRegistry.values()];
+}
+
 export function deckById(id: string): Deck | undefined {
-  return starterDecks.find((d) => d.id === id);
+  return starterDecks.find((d) => d.id === id) ?? generatedRegistry.get(id);
 }
 export function decksBySubject(subjectKey: string): Deck[] {
   return starterDecks.filter((d) => d.subjectKey === subjectKey);

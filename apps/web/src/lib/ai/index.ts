@@ -7,13 +7,21 @@ import { generateContent, extractJson } from './gemini';
 import {
   EVALUATE_ANSWER_PROMPT,
   GENERATE_QUESTION_PROMPT,
+  GENERATE_DECK_PROMPT,
   renderPrompt,
 } from './prompts';
-import { evaluationSchema, generatedQuestionSchema, type Evaluation, type GeneratedQuestion } from './schemas';
+import {
+  evaluationSchema,
+  generatedQuestionSchema,
+  generatedDeckSchema,
+  type Evaluation,
+  type GeneratedQuestion,
+  type GeneratedDeck,
+} from './schemas';
 import { heuristicEvaluation } from './fallback';
 
 export interface UsageRecord {
-  task: 'evaluate' | 'generate_question';
+  task: 'evaluate' | 'generate_question' | 'generate_deck';
   model: string;
   status: 'ok' | 'timeout' | 'error' | 'fallback' | 'not_configured';
   latencyMs: number;
@@ -152,4 +160,51 @@ export async function generateQuestion(
   return { question: null, usage };
 }
 
-export type { Evaluation, GeneratedQuestion };
+export interface GenerateDeckInput {
+  topic: string;
+  count: number;
+  field: string | null;
+  studyLevel: string | null;
+  level: string | null;
+  goal: string | null;
+}
+
+export interface GenerateDeckOutput {
+  deck: GeneratedDeck | null;
+  usage: UsageRecord;
+}
+
+/** Build a calibrated practice deck. Returns null deck on any failure —
+ *  deck generation has no meaningful heuristic fallback, so callers surface
+ *  a retry instead of storing junk. */
+export async function generateDeck(input: GenerateDeckInput): Promise<GenerateDeckOutput> {
+  const prompt = renderPrompt(GENERATE_DECK_PROMPT, {
+    topic: input.topic.slice(0, 160),
+    count: input.count,
+    field: input.field ?? 'unknown',
+    studyLevel: input.studyLevel ?? 'unknown',
+    level: input.level ?? 'intermediate',
+    goal: input.goal ?? 'oral_exam',
+  });
+
+  const res = await generateContent(prompt, { json: true, temperature: 0.7, maxOutputTokens: 2048 });
+  const usage: UsageRecord = {
+    task: 'generate_deck',
+    model: res.model,
+    status: res.status === 'ok' ? 'ok' : res.status,
+    latencyMs: res.latencyMs,
+    inputTokens: res.inputTokens,
+    outputTokens: res.outputTokens,
+    errorCode: res.errorCode,
+  };
+
+  if (res.status === 'ok') {
+    const parsed = generatedDeckSchema.safeParse(extractJson(res.text));
+    if (parsed.success) return { deck: parsed.data, usage };
+    usage.status = 'fallback';
+    usage.errorCode = 'schema_mismatch';
+  }
+  return { deck: null, usage };
+}
+
+export type { Evaluation, GeneratedQuestion, GeneratedDeck };

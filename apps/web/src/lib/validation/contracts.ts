@@ -45,6 +45,13 @@ export const updateProfileInput = z.object({
 });
 export type UpdateProfileInput = z.infer<typeof updateProfileInput>;
 
+/* ── AI deck generation ───────────────────────────────────────────────────── */
+export const generateDeckInput = z.object({
+  topic: z.string().trim().min(3).max(120),
+  count: z.number().int().min(4).max(8).default(6),
+});
+export type GenerateDeckInput = z.infer<typeof generateDeckInput>;
+
 /* ── Sessions ─────────────────────────────────────────────────────────────── */
 export const sessionMode = z.enum([
   'quick',

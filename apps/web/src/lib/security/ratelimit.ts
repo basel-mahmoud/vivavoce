@@ -56,5 +56,6 @@ export const limiters = {
   demoEval: new InMemorySlidingWindow(4, 60 * 60 * 1000), // 4 / hour / ip (costs AI tokens)
   evaluate: new InMemorySlidingWindow(30, 60 * 1000), // 30 / min / user
   sessionStart: new InMemorySlidingWindow(20, 60 * 1000),
+  deckGenerate: new InMemorySlidingWindow(6, 60 * 60 * 1000), // 6 / hour / user (costs AI tokens)
   generic: new InMemorySlidingWindow(60, 60 * 1000),
 } as const;
