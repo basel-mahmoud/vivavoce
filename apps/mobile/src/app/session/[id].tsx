@@ -251,6 +251,8 @@ export default function SessionScreen() {
               isLast={isLast}
               onRetry={retry}
               onNext={next}
+              deckTitle={deck.title}
+              mode={mode}
             />
           </View>
         )}

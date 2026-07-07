@@ -1,14 +1,19 @@
+import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Sparkles, RotateCcw, ArrowRight, Lightbulb } from 'lucide-react-native';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import { Sparkles, RotateCcw, ArrowRight, Lightbulb, Share2 } from 'lucide-react-native';
 import { Text } from '@/ui/Text';
 import { Card } from '@/ui/Card';
 import { Pill } from '@/ui/Pill';
 import { Button } from '@/ui/Button';
 import { ScoreBar, bandColor } from '@/ui/ScoreBar';
 import { entrance, Stamp, DigitRoll } from '@/ui/motion';
+import { ShareCard } from './ShareCard';
 import { useTheme } from '@/theme';
-import { rubricAxes } from '@/data/content';
+import { haptics } from '@/lib/haptics';
+import { rubricAxes, modeName } from '@/data/content';
 import type { EvaluationResult } from '@/lib/api';
 
 export function FeedbackView({
@@ -17,15 +22,36 @@ export function FeedbackView({
   isLast,
   onRetry,
   onNext,
+  deckTitle,
+  mode,
 }: {
   result: EvaluationResult;
   usedFallback: boolean;
   isLast: boolean;
   onRetry: () => void;
   onNext: () => void;
+  deckTitle?: string;
+  mode?: string;
 }) {
   const { c, space, type } = useTheme();
   const scores = result.scores as Record<string, number>;
+  const shareRef = useRef<View>(null);
+  const [sharing, setSharing] = useState(false);
+
+  const share = async () => {
+    if (sharing) return;
+    setSharing(true);
+    haptics.tap();
+    try {
+      if (!(await Sharing.isAvailableAsync())) return;
+      const uri = await captureRef(shareRef, { format: 'png', quality: 1 });
+      await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Share your mark' });
+    } catch {
+      /* user cancelled or capture failed — nothing to clean up */
+    } finally {
+      setSharing(false);
+    }
+  };
 
   return (
     <View style={{ gap: space.lg }}>
@@ -143,24 +169,38 @@ export function FeedbackView({
         </Card>
       </Animated.View>
 
-      <Animated.View
-        entering={entrance(6)}
-        style={{ flexDirection: 'row', gap: space.md, marginTop: space.sm }}
-      >
+      <Animated.View entering={entrance(6)} style={{ gap: space.md, marginTop: space.sm }}>
         <Button
-          label="Retry"
-          variant="secondary"
-          onPress={onRetry}
-          icon={<RotateCcw size={16} color={c.text} />}
-          style={{ flex: 1 }}
+          label={sharing ? 'Preparing card…' : 'Share this mark'}
+          variant="ghost"
+          onPress={share}
+          loading={sharing}
+          icon={<Share2 size={16} color={c.text} />}
         />
-        <Button
-          label={isLast ? 'Finish' : 'Next'}
-          onPress={onNext}
-          icon={<ArrowRight size={16} color={c.onAccent} />}
-          style={{ flex: 1 }}
-        />
+        <View style={{ flexDirection: 'row', gap: space.md }}>
+          <Button
+            label="Retry"
+            variant="secondary"
+            onPress={onRetry}
+            icon={<RotateCcw size={16} color={c.text} />}
+            style={{ flex: 1 }}
+          />
+          <Button
+            label={isLast ? 'Finish' : 'Next'}
+            onPress={onNext}
+            icon={<ArrowRight size={16} color={c.onAccent} />}
+            style={{ flex: 1 }}
+          />
+        </View>
       </Animated.View>
+
+      {/* off-screen, capture-only */}
+      <ShareCard
+        ref={shareRef}
+        overall={result.overall}
+        deckTitle={deckTitle ?? 'Practice session'}
+        mode={modeName(mode ?? 'quick')}
+      />
     </View>
   );
 }
