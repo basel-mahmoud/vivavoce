@@ -1,8 +1,12 @@
 import { View, Pressable, type ViewStyle } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import Animated, { useAnimatedProps } from 'react-native-reanimated';
 import { ChevronRight } from 'lucide-react-native';
 import { useTheme } from '@/theme';
+import { useFillProgress } from './motion';
 import { Text } from './Text';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 /** A section title with an optional action on the right. */
 export function SectionHeader({
@@ -88,7 +92,7 @@ export function StatTile({
   );
 }
 
-/** A ring showing progress toward a goal. */
+/** A ring showing progress toward a goal; the arc draws in on mount. */
 export function ProgressRing({
   progress,
   size = 72,
@@ -105,13 +109,16 @@ export function ProgressRing({
   const { c } = useTheme();
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
-  const clamped = Math.max(0, Math.min(1, progress));
   const fill = color ?? c.accent;
+  const animated = useFillProgress(progress);
+  const arcProps = useAnimatedProps(() => ({
+    strokeDashoffset: circ * (1 - animated.value),
+  }));
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}>
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={c.surface2} strokeWidth={stroke} fill="none" />
-        <Circle
+        <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
           r={r}
@@ -119,7 +126,7 @@ export function ProgressRing({
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={circ}
-          strokeDashoffset={circ * (1 - clamped)}
+          animatedProps={arcProps}
           fill="none"
         />
       </Svg>

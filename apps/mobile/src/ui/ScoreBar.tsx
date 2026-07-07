@@ -1,5 +1,7 @@
 import { View } from 'react-native';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useTheme } from '@/theme';
+import { useFillProgress } from './motion';
 import { Text } from './Text';
 
 export function bandColor(
@@ -11,8 +13,14 @@ export function bandColor(
   return c.gravitas;
 }
 
-export function ScoreBar({ label, value }: { label: string; value: number }) {
+/** A labelled 0–100 bar whose fill draws in (staggered by `order`). */
+export function ScoreBar({ label, value, order = 0 }: { label: string; value: number; order?: number }) {
   const { c, space, radius } = useTheme();
+  const progress = useFillProgress(value / 100, order * 70);
+  const fillStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: progress.value }],
+  }));
+
   return (
     <View style={{ marginBottom: space.md }}>
       <View
@@ -37,13 +45,17 @@ export function ScoreBar({ label, value }: { label: string; value: number }) {
         accessibilityRole="progressbar"
         accessibilityValue={{ min: 0, max: 100, now: value }}
       >
-        <View
-          style={{
-            height: '100%',
-            width: `${Math.max(0, Math.min(100, value))}%`,
-            backgroundColor: bandColor(value, c),
-            borderRadius: radius.pill,
-          }}
+        <Animated.View
+          style={[
+            {
+              height: '100%',
+              width: '100%',
+              backgroundColor: bandColor(value, c),
+              borderRadius: radius.pill,
+              transformOrigin: 'left center',
+            },
+            fillStyle,
+          ]}
         />
       </View>
     </View>
