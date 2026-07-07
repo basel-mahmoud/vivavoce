@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { View, Switch, Pressable, Alert, Linking } from 'react-native';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
@@ -22,8 +23,10 @@ import { Card } from '@/ui/Card';
 import { useTheme } from '@/theme';
 import { useProfile } from '@/data/profile';
 import { fieldByKey } from '@/data/content';
+import { Chip } from '@/ui/kit';
 import { isAuthConfigured } from '@/lib/config';
 import { haptics } from '@/lib/haptics';
+import { getReminder, setReminder, type ReminderPrefs } from '@/lib/reminders';
 
 /** Sign-in entry when signed out; identity + working sign-out when signed in.
  *  Only rendered when Clerk is configured (hooks need the provider). */
@@ -101,9 +104,37 @@ function Row({
   );
 }
 
+const REMINDER_TIMES: [number, string][] = [
+  [7, '7:00'],
+  [12, '12:00'],
+  [18, '18:00'],
+  [21, '21:00'],
+];
+
 export default function SettingsScreen() {
   const { c, space } = useTheme();
   const { profile, update, reset } = useProfile();
+  const [reminder, setReminderState] = useState<ReminderPrefs>({
+    enabled: false,
+    hour: 18,
+    minute: 0,
+  });
+
+  useEffect(() => {
+    void getReminder().then(setReminderState);
+  }, []);
+
+  const applyReminder = async (next: ReminderPrefs) => {
+    setReminderState(next);
+    const okGranted = await setReminder(next);
+    if (!okGranted && next.enabled) {
+      setReminderState({ ...next, enabled: false });
+      Alert.alert(
+        'Notifications are off',
+        'Allow notifications for VivaVoce in your system settings to get practice reminders.',
+      );
+    }
+  };
 
   const confirmDelete = () =>
     Alert.alert(
@@ -145,7 +176,37 @@ export default function SettingsScreen() {
           }}
         />
         <Row icon={<Shield size={18} color={c.textMuted} />} label="Security" hint="Password, sessions, MFA" onPress={() => haptics.tap()} />
-        <Row icon={<Bell size={18} color={c.textMuted} />} label="Notifications" hint="Reminders & streaks" onPress={() => haptics.tap()} />
+        <Row
+          icon={<Bell size={18} color={reminder.enabled ? c.accent : c.textMuted} />}
+          label="Daily reminder"
+          hint={reminder.enabled ? `Every day at ${reminder.hour}:00` : 'Keep the streak alive'}
+          right={
+            <Switch
+              value={reminder.enabled}
+              onValueChange={(v) => {
+                haptics.tap();
+                void applyReminder({ ...reminder, enabled: v });
+              }}
+              trackColor={{ true: c.accent, false: c.surface2 }}
+              thumbColor="#fff"
+            />
+          }
+        />
+        {reminder.enabled ? (
+          <View style={{ flexDirection: 'row', gap: space.sm, paddingBottom: space.md, paddingLeft: 30 }}>
+            {REMINDER_TIMES.map(([hour, label]) => (
+              <Chip
+                key={hour}
+                label={label}
+                active={reminder.hour === hour}
+                onPress={() => {
+                  haptics.tap();
+                  void applyReminder({ ...reminder, hour, minute: 0 });
+                }}
+              />
+            ))}
+          </View>
+        ) : null}
       </Card>
 
       <Text variant="caption" tone="textFaint" style={{ marginTop: space.xl, marginBottom: space.sm }}>
