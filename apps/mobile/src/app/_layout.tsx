@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useColorScheme, View, ActivityIndicator } from 'react-native';
+import { useColorScheme, View, ActivityIndicator, AppState } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
@@ -21,8 +21,23 @@ import { config, isAuthConfigured } from '@/lib/config';
 import { tokenCache } from '@/lib/token-cache';
 import { ProfileProvider } from '@/data/profile';
 import { StatsProvider } from '@/data/stats';
-import { ApiProvider } from '@/data/api-context';
+import { ApiProvider, useApi } from '@/data/api-context';
 import { createApi } from '@/lib/api';
+import { flushQueue } from '@/lib/queue';
+
+/** Drains the offline answer queue on launch and whenever the app foregrounds. */
+function QueueFlusher() {
+  const api = useApi();
+  useEffect(() => {
+    if (!api) return;
+    void flushQueue(api).catch(() => {});
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s === 'active') void flushQueue(api).catch(() => {});
+    });
+    return () => sub.remove();
+  }, [api]);
+  return null;
+}
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -126,6 +141,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <Providers>
+          <QueueFlusher />
           <RootStack />
           <StatusBar style="auto" />
         </Providers>

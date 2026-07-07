@@ -277,17 +277,23 @@ export default function SessionScreen() {
                 ? 'We didn’t catch that'
                 : error === 'auth_required'
                   ? 'Sign in to get marked'
-                  : 'Something went wrong'}
+                  : error === 'queued_offline'
+                    ? 'Saved for later'
+                    : 'Something went wrong'}
             </Text>
             <Text variant="small" tone="textMuted" style={{ textAlign: 'center', maxWidth: 280 }}>
               {error === 'no_speech'
                 ? 'No speech was detected. Find a quieter spot and try again.'
                 : error === 'auth_required'
                   ? 'Spoken answers are transcribed and marked on our servers, which needs an account. It takes a few seconds with Google.'
-                  : 'We couldn’t evaluate that answer. Your recording is safe. Give it another go.'}
+                  : error === 'queued_offline'
+                    ? 'You’re offline. Your answer is queued and will be marked automatically when you’re back online.'
+                    : 'We couldn’t evaluate that answer. Your recording is safe. Give it another go.'}
             </Text>
             {error === 'auth_required' ? (
               <Button label="Sign in" onPress={() => router.push('/(auth)/sign-in')} />
+            ) : error === 'queued_offline' ? (
+              <Button label={onLastBase ? 'Finish' : 'Next question'} onPress={next} />
             ) : (
               <Button label="Try again" onPress={retry} />
             )}

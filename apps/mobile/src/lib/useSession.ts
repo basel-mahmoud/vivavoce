@@ -3,6 +3,7 @@ import * as Crypto from 'expo-crypto';
 import type { Api, EvaluationResult } from './api';
 import type { CapturedAudio } from './useRecorder';
 import { localEvaluate } from './local-eval';
+import { enqueueAnswer } from './queue';
 
 /**
  * Voice-session state machine. Mirrors PRODUCT.md:
@@ -21,7 +22,7 @@ export type SessionState =
   | 'feedback'
   | 'error';
 
-export type SessionError = 'evaluation_failed' | 'no_speech' | 'auth_required';
+export type SessionError = 'evaluation_failed' | 'no_speech' | 'auth_required' | 'queued_offline';
 
 interface UseSessionArgs {
   sessionId: string;
@@ -102,9 +103,25 @@ export function useSession({
           setState('feedback');
           return;
         }
+        // Offline: keep the recording — queue it for real marking later
+        // (idempotent by clientAnswerKey), and tell the user honestly.
+        if (res.error.code === 'network') {
+          enqueueAnswer({
+            sessionId,
+            clientAnswerKey: answerKey.current,
+            questionPrompt,
+            audioBase64: audio.base64,
+            audioMimeType: audio.mimeType,
+            durationMs: audio.durationMs,
+            queuedAt: Date.now(),
+          });
+          setError('queued_offline');
+          setState('error');
+          return;
+        }
         // Audio can't be transcribed on-device: an anonymous caller needs an
         // account for server-side marking; anything else is a retry.
-        setError(res.ok === false && res.error.code === 'unauthorized' ? 'auth_required' : 'evaluation_failed');
+        setError(res.error.code === 'unauthorized' ? 'auth_required' : 'evaluation_failed');
         setState('error');
         return;
       }
@@ -130,6 +147,18 @@ export function useSession({
           setUsedFallback(res.data.result.source === 'heuristic');
           setState('feedback');
           return;
+        }
+        // Offline: show heuristic marks now, queue the transcript so the real
+        // marks (and streak credit) land server-side on the next flush.
+        if (res.error.code === 'network') {
+          enqueueAnswer({
+            sessionId,
+            clientAnswerKey: answerKey.current,
+            questionPrompt,
+            transcript,
+            durationMs: duration,
+            queuedAt: Date.now(),
+          });
         }
       }
       setResult(localEvaluate(transcript, duration));
