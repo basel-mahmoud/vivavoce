@@ -42,6 +42,12 @@ export const updateProfileInput = z.object({
   subjectKeys: z.array(z.string().trim().min(1).max(60)).max(24).optional(),
   timezone: z.string().max(64).optional(),
   onboarded: z.boolean().optional(),
+  examName: z.string().trim().min(1).max(60).nullable().optional(),
+  examDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD')
+    .nullable()
+    .optional(),
 });
 export type UpdateProfileInput = z.infer<typeof updateProfileInput>;
 

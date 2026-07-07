@@ -33,6 +33,9 @@ export interface Profile {
   examFormats: string[];
   /** Subject keys (see content.subjects). */
   subjects: string[];
+  /** The exam being counted down to (Home tile). */
+  examName: string | null;
+  examDate: string | null; // YYYY-MM-DD
   // Consent flags gate on-device mic use; kept local, never a calibration input.
   consentAudio: boolean;
   consentAI: boolean;
@@ -47,6 +50,8 @@ const DEFAULT: Profile = {
   studyLevel: null,
   examFormats: [],
   subjects: [],
+  examName: null,
+  examDate: null,
   consentAudio: false,
   consentAI: false,
   onboarded: false,
@@ -80,6 +85,8 @@ function toPatch(p: Profile): ProfilePatch {
     subjectKeys: p.subjects,
     timezone: deviceTimezone(),
     onboarded: p.onboarded || undefined,
+    examName: p.examName,
+    examDate: p.examDate,
   };
 }
 
@@ -145,6 +152,8 @@ export function ProfileProvider({
           studyLevel: (u.studyLevel as StudyLevelKey | null) ?? latest.current.studyLevel,
           examFormats: u.examFormats?.length ? u.examFormats : latest.current.examFormats,
           subjects: u.subjectKeys?.length ? u.subjectKeys : latest.current.subjects,
+          examName: u.examName ?? latest.current.examName,
+          examDate: u.examDate ?? latest.current.examDate,
           onboarded: u.onboarded,
         };
         persistLocal(merged);

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import Animated from 'react-native-reanimated';
-import { Flame, Mic, Target, Lightbulb, Sparkles, ArrowRight } from 'lucide-react-native';
+import { Flame, Mic, Target, Lightbulb, Sparkles, ArrowRight, CalendarClock } from 'lucide-react-native';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { SectionHeader, StatTile, ProgressRing } from '@/ui/kit';
@@ -59,6 +59,13 @@ export default function Home() {
   const recommended = useMemo(() => decksForSubjects(profile.subjects), [profile.subjects]);
   const resume = recommended[0]!;
   const weekPct = weeklyProgress(stats.minutesThisWeek);
+
+  // Honest countdown: only when the user set a future exam date in Settings.
+  const examDays = useMemo(() => {
+    if (!profile.examDate) return null;
+    const days = Math.ceil((Date.parse(profile.examDate) - Date.now()) / 86_400_000);
+    return days >= 0 ? days : null;
+  }, [profile.examDate]);
 
   const weakest = useMemo(() => {
     if (!stats.hasData) return null;
@@ -132,6 +139,41 @@ export default function Home() {
           </View>
         </Animated.View>
       )}
+
+      {/* exam countdown — real date, set in Settings */}
+      {examDays != null ? (
+        <Animated.View entering={entrance(2)}>
+          <PressableScale
+            haptic={false}
+            onPress={() => {
+              haptics.tap();
+              router.push('/(tabs)/progress');
+            }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: space.md,
+              marginTop: space.md,
+              padding: space.lg,
+              borderRadius: radius.lg,
+              backgroundColor: c.gravitas,
+            }}
+          >
+            <CalendarClock size={20} color="#FBFAF8" />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text variant="bodyMedium" numberOfLines={1} style={{ color: '#FBFAF8' }}>
+                {profile.examName ?? 'Your exam'}
+              </Text>
+              <Text variant="small" style={{ color: '#FBFAF8', opacity: 0.8 }}>
+                {examDays === 0 ? 'Today — go get it' : `${examDays} ${examDays === 1 ? 'day' : 'days'} away · keep the streak`}
+              </Text>
+            </View>
+            <Text variant="display2" style={{ color: '#FBFAF8' }}>
+              {examDays}
+            </Text>
+          </PressableScale>
+        </Animated.View>
+      ) : null}
 
       {/* resume / quick start */}
       <Animated.View entering={entrance(2)}>

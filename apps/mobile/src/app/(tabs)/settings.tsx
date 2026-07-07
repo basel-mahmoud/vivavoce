@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { View, Switch, Pressable, Alert, Linking } from 'react-native';
+import { View, Switch, Pressable, Alert, Linking, TextInput } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
 import {
@@ -15,6 +16,7 @@ import {
   Star,
   FileText,
   Info,
+  CalendarClock,
 } from 'lucide-react-native';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Screen } from '@/ui/Screen';
@@ -136,6 +138,10 @@ export default function SettingsScreen() {
     }
   };
 
+  const [examName, setExamName] = useState(profile.examName ?? '');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  useEffect(() => setExamName(profile.examName ?? ''), [profile.examName]);
+
   const confirmDelete = () =>
     Alert.alert(
       'Delete your account?',
@@ -206,6 +212,58 @@ export default function SettingsScreen() {
               />
             ))}
           </View>
+        ) : null}
+      </Card>
+
+      <Text variant="caption" tone="textFaint" style={{ marginTop: space.xl, marginBottom: space.sm }}>
+        EXAM COUNTDOWN
+      </Text>
+      <Card style={{ paddingVertical: space.md, gap: space.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+          <CalendarClock size={18} color={profile.examDate ? c.gravitas : c.textMuted} />
+          <TextInput
+            value={examName}
+            onChangeText={setExamName}
+            onEndEditing={() => update({ examName: examName.trim() || null })}
+            placeholder="Name your exam (e.g. Cardiology viva)"
+            placeholderTextColor={c.textFaint}
+            maxLength={60}
+            style={{ flex: 1, color: c.text, fontFamily: 'Archivo_400Regular', fontSize: 15 }}
+            accessibilityLabel="Exam name"
+          />
+        </View>
+        <View style={{ flexDirection: 'row', gap: space.sm, paddingLeft: 30 }}>
+          <Chip
+            label={profile.examDate ?? 'Pick a date'}
+            active={Boolean(profile.examDate)}
+            onPress={() => {
+              haptics.tap();
+              setShowDatePicker(true);
+            }}
+          />
+          {profile.examDate ? (
+            <Chip
+              label="Clear"
+              onPress={() => {
+                haptics.tap();
+                update({ examDate: null, examName: null });
+                setExamName('');
+              }}
+            />
+          ) : null}
+        </View>
+        {showDatePicker ? (
+          <DateTimePicker
+            value={profile.examDate ? new Date(profile.examDate) : new Date()}
+            mode="date"
+            minimumDate={new Date()}
+            onChange={(event, date) => {
+              setShowDatePicker(false);
+              if (event.type === 'set' && date) {
+                update({ examDate: date.toISOString().slice(0, 10) });
+              }
+            }}
+          />
         ) : null}
       </Card>
 

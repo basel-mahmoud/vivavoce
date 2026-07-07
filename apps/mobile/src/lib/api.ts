@@ -46,6 +46,8 @@ export interface MeProfile {
   subjectKeys: string[];
   timezone: string;
   onboarded: boolean;
+  examName: string | null;
+  examDate: string | null;
 }
 
 export interface ProfilePatch {
@@ -58,6 +60,8 @@ export interface ProfilePatch {
   subjectKeys?: string[];
   timezone?: string;
   onboarded?: boolean;
+  examName?: string | null;
+  examDate?: string | null;
 }
 
 /** Real per-user progress (mirrors GET /api/v1/me/stats). */

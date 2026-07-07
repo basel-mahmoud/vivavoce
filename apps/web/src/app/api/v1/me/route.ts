@@ -22,6 +22,8 @@ function serialize(u: typeof schema.users.$inferSelect) {
     subjectKeys: u.subjectKeys,
     timezone: u.timezone,
     onboarded: Boolean(u.onboardedAt),
+    examName: u.examName,
+    examDate: u.examDate,
   };
 }
 
@@ -60,6 +62,8 @@ export async function PATCH(req: NextRequest) {
   if (p.subjectKeys !== undefined) patch.subjectKeys = p.subjectKeys;
   if (p.timezone !== undefined) patch.timezone = p.timezone;
   if (p.onboarded === true) patch.onboardedAt = new Date();
+  if (p.examName !== undefined) patch.examName = p.examName;
+  if (p.examDate !== undefined) patch.examDate = p.examDate;
 
   const [user] = await db
     .update(schema.users)

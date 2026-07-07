@@ -130,6 +130,9 @@ export const users = pgTable(
     locale: text('locale').notNull().default('en'),
     onboardedAt: timestamp('onboarded_at', { withTimezone: true }),
     timezone: text('timezone').notNull().default('UTC'),
+    // The exam this user is counting down to (drives the Home countdown tile).
+    examName: text('exam_name'),
+    examDate: date('exam_date'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
