@@ -116,6 +116,19 @@ export default function SessionScreen() {
     mode === 'mock_viva' && !followUp ? result?.suggestedFollowUp?.trim() || null : null;
   const isLast = onLastBase && !nextFollowUp;
 
+  const finish = () => {
+    if (serverSessionId && api) {
+      // Stamp completion + rolled-up average server-side, then show the recap.
+      api.completeSession(serverSessionId).catch(() => {});
+      router.replace({
+        pathname: '/session/recap',
+        params: { id: serverSessionId, title: deck.title },
+      });
+    } else {
+      router.back();
+    }
+  };
+
   const next = () => {
     if (nextFollowUp) {
       setFollowUp(nextFollowUp);
@@ -123,7 +136,7 @@ export default function SessionScreen() {
       return;
     }
     if (onLastBase) {
-      router.back();
+      finish();
       return;
     }
     setFollowUp(null);

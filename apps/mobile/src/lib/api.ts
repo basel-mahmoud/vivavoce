@@ -83,6 +83,29 @@ export interface UserStats {
   hasData: boolean;
 }
 
+/** One reviewed answer inside a session (mirrors GET /api/v1/sessions/:id). */
+export interface SessionAnswer {
+  id: string;
+  questionPrompt: string;
+  transcript: string | null;
+  overall: number | null;
+  weakestAxis: string | null;
+  summary: string | null;
+  scores: Record<string, number> | null;
+  createdAt: string;
+}
+
+export interface SessionDetail {
+  session: {
+    id: string;
+    mode: string;
+    startedAt: string;
+    completedAt: string | null;
+    overallScore: number | null;
+  };
+  answers: SessionAnswer[];
+}
+
 /** An AI-generated deck owned by the caller (mirrors /api/v1/decks). */
 export interface ServerDeck {
   id: string;
@@ -186,6 +209,14 @@ export function createApi(getToken: GetToken) {
       }),
 
     listDecks: () => request<{ decks: ServerDeck[] }>('/api/v1/decks'),
+
+    getSession: (id: string) => request<SessionDetail>(`/api/v1/sessions/${id}`),
+
+    completeSession: (id: string) =>
+      request<{ session: { id: string; overallScore: number | null } }>(
+        `/api/v1/sessions/${id}`,
+        { method: 'PATCH' },
+      ),
   };
 }
 

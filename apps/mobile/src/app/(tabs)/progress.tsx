@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
-import { View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { View, Pressable } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { Trophy, Lock, TrendingUp } from 'lucide-react-native';
 import { Screen } from '@/ui/Screen';
@@ -203,8 +203,16 @@ export default function Progress() {
                 {stats.recent.map((s, i) => {
                   const band = s.overall >= 80 ? c.success : s.overall >= 65 ? c.accent : c.gravitas;
                   return (
-                    <View
+                    <Pressable
                       key={s.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Review ${s.deckTitle}`}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/session/recap',
+                          params: { id: s.id, title: s.deckTitle },
+                        })
+                      }
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -236,7 +244,7 @@ export default function Progress() {
                           {modeName(s.mode)} · fix {s.weakest} · {s.when}
                         </Text>
                       </View>
-                    </View>
+                    </Pressable>
                   );
                 })}
               </Card>
