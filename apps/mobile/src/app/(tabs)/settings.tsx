@@ -24,11 +24,57 @@ import { Text } from '@/ui/Text';
 import { Card } from '@/ui/Card';
 import { useTheme } from '@/theme';
 import { useProfile } from '@/data/profile';
+import { useApi } from '@/data/api-context';
 import { fieldByKey } from '@/data/content';
 import { Chip } from '@/ui/kit';
 import { isAuthConfigured } from '@/lib/config';
 import { haptics } from '@/lib/haptics';
 import { getReminder, setReminder, type ReminderPrefs } from '@/lib/reminders';
+
+/** Real account deletion (Clerk-gated: hooks need the provider). Deletes the
+ *  server data + Clerk identity via DELETE /api/v1/me, then clears the device. */
+function DeleteAccountRow() {
+  const { c } = useTheme();
+  const { signOut } = useAuth();
+  const api = useApi();
+  const { reset } = useProfile();
+
+  const confirm = () =>
+    Alert.alert(
+      'Delete your account?',
+      'This permanently erases your account, practice history, transcripts, and AI decks from our servers, and removes your sign-in. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete forever',
+          style: 'destructive',
+          onPress: async () => {
+            const res = api ? await api.deleteMe() : null;
+            if (res?.ok) {
+              await signOut().catch(() => {});
+              reset();
+              router.replace('/');
+            } else {
+              Alert.alert(
+                'Could not delete',
+                'We could not reach the server. Check your connection and try again — nothing was deleted.',
+              );
+            }
+          },
+        },
+      ],
+    );
+
+  return (
+    <Row
+      icon={<Trash2 size={18} color={c.danger} />}
+      label="Delete account"
+      hint="Erases everything, right now"
+      danger
+      onPress={confirm}
+    />
+  );
+}
 
 /** Sign-in entry when signed out; identity + working sign-out when signed in.
  *  Only rendered when Clerk is configured (hooks need the provider). */
@@ -323,7 +369,11 @@ export default function SettingsScreen() {
         DANGER ZONE
       </Text>
       <Card style={{ paddingVertical: space.xs }}>
-        <Row icon={<Trash2 size={18} color={c.danger} />} label="Delete account" hint="Right to be forgotten" danger onPress={confirmDelete} />
+        {isAuthConfigured ? (
+          <DeleteAccountRow />
+        ) : (
+          <Row icon={<Trash2 size={18} color={c.danger} />} label="Delete local data" hint="Demo mode: clears this device" danger onPress={confirmDelete} />
+        )}
       </Card>
 
       <Text variant="caption" tone="textFaint" style={{ marginTop: space['2xl'], textAlign: 'center' }}>

@@ -205,6 +205,8 @@ export function createApi(getToken: GetToken) {
 
     getStats: () => request<{ stats: UserStats }>('/api/v1/me/stats'),
 
+    deleteMe: () => request<{ deleted: true }>('/api/v1/me', { method: 'DELETE', retries: 0 }),
+
     generateDeck: (body: { topic: string; count?: number }) =>
       request<{ deck: ServerDeck }>('/api/v1/decks/generate', {
         method: 'POST',
