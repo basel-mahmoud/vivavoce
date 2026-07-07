@@ -6,8 +6,10 @@ import Animated, {
   withRepeat,
   withTiming,
   withSpring,
+  withSequence,
   useReducedMotion,
   cancelAnimation,
+  Easing,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
 import { useTheme } from '@/theme';
@@ -26,6 +28,7 @@ export function RecordButton({
   const reduced = useReducedMotion();
   const ring = useSharedValue(0);
   const scale = useSharedValue(1);
+  const breathe = useSharedValue(1);
 
   useEffect(() => {
     if (listening && !reduced) {
@@ -37,11 +40,30 @@ export function RecordButton({
     return () => cancelAnimation(ring);
   }, [listening, reduced, ring]);
 
+  // Idle breathing: a slow 1.5% swell that invites the tap without shouting.
+  useEffect(() => {
+    if (!listening && !disabled && !reduced) {
+      breathe.value = withRepeat(
+        withSequence(
+          withTiming(1.015, { duration: 1200, easing: Easing.inOut(Easing.quad) }),
+          withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.quad) }),
+        ),
+        -1,
+      );
+    } else {
+      cancelAnimation(breathe);
+      breathe.value = 1;
+    }
+    return () => cancelAnimation(breathe);
+  }, [listening, disabled, reduced, breathe]);
+
   const ringStyle = useAnimatedStyle(() => ({
     transform: [{ scale: 1 + ring.value * 0.6 }],
     opacity: 0.5 - ring.value * 0.5,
   }));
-  const btnStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const btnStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value * breathe.value }],
+  }));
 
   const size = 116;
   const color = listening ? c.live : c.accent;

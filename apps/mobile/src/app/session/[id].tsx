@@ -3,8 +3,10 @@ import { View, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Crypto from 'expo-crypto';
 import { X, RefreshCw } from 'lucide-react-native';
+import { entrance } from '@/ui/motion';
 import { Text } from '@/ui/Text';
 import { Button } from '@/ui/Button';
 import { Pill } from '@/ui/Pill';
@@ -129,13 +131,15 @@ export default function SessionScreen() {
         contentContainerStyle={{ padding: space.xl, paddingBottom: space['4xl'], flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* question */}
-        <Text variant="caption" tone="textFaint">
-          {deck.subject.toUpperCase()}
-        </Text>
-        <Text variant="display2" style={{ marginTop: space.sm, lineHeight: 32 }}>
-          {question}
-        </Text>
+        {/* question — re-keyed per question so each one slides in fresh */}
+        <Animated.View key={qIndex} entering={entrance(0)}>
+          <Text variant="caption" tone="textFaint">
+            {deck.subject.toUpperCase()}
+          </Text>
+          <Text variant="display2" style={{ marginTop: space.sm, lineHeight: 32 }}>
+            {question}
+          </Text>
+        </Animated.View>
 
         {/* state-driven body */}
         {(state === 'idle' || state === 'listening') && (
@@ -170,13 +174,19 @@ export default function SessionScreen() {
         )}
 
         {state === 'processing' && (
-          <View style={{ alignItems: 'center', marginTop: space['4xl'], gap: space.lg }}>
+          <Animated.View
+            entering={FadeIn.duration(180)}
+            style={{ alignItems: 'center', marginTop: space['4xl'], gap: space.lg }}
+          >
             <ActivityIndicator size="large" color={c.accent} />
+            <View style={{ width: '100%', maxWidth: 280 }}>
+              <Waveform bars={28} height={32} color={c.surface2} />
+            </View>
             <Text variant="bodyMedium">Listening back…</Text>
             <Text variant="small" tone="textMuted" style={{ textAlign: 'center', maxWidth: 280 }}>
               Transcribing and weighing your answer across the five axes.
             </Text>
-          </View>
+          </Animated.View>
         )}
 
         {state === 'feedback' && result && (
@@ -192,7 +202,10 @@ export default function SessionScreen() {
         )}
 
         {state === 'error' && (
-          <View style={{ alignItems: 'center', marginTop: space['4xl'], gap: space.lg }}>
+          <Animated.View
+            entering={FadeIn.duration(180)}
+            style={{ alignItems: 'center', marginTop: space['4xl'], gap: space.lg }}
+          >
             <View
               style={{
                 width: 64,
@@ -224,7 +237,7 @@ export default function SessionScreen() {
             ) : (
               <Button label="Try again" onPress={retry} />
             )}
-          </View>
+          </Animated.View>
         )}
       </ScrollView>
     </SafeAreaView>
