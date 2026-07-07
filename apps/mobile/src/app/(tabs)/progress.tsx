@@ -1,16 +1,38 @@
 import { useCallback, useMemo } from 'react';
 import { View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { Trophy, Lock, TrendingUp } from 'lucide-react-native';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { Card } from '@/ui/Card';
 import { ScoreBar } from '@/ui/ScoreBar';
 import { SectionHeader, ProgressRing, EmptyState } from '@/ui/kit';
+import { entrance, useFillProgress, useCountUp } from '@/ui/motion';
 import { useTheme } from '@/theme';
 import { rubricAxes, modeName } from '@/data/content';
 import { useStats, weeklyProgress } from '@/data/stats';
 import type { UserStats } from '@/lib/api';
+
+/** One trend column that grows up from the baseline (staggered). */
+function TrendBar({ pct, color, delay }: { pct: number; color: string; delay: number }) {
+  const grow = useFillProgress(1, delay);
+  const style = useAnimatedStyle(() => ({ transform: [{ scaleY: grow.value }] }));
+  return (
+    <Animated.View
+      style={[
+        {
+          width: '64%',
+          height: `${pct}%`,
+          backgroundColor: color,
+          borderRadius: 5,
+          transformOrigin: 'bottom center',
+        },
+        style,
+      ]}
+    />
+  );
+}
 
 function TrendBars({ data }: { data: number[] }) {
   const { c, space } = useTheme();
@@ -20,14 +42,11 @@ function TrendBars({ data }: { data: number[] }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8, height: 92, marginTop: space.md }}>
       {data.map((v, i) => (
-        <View key={i} style={{ flex: 1, alignItems: 'center', gap: 6 }}>
-          <View
-            style={{
-              width: '64%',
-              height: `${25 + ((v - min) / range) * 70}%`,
-              backgroundColor: i === data.length - 1 ? c.accent : c.accentSoft,
-              borderRadius: 5,
-            }}
+        <View key={i} style={{ flex: 1, alignItems: 'center', gap: 6, height: '100%', justifyContent: 'flex-end' }}>
+          <TrendBar
+            pct={25 + ((v - min) / range) * 70}
+            color={i === data.length - 1 ? c.accent : c.accentSoft}
+            delay={i * 60}
           />
           <Text variant="caption" tone="textFaint" style={{ fontSize: 10 }}>
             {v}
@@ -63,27 +82,31 @@ export default function Progress() {
   const achievements = useMemo(() => achievementsFor(stats), [stats]);
   const trend = stats.confidenceTrend;
   const weekPct = weeklyProgress(stats.minutesThisWeek);
+  const shownOverall = useCountUp(stats.overall);
 
   return (
     <Screen>
-      <Text variant="display2">Progress</Text>
-      <Text variant="body" tone="textMuted" style={{ marginTop: space.xs }}>
-        Where you’re improving, and what to work on next.
-      </Text>
+      <Animated.View entering={entrance(0)}>
+        <Text variant="display2">Progress</Text>
+        <Text variant="body" tone="textMuted" style={{ marginTop: space.xs }}>
+          Where you’re improving, and what to work on next.
+        </Text>
+      </Animated.View>
 
       {!stats.hasData ? (
-        <View style={{ marginTop: space['3xl'] }}>
+        <Animated.View entering={entrance(1)} style={{ marginTop: space['3xl'] }}>
           <EmptyState
             icon={<TrendingUp size={22} color={c.textMuted} />}
             title="No sessions yet"
             body="Finish your first spoken answer and your scores, streak, and trends start filling in here — all tied to your account."
           />
-        </View>
+        </Animated.View>
       ) : (
         <>
           {/* hero: overall ring + lifetime stats */}
+          <Animated.View entering={entrance(1)}>
           <Card style={{ marginTop: space.xl, flexDirection: 'row', alignItems: 'center', gap: space.xl }}>
-            <ProgressRing progress={stats.overall / 100} size={92} stroke={9} label={`${stats.overall}`} />
+            <ProgressRing progress={stats.overall / 100} size={92} stroke={9} label={`${shownOverall}`} />
             <View style={{ flex: 1, gap: space.md }}>
               <View>
                 <Text variant="caption" tone="textFaint">
@@ -115,8 +138,10 @@ export default function Progress() {
               </View>
             </View>
           </Card>
+          </Animated.View>
 
           {/* weekly minutes */}
+          <Animated.View entering={entrance(2)}>
           <Card style={{ marginTop: space.md, flexDirection: 'row', alignItems: 'center', gap: space.lg }}>
             <ProgressRing progress={weekPct} size={56} stroke={7} label={`${Math.round(weekPct * 100)}%`} />
             <View style={{ flex: 1 }}>
@@ -124,10 +149,11 @@ export default function Progress() {
               <Text variant="small" tone="textMuted">Weekly goal: 60 minutes of practice.</Text>
             </View>
           </Card>
+          </Animated.View>
 
           {/* confidence trend */}
           {trend.length >= 2 ? (
-            <>
+            <Animated.View entering={entrance(3)}>
               <SectionHeader title="Confidence trend" style={{ marginTop: space['2xl'] }} />
               <Card>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: space.sm }}>
@@ -140,20 +166,22 @@ export default function Progress() {
                 </View>
                 <TrendBars data={trend} />
               </Card>
-            </>
+            </Animated.View>
           ) : null}
 
           {/* average by axis */}
+          <Animated.View entering={entrance(4)}>
           <SectionHeader title="Average by axis" style={{ marginTop: space['2xl'] }} />
           <Card>
-            {rubricAxes.map((a) => (
-              <ScoreBar key={a.key} label={a.label} value={stats.axisAverages[a.key] ?? 0} />
+            {rubricAxes.map((a, i) => (
+              <ScoreBar key={a.key} label={a.label} value={stats.axisAverages[a.key] ?? 0} order={i} />
             ))}
           </Card>
+          </Animated.View>
 
           {/* recent history */}
           {stats.recent.length ? (
-            <>
+            <Animated.View entering={entrance(5)}>
               <SectionHeader title="Recent sessions" style={{ marginTop: space['2xl'] }} />
               <Card style={{ paddingVertical: space.xs }}>
                 {stats.recent.map((s, i) => {
@@ -196,12 +224,13 @@ export default function Progress() {
                   );
                 })}
               </Card>
-            </>
+            </Animated.View>
           ) : null}
         </>
       )}
 
       {/* achievements — always visible, honestly gated */}
+      <Animated.View entering={entrance(6)}>
       <SectionHeader title="Achievements" style={{ marginTop: space['2xl'] }} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md }}>
         {achievements.map((a) => (
@@ -240,6 +269,7 @@ export default function Progress() {
           </View>
         ))}
       </View>
+      </Animated.View>
     </Screen>
   );
 }

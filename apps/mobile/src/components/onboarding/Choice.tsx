@@ -1,7 +1,8 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { Text } from '@/ui/Text';
+import { PressableScale } from '@/ui/motion';
 import { haptics } from '@/lib/haptics';
 
 export function Choice({
@@ -17,7 +18,8 @@ export function Choice({
 }) {
   const { c, radius, space } = useTheme();
   return (
-    <Pressable
+    <PressableScale
+      haptic={false}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: selected }}
       onPress={() => {
@@ -57,6 +59,6 @@ export function Choice({
       >
         {selected ? <Check size={15} color={c.onAccent} /> : null}
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }

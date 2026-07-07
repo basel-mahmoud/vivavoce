@@ -1,12 +1,14 @@
 import { useCallback, useState } from 'react';
 import { View, TextInput, Pressable } from 'react-native';
 import { router, Link } from 'expo-router';
+import Animated from 'react-native-reanimated';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { useSignUp, useSSO } from '@clerk/clerk-expo';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { Button } from '@/ui/Button';
+import { entrance } from '@/ui/motion';
 import { useTheme } from '@/theme';
 import { isAuthConfigured } from '@/lib/config';
 
@@ -193,21 +195,26 @@ export default function SignUp() {
   const { c, space } = useTheme();
   return (
     <Screen>
-      <Text variant="caption" tone="accent" style={{ marginTop: space['2xl'] }}>
-        VIVAVOCE
-      </Text>
-      <Text variant="display2" style={{ marginTop: space.sm }}>
-        Create your account
-      </Text>
-      <Text variant="body" tone="textMuted" style={{ marginTop: space.xs, marginBottom: space['2xl'] }}>
-        One account for your streak, your progress, and AI marking that remembers
-        where you struggle.
-      </Text>
+      <Animated.View entering={entrance(0)}>
+        <Text variant="caption" tone="accent" style={{ marginTop: space['2xl'] }}>
+          VIVAVOCE
+        </Text>
+        <Text variant="display2" style={{ marginTop: space.sm }}>
+          Create your account
+        </Text>
+        <Text variant="body" tone="textMuted" style={{ marginTop: space.xs, marginBottom: space['2xl'] }}>
+          One account for your streak, your progress, and AI marking that remembers
+          where you struggle.
+        </Text>
+      </Animated.View>
 
       {isAuthConfigured ? (
         <>
-          <SignUpForm />
-          <View
+          <Animated.View entering={entrance(1)}>
+            <SignUpForm />
+          </Animated.View>
+          <Animated.View
+            entering={entrance(2)}
             style={{
               flexDirection: 'row',
               justifyContent: 'center',
@@ -226,7 +233,7 @@ export default function SignUp() {
                 </Text>
               </Pressable>
             </Link>
-          </View>
+          </Animated.View>
         </>
       ) : (
         <Text variant="small" tone="textMuted">
