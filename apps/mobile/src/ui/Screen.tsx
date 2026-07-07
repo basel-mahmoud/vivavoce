@@ -1,4 +1,4 @@
-import { ScrollView, View, type ViewStyle } from 'react-native';
+import { ScrollView, View, type ViewStyle, type RefreshControlProps } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme';
 
@@ -8,11 +8,13 @@ export function Screen({
   scroll = true,
   edges = ['top', 'bottom'],
   contentStyle,
+  refreshControl,
 }: {
   children: React.ReactNode;
   scroll?: boolean;
   edges?: Edge[];
   contentStyle?: ViewStyle;
+  refreshControl?: React.ReactElement<RefreshControlProps>;
 }) {
   const { c, space } = useTheme();
   const padding: ViewStyle = {
@@ -28,6 +30,7 @@ export function Screen({
           contentContainerStyle={[padding, contentStyle]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          refreshControl={refreshControl}
         >
           {children}
         </ScrollView>

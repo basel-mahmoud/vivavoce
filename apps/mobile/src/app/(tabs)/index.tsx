@@ -1,10 +1,13 @@
-import { useCallback, useMemo } from 'react';
-import { View, Pressable, ScrollView } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, ScrollView, RefreshControl } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import Animated from 'react-native-reanimated';
 import { Flame, Mic, Target, Lightbulb, Sparkles, ArrowRight } from 'lucide-react-native';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { SectionHeader, StatTile, ProgressRing } from '@/ui/kit';
+import { ScoreBar } from '@/ui/ScoreBar';
+import { entrance, useCountUp, usePulse, PressableScale } from '@/ui/motion';
 import { DeckCard } from '@/components/DeckCard';
 import { useTheme } from '@/theme';
 import { tipOfTheDay, rubricAxes, decksForSubjects } from '@/data/content';
@@ -24,6 +27,7 @@ export default function Home() {
   const { profile } = useProfile();
   const { stats, refresh } = useStats();
   const tip = tipOfTheDay();
+  const [refreshing, setRefreshing] = useState(false);
 
   // Keep the dashboard honest: re-pull stats whenever the tab regains focus
   // (e.g. right after finishing a session), so the streak reflects reality.
@@ -32,6 +36,25 @@ export default function Home() {
       void refresh();
     }, [refresh]),
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  }, [refresh]);
+
+  // Marks count up; the streak tile pulses only when the streak actually grows.
+  const streakShown = useCountUp(stats.streak.current);
+  const minutesShown = useCountUp(stats.minutesThisWeek);
+  const { style: streakPulse, pulse } = usePulse();
+  const prevStreak = useRef(stats.streak.current);
+  useEffect(() => {
+    if (stats.streak.current > prevStreak.current) {
+      pulse();
+      haptics.success();
+    }
+    prevStreak.current = stats.streak.current;
+  }, [stats.streak.current, pulse]);
 
   const recommended = useMemo(() => decksForSubjects(profile.subjects), [profile.subjects]);
   const resume = recommended[0]!;
@@ -50,22 +73,38 @@ export default function Home() {
   };
 
   return (
-    <Screen>
-      <Text variant="small" tone="textMuted">
-        {greeting()}{profile.displayName ? `, ${profile.displayName}` : ''}
-      </Text>
-      <Text variant="display" style={{ marginTop: 2 }}>
-        {stats.hasData ? 'Let’s sharpen up' : 'Ready when you are'}
-      </Text>
+    <Screen
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={c.accent}
+          colors={[c.accent]}
+        />
+      }
+    >
+      <Animated.View entering={entrance(0)}>
+        <Text variant="small" tone="textMuted">
+          {greeting()}{profile.displayName ? `, ${profile.displayName}` : ''}
+        </Text>
+        <Text variant="display" style={{ marginTop: 2 }}>
+          {stats.hasData ? 'Let’s sharpen up' : 'Ready when you are'}
+        </Text>
+      </Animated.View>
 
       {/* stat row: streak, minutes, weekly goal ring */}
-      <View style={{ flexDirection: 'row', gap: space.md, marginTop: space.xl }}>
-        <StatTile
-          label="Streak"
-          value={`${stats.streak.current}d`}
-          icon={<Flame size={14} color={c.accent} />}
-        />
-        <StatTile label="This week" value={`${stats.minutesThisWeek}m`} />
+      <Animated.View
+        entering={entrance(1)}
+        style={{ flexDirection: 'row', gap: space.md, marginTop: space.xl }}
+      >
+        <Animated.View style={[{ flex: 1 }, streakPulse]}>
+          <StatTile
+            label="Streak"
+            value={`${streakShown}d`}
+            icon={<Flame size={14} color={c.accent} />}
+          />
+        </Animated.View>
+        <StatTile label="This week" value={`${minutesShown}m`} />
         <View
           style={{
             backgroundColor: c.surface,
@@ -84,110 +123,103 @@ export default function Home() {
             label={`${Math.round(weekPct * 100)}%`}
           />
         </View>
-      </View>
+      </Animated.View>
 
       {/* resume / quick start */}
-      <Pressable onPress={startQuick} accessibilityRole="button">
-        <View
-          style={{
-            marginTop: space.md,
-            borderRadius: radius.xl,
-            backgroundColor: c.accent,
-            padding: space.xl,
-            overflow: 'hidden',
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-            <Mic size={16} color={c.onAccent} />
-            <Text variant="caption" style={{ color: c.onAccent }}>
-              {stats.hasData ? 'PICK UP WHERE YOU LEFT OFF' : 'START YOUR FIRST SESSION'}
+      <Animated.View entering={entrance(2)}>
+        <PressableScale onPress={startQuick} accessibilityRole="button" haptic={false}>
+          <View
+            style={{
+              marginTop: space.md,
+              borderRadius: radius.xl,
+              backgroundColor: c.accent,
+              padding: space.xl,
+              overflow: 'hidden',
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+              <Mic size={16} color={c.onAccent} />
+              <Text variant="caption" style={{ color: c.onAccent }}>
+                {stats.hasData ? 'PICK UP WHERE YOU LEFT OFF' : 'START YOUR FIRST SESSION'}
+              </Text>
+            </View>
+            <Text variant="title" style={{ color: c.onAccent, marginTop: space.sm }}>
+              {resume.title}
             </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs, marginTop: space.md }}>
+              <Text variant="bodyMedium" style={{ color: c.onAccent }}>
+                {stats.hasData ? 'Continue' : 'Begin'}
+              </Text>
+              <ArrowRight size={16} color={c.onAccent} />
+            </View>
           </View>
-          <Text variant="title" style={{ color: c.onAccent, marginTop: space.sm }}>
-            {resume.title}
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs, marginTop: space.md }}>
-            <Text variant="bodyMedium" style={{ color: c.onAccent }}>
-              {stats.hasData ? 'Continue' : 'Begin'}
-            </Text>
-            <ArrowRight size={16} color={c.onAccent} />
-          </View>
-        </View>
-      </Pressable>
+        </PressableScale>
+      </Animated.View>
 
       {/* focus areas — only real once there's data */}
-      <SectionHeader
-        title="Focus areas"
-        action="Progress"
-        onAction={() => router.push('/(tabs)/progress')}
-        style={{ marginTop: space['2xl'] }}
-      />
-      <View
-        style={{
-          backgroundColor: c.surface,
-          borderColor: c.border,
-          borderWidth: 1,
-          borderRadius: radius.lg,
-          padding: space.lg,
-        }}
-      >
-        {stats.hasData && weakest ? (
-          <>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-              <Target size={16} color={c.accent} />
-              <Text variant="bodyMedium">Your weakest axis is {weakest}</Text>
+      <Animated.View entering={entrance(3)}>
+        <SectionHeader
+          title="Focus areas"
+          action="Progress"
+          onAction={() => router.push('/(tabs)/progress')}
+          style={{ marginTop: space['2xl'] }}
+        />
+        <View
+          style={{
+            backgroundColor: c.surface,
+            borderColor: c.border,
+            borderWidth: 1,
+            borderRadius: radius.lg,
+            padding: space.lg,
+          }}
+        >
+          {stats.hasData && weakest ? (
+            <>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+                <Target size={16} color={c.accent} />
+                <Text variant="bodyMedium">Your weakest axis is {weakest}</Text>
+              </View>
+              <View style={{ marginTop: space.md }}>
+                {rubricAxes.map((a, i) => (
+                  <ScoreBar key={a.key} label={a.label} value={stats.axisAverages[a.key] ?? 0} order={i} />
+                ))}
+              </View>
+            </>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+              <Sparkles size={18} color={c.accent} />
+              <Text variant="small" tone="textMuted" style={{ flex: 1 }}>
+                Answer a few questions out loud and your five-axis breakdown — clarity,
+                structure, confidence and more — shows up here.
+              </Text>
             </View>
-            <View style={{ marginTop: space.md, gap: space.md }}>
-              {rubricAxes.map((a) => {
-                const v = stats.axisAverages[a.key] ?? 0;
-                const band = v >= 80 ? c.success : v >= 65 ? c.accent : c.gravitas;
-                return (
-                  <View key={a.key} style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
-                    <Text variant="small" style={{ width: 92 }}>
-                      {a.label}
-                    </Text>
-                    <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden' }}>
-                      <View style={{ height: '100%', width: `${v}%`, backgroundColor: band, borderRadius: 3 }} />
-                    </View>
-                    <Text variant="mono" tone="textMuted" style={{ width: 26, textAlign: 'right', fontSize: 12 }}>
-                      {v}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          </>
-        ) : (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
-            <Sparkles size={18} color={c.accent} />
-            <Text variant="small" tone="textMuted" style={{ flex: 1 }}>
-              Answer a few questions out loud and your five-axis breakdown — clarity,
-              structure, confidence and more — shows up here.
-            </Text>
-          </View>
-        )}
-      </View>
+          )}
+        </View>
+      </Animated.View>
 
       {/* recommended decks — calibrated to the user's subjects */}
-      <SectionHeader
-        title="Recommended for you"
-        action="Library"
-        onAction={() => router.push('/(tabs)/library')}
-        style={{ marginTop: space['2xl'] }}
-      />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: space.md, paddingRight: space.xl }}
-        style={{ marginHorizontal: -space.xl, paddingHorizontal: space.xl }}
-      >
-        {recommended.slice(0, 6).map((d) => (
-          <DeckCard key={d.id} deck={d} compact />
-        ))}
-      </ScrollView>
+      <Animated.View entering={entrance(4)}>
+        <SectionHeader
+          title="Recommended for you"
+          action="Library"
+          onAction={() => router.push('/(tabs)/library')}
+          style={{ marginTop: space['2xl'] }}
+        />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: space.md, paddingRight: space.xl }}
+          style={{ marginHorizontal: -space.xl, paddingHorizontal: space.xl }}
+        >
+          {recommended.slice(0, 6).map((d) => (
+            <DeckCard key={d.id} deck={d} compact />
+          ))}
+        </ScrollView>
+      </Animated.View>
 
       {/* tip of the day */}
-      <View
+      <Animated.View
+        entering={entrance(5)}
         style={{
           marginTop: space['2xl'],
           padding: space.xl,
@@ -207,7 +239,7 @@ export default function Home() {
         <Text variant="small" style={{ color: c.bg, opacity: 0.75, marginTop: space.xs, lineHeight: 20 }}>
           {tip.body}
         </Text>
-      </View>
+      </Animated.View>
     </Screen>
   );
 }
