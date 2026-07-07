@@ -101,7 +101,11 @@ export function ProfileProvider({
   const [profile, setProfile] = useState<Profile>(DEFAULT);
   const [ready, setReady] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const cacheLoaded = useRef(false);
+  // State (not a ref!) so the reconcile effect re-runs when the cache lands —
+  // a ref here caused an unfixable race: Clerk restoring the session faster
+  // than SecureStore loads left `ready` false forever (infinite boot spinner).
+  const [cacheReady, setCacheReady] = useState(false);
+  const hadCache = useRef(false);
   const latest = useRef<Profile>(DEFAULT);
   latest.current = profile;
 
@@ -110,23 +114,20 @@ export function ProfileProvider({
     SecureStore.setItemAsync(KEY, JSON.stringify(next)).catch(() => {});
   }, []);
 
-  // 1. Instant paint from the on-device cache.
+  // 1. Instant paint from the on-device cache (runs exactly once).
   useEffect(() => {
     SecureStore.getItemAsync(KEY)
       .then((raw) => {
         if (raw) {
+          hadCache.current = true;
           const cached = { ...DEFAULT, ...(JSON.parse(raw) as Partial<Profile>) };
           setProfile(cached);
           latest.current = cached;
         }
       })
       .catch(() => {})
-      .finally(() => {
-        cacheLoaded.current = true;
-        // In demo/local mode the cache is the source of truth.
-        if (signedIn === null) setReady(true);
-      });
-  }, [signedIn]);
+      .finally(() => setCacheReady(true));
+  }, []);
 
   const pullServer = useCallback(async () => {
     if (!api) return;
@@ -156,15 +157,21 @@ export function ProfileProvider({
     }
   }, [api, persistLocal]);
 
-  // 2. When signed in, reconcile with the server once the cache has loaded.
+  // 2. Reconcile once BOTH signals have landed (cache loaded + auth resolved).
   useEffect(() => {
-    if (signedIn === true && cacheLoaded.current) {
+    if (!cacheReady) return;
+    if (signedIn === true) {
+      // Reopen path: a cached profile paints instantly and the server sync
+      // happens in the background. Fresh installs (no cache) wait for the
+      // server so routing uses the account's real onboarded state —
+      // pullServer's finally sets ready either way, even offline.
+      if (hadCache.current) setReady(true);
       void pullServer();
-    } else if (signedIn === false) {
-      // Signed out: nothing to sync; let the gate route to auth.
+    } else {
+      // Signed out or demo mode: the device cache is the source of truth.
       setReady(true);
     }
-  }, [signedIn, pullServer]);
+  }, [cacheReady, signedIn, pullServer]);
 
   const update = useCallback(
     (patch: Partial<Profile>) => {
