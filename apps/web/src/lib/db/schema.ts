@@ -552,6 +552,14 @@ export const modelUsageLogs = pgTable(
   ],
 );
 
+/* one fixed-window counter per (surface, principal) — global rate limiting
+   that survives serverless instance churn. Purged opportunistically. */
+export const rateLimits = pgTable('rate_limits', {
+  key: text('key').primaryKey(), // e.g. 'evaluate:user-uuid'
+  windowStart: timestamp('window_start', { withTimezone: true }).notNull().defaultNow(),
+  count: integer('count').notNull().default(1),
+});
+
 /* ───────────────────────────── website leads ────────────────────────────── */
 
 export const waitlistLeads = pgTable(

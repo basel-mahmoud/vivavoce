@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { getAuthContext } from '@/lib/auth/context';
 import { ok, errors, fail, parseBody } from '@/lib/http';
 import { generateDeckInput } from '@/lib/validation/contracts';
-import { limiters } from '@/lib/security/ratelimit';
+import { limiters, globalLimiters } from '@/lib/security/ratelimit';
 import { audit } from '@/lib/security/audit';
 import { db, schema } from '@/lib/db/client';
 import { generateDeck } from '@/lib/ai';
@@ -22,6 +22,8 @@ export async function POST(req: NextRequest) {
 
   const rl = limiters.deckGenerate.check(ctx.userId);
   if (!rl.ok) return errors.tooMany(rl.resetMs);
+  const grl = await globalLimiters.deckGenerate.check(ctx.userId);
+  if (!grl.ok) return errors.tooMany(grl.resetMs);
 
   const parsed = await parseBody(req, generateDeckInput);
   if (!parsed.ok) return parsed.response;

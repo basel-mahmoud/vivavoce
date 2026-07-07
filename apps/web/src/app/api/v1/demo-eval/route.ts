@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { ok, errors, parseBody } from '@/lib/http';
-import { limiters } from '@/lib/security/ratelimit';
+import { limiters, globalLimiters } from '@/lib/security/ratelimit';
 import { clientIp, hashIp } from '@/lib/security/hash';
 import { evaluateAnswer } from '@/lib/ai';
 
@@ -29,6 +29,8 @@ export async function POST(req: NextRequest) {
   const ipHash = hashIp(clientIp(req.headers)) ?? 'anon';
   const rl = limiters.demoEval.check(ipHash);
   if (!rl.ok) return errors.tooMany(rl.resetMs);
+  const grl = await globalLimiters.demoEval.check(ipHash);
+  if (!grl.ok) return errors.tooMany(grl.resetMs);
 
   const parsed = await parseBody(req, demoInput);
   if (!parsed.ok) return parsed.response;

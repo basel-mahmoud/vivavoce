@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { getAuthContext } from '@/lib/auth/context';
 import { ok, errors, parseBody } from '@/lib/http';
 import { submitAnswerInput, type EvaluationResponse } from '@/lib/validation/contracts';
-import { limiters } from '@/lib/security/ratelimit';
+import { limiters, globalLimiters } from '@/lib/security/ratelimit';
 import { audit } from '@/lib/security/audit';
 import { db, schema } from '@/lib/db/client';
 import { getOwnedSession, findAnswerByClientKey } from '@/lib/db/sessions.repo';
@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
 
   const rl = limiters.evaluate.check(ctx.userId);
   if (!rl.ok) return errors.tooMany(rl.resetMs);
+  const grl = await globalLimiters.evaluate.check(ctx.userId);
+  if (!grl.ok) return errors.tooMany(grl.resetMs);
 
   const parsed = await parseBody(req, submitAnswerInput);
   if (!parsed.ok) return parsed.response;

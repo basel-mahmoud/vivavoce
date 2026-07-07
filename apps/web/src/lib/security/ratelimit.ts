@@ -59,3 +59,53 @@ export const limiters = {
   deckGenerate: new InMemorySlidingWindow(6, 60 * 60 * 1000), // 6 / hour / user (costs AI tokens)
   generic: new InMemorySlidingWindow(60, 60 * 1000),
 } as const;
+
+/**
+ * Globally-correct fixed-window limiter backed by Postgres (one atomic upsert
+ * per check), so limits hold across every serverless instance — the property
+ * the in-memory windows can't give. Used for the surfaces that cost model
+ * tokens. Fails OPEN on database trouble: availability beats strictness for a
+ * rate limit, and the in-memory limiter above still applies per instance.
+ * The same interface swaps to Upstash/Redis later without touching call sites.
+ */
+class PgFixedWindow {
+  constructor(
+    private readonly name: string,
+    private readonly limit: number,
+    private readonly windowMs: number,
+  ) {}
+
+  async check(id: string): Promise<RateLimitResult> {
+    try {
+      // Imported lazily so module init never hard-depends on DB config.
+      const { sqlClient } = await import('@/lib/db/client');
+      const rows = (await sqlClient`
+        insert into rate_limits (key, window_start, count)
+        values (${`${this.name}:${id}`}, now(), 1)
+        on conflict (key) do update set
+          count = case
+            when rate_limits.window_start < now() - (${this.windowMs} * interval '1 millisecond')
+              then 1 else rate_limits.count + 1 end,
+          window_start = case
+            when rate_limits.window_start < now() - (${this.windowMs} * interval '1 millisecond')
+              then now() else rate_limits.window_start end
+        returning count, extract(epoch from (now() - window_start)) * 1000 as elapsed_ms
+      `) as { count: number; elapsed_ms: number }[];
+      const row = rows[0];
+      if (!row) return { ok: true, remaining: this.limit, resetMs: this.windowMs };
+      const count = Number(row.count);
+      const resetMs = Math.max(0, this.windowMs - Number(row.elapsed_ms));
+      return { ok: count <= this.limit, remaining: Math.max(0, this.limit - count), resetMs };
+    } catch (err) {
+      console.error('rate_limit_db_failed', { name: this.name, error: String(err) });
+      return { ok: true, remaining: 1, resetMs: this.windowMs };
+    }
+  }
+}
+
+/** Global (cross-instance) limiters for the token-costing surfaces. */
+export const globalLimiters = {
+  evaluate: new PgFixedWindow('evaluate', 30, 60 * 1000),
+  deckGenerate: new PgFixedWindow('deck_generate', 6, 60 * 60 * 1000),
+  demoEval: new PgFixedWindow('demo_eval', 4, 60 * 60 * 1000),
+} as const;
