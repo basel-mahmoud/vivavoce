@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { View, Pressable, ScrollView } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { router } from 'expo-router';
+import Animated from 'react-native-reanimated';
 import { ChevronRight, Clock } from 'lucide-react-native';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { Chip } from '@/ui/kit';
+import { entrance, PressableScale } from '@/ui/motion';
 import { ModeIcon } from '@/components/ModeIcon';
 import { useTheme } from '@/theme';
 import { haptics } from '@/lib/haptics';
@@ -22,10 +24,12 @@ export default function Practice() {
 
   return (
     <Screen>
-      <Text variant="display2">Practice</Text>
-      <Text variant="body" tone="textMuted" style={{ marginTop: space.xs }}>
-        Pick a deck, then choose how you want to spar.
-      </Text>
+      <Animated.View entering={entrance(0)}>
+        <Text variant="display2">Practice</Text>
+        <Text variant="body" tone="textMuted" style={{ marginTop: space.xs }}>
+          Pick a deck, then choose how you want to spar.
+        </Text>
+      </Animated.View>
 
       {/* deck selector */}
       <Text variant="caption" tone="textFaint" style={{ marginTop: space.xl, marginBottom: space.sm }}>
@@ -60,8 +64,9 @@ export default function Practice() {
         MODE
       </Text>
       <View style={{ gap: space.md }}>
-        {modes.map((m) => (
-          <Pressable key={m.key} onPress={() => start(m.key)} accessibilityRole="button">
+        {modes.map((m, i) => (
+          <Animated.View key={m.key} entering={entrance(i + 1)}>
+          <PressableScale onPress={() => start(m.key)} accessibilityRole="button" haptic={false}>
             <View
               style={{
                 flexDirection: 'row',
@@ -98,7 +103,8 @@ export default function Practice() {
                 </Text>
               </View>
             </View>
-          </Pressable>
+          </PressableScale>
+          </Animated.View>
         ))}
       </View>
     </Screen>

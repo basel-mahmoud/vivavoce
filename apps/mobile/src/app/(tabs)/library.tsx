@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
-import { View, TextInput, ScrollView, Pressable } from 'react-native';
+import { View, TextInput, ScrollView } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { Search, Plus, SearchX } from 'lucide-react-native';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { Chip, EmptyState } from '@/ui/kit';
+import { entrance, PressableScale } from '@/ui/motion';
 import { DeckCard } from '@/components/DeckCard';
 import { useTheme } from '@/theme';
 import { tintColor } from '@/theme/tint';
@@ -33,12 +35,16 @@ export default function LibraryScreen() {
 
   return (
     <Screen>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Animated.View
+        entering={entrance(0)}
+        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+      >
         <Text variant="display2">Library</Text>
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel="Create a deck"
           onPress={() => haptics.tap()}
+          haptic={false}
           style={{
             width: 40,
             height: 40,
@@ -49,11 +55,12 @@ export default function LibraryScreen() {
           }}
         >
           <Plus size={18} color={c.bg} />
-        </Pressable>
-      </View>
+        </PressableScale>
+      </Animated.View>
 
       {/* search */}
-      <View
+      <Animated.View
+        entering={entrance(1)}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -78,7 +85,7 @@ export default function LibraryScreen() {
           clearButtonMode="while-editing"
           accessibilityLabel="Search decks"
         />
-      </View>
+      </Animated.View>
 
       {/* subject filters */}
       <ScrollView
@@ -101,22 +108,22 @@ export default function LibraryScreen() {
 
       {/* results */}
       {results.length === 0 ? (
-        <View style={{ marginTop: space['2xl'] }}>
+        <Animated.View entering={FadeIn.duration(180)} style={{ marginTop: space['2xl'] }}>
           <EmptyState
             icon={<SearchX size={22} color={c.textMuted} />}
             title="No decks match"
             body="Try a different subject or clear your search to see the full catalogue."
           />
-        </View>
+        </Animated.View>
       ) : searching ? (
-        <View style={{ marginTop: space.xl, gap: space.md }}>
+        <Animated.View entering={FadeIn.duration(180)} style={{ marginTop: space.xl, gap: space.md }}>
           <Text variant="caption" tone="textFaint">
             {results.length} {results.length === 1 ? 'DECK' : 'DECKS'}
           </Text>
           {results.map((d) => (
             <DeckCard key={d.id} deck={d} />
           ))}
-        </View>
+        </Animated.View>
       ) : (
         // Browse by subject when not filtering
         subjects

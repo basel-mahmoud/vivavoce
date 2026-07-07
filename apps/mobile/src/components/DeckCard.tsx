@@ -1,11 +1,11 @@
-import { View, Pressable } from 'react-native';
+import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Clock, ChevronRight } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 import { tintColor } from '@/theme/tint';
 import { Text } from '@/ui/Text';
 import { Dot } from '@/ui/kit';
-import { haptics } from '@/lib/haptics';
+import { PressableScale } from '@/ui/motion';
 import {
   type Deck,
   subjectByKey,
@@ -20,9 +20,8 @@ export function DeckCard({ deck, compact }: { deck: Deck; compact?: boolean }) {
   const accent = subject ? tintColor(c, subject.tint) : c.accent;
 
   return (
-    <Pressable
+    <PressableScale
       onPress={() => {
-        haptics.tap();
         router.push({ pathname: '/deck/[id]', params: { id: deck.id } });
       }}
       style={{
@@ -70,6 +69,6 @@ export function DeckCard({ deck, compact }: { deck: Deck; compact?: boolean }) {
         </Text>
         {!compact ? <ChevronRight size={16} color={c.textFaint} style={{ marginLeft: 'auto' }} /> : null}
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }

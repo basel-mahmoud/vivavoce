@@ -3,7 +3,7 @@ import Svg, { Circle } from 'react-native-svg';
 import Animated, { useAnimatedProps } from 'react-native-reanimated';
 import { ChevronRight } from 'lucide-react-native';
 import { useTheme } from '@/theme';
-import { useFillProgress } from './motion';
+import { useFillProgress, PressableScale } from './motion';
 import { Text } from './Text';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -135,7 +135,7 @@ export function ProgressRing({
   );
 }
 
-/** A small rounded chip/tag. */
+/** A small rounded chip/tag with press physics when tappable. */
 export function Chip({
   label,
   active,
@@ -165,7 +165,13 @@ export function Chip({
       </Text>
     </View>
   );
-  return onPress ? <Pressable onPress={onPress}>{body}</Pressable> : body;
+  return onPress ? (
+    <PressableScale onPress={onPress} haptic={false}>
+      {body}
+    </PressableScale>
+  ) : (
+    body
+  );
 }
 
 /** A tappable list row with a leading accent and a chevron. */

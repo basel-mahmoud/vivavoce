@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { View, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
+import Animated, { FadeInUp, ReduceMotion } from 'react-native-reanimated';
 import { ChevronLeft, Play, Check } from 'lucide-react-native';
 import { Text } from '@/ui/Text';
 import { Button } from '@/ui/Button';
 import { Chip, Dot } from '@/ui/kit';
+import { entrance, easeOutQuint, PressableScale } from '@/ui/motion';
 import { ModeIcon } from '@/components/ModeIcon';
 import { useTheme } from '@/theme';
 import { tintColor } from '@/theme/tint';
@@ -55,21 +57,26 @@ export default function DeckDetail() {
         contentContainerStyle={{ paddingHorizontal: space.xl, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
-          <Dot color={accent} />
-          <Text variant="caption" style={{ color: accent }}>
-            {deck.subject.toUpperCase()}
+        <Animated.View entering={entrance(0)}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+            <Dot color={accent} />
+            <Text variant="caption" style={{ color: accent }}>
+              {deck.subject.toUpperCase()}
+            </Text>
+          </View>
+          <Text variant="display2" style={{ marginTop: space.sm }}>
+            {deck.title}
           </Text>
-        </View>
-        <Text variant="display2" style={{ marginTop: space.sm }}>
-          {deck.title}
-        </Text>
-        <Text variant="body" tone="textMuted" style={{ marginTop: space.sm }}>
-          {deck.description}
-        </Text>
+          <Text variant="body" tone="textMuted" style={{ marginTop: space.sm }}>
+            {deck.description}
+          </Text>
+        </Animated.View>
 
         {/* meta */}
-        <View style={{ flexDirection: 'row', gap: space.lg, marginTop: space.lg }}>
+        <Animated.View
+          entering={entrance(1)}
+          style={{ flexDirection: 'row', gap: space.lg, marginTop: space.lg }}
+        >
           {[
             [`${deck.questions.length}`, 'questions'],
             [`${estMinutes(deck, mode)}`, 'minutes'],
@@ -84,84 +91,96 @@ export default function DeckDetail() {
               </Text>
             </View>
           ))}
-        </View>
+        </Animated.View>
 
         {/* tags */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.lg }}>
+        <Animated.View
+          entering={entrance(2)}
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.lg }}
+        >
           {deck.tags.map((t) => (
             <Chip key={t} label={t} />
           ))}
-        </View>
+        </Animated.View>
 
         {/* mode picker */}
-        <Text variant="title" style={{ marginTop: space['2xl'], marginBottom: space.md }}>
-          How do you want to spar?
-        </Text>
-        <View style={{ gap: space.sm }}>
-          {modes.map((m) => {
-            const active = m.key === mode;
-            return (
-              <Pressable
-                key={m.key}
-                onPress={() => {
-                  haptics.tap();
-                  setMode(m.key);
-                }}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: space.md,
-                  padding: space.md,
-                  borderRadius: radius.md,
-                  borderWidth: 1.5,
-                  borderColor: active ? c.accent : c.border,
-                  backgroundColor: active ? c.accent + '10' : c.surface,
-                }}
-              >
-                <View
+        <Animated.View entering={entrance(3)}>
+          <Text variant="title" style={{ marginTop: space['2xl'], marginBottom: space.md }}>
+            How do you want to spar?
+          </Text>
+          <View style={{ gap: space.sm }}>
+            {modes.map((m) => {
+              const active = m.key === mode;
+              return (
+                <PressableScale
+                  key={m.key}
+                  haptic={false}
+                  onPress={() => {
+                    haptics.tap();
+                    setMode(m.key);
+                  }}
                   style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 19,
+                    flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: active ? c.accent : c.surface2,
+                    gap: space.md,
+                    padding: space.md,
+                    borderRadius: radius.md,
+                    borderWidth: 1.5,
+                    borderColor: active ? c.accent : c.border,
+                    backgroundColor: active ? c.accent + '10' : c.surface,
                   }}
                 >
-                  <ModeIcon icon={m.icon} color={active ? c.onAccent : c.textMuted} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text variant="bodyMedium">{m.name}</Text>
-                  <Text variant="small" tone="textMuted" numberOfLines={1}>
-                    {m.line}
-                  </Text>
-                </View>
-                {active ? <Check size={18} color={c.accent} /> : null}
-              </Pressable>
-            );
-          })}
-        </View>
+                  <View
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 19,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: active ? c.accent : c.surface2,
+                    }}
+                  >
+                    <ModeIcon icon={m.icon} color={active ? c.onAccent : c.textMuted} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text variant="bodyMedium">{m.name}</Text>
+                    <Text variant="small" tone="textMuted" numberOfLines={1}>
+                      {m.line}
+                    </Text>
+                  </View>
+                  {active ? <Check size={18} color={c.accent} /> : null}
+                </PressableScale>
+              );
+            })}
+          </View>
+        </Animated.View>
 
         {/* question preview */}
-        <Text variant="title" style={{ marginTop: space['2xl'], marginBottom: space.md }}>
-          What you’ll be asked
-        </Text>
-        <View style={{ gap: space.md }}>
-          {deck.questions.map((q, i) => (
-            <View key={i} style={{ flexDirection: 'row', gap: space.md }}>
-              <Text variant="mono" style={{ color: accent, width: 22 }}>
-                {String(i + 1).padStart(2, '0')}
-              </Text>
-              <Text variant="small" style={{ flex: 1, lineHeight: 21 }}>
-                {q}
-              </Text>
-            </View>
-          ))}
-        </View>
+        <Animated.View entering={entrance(4)}>
+          <Text variant="title" style={{ marginTop: space['2xl'], marginBottom: space.md }}>
+            What you’ll be asked
+          </Text>
+          <View style={{ gap: space.md }}>
+            {deck.questions.map((q, i) => (
+              <View key={i} style={{ flexDirection: 'row', gap: space.md }}>
+                <Text variant="mono" style={{ color: accent, width: 22 }}>
+                  {String(i + 1).padStart(2, '0')}
+                </Text>
+                <Text variant="small" style={{ flex: 1, lineHeight: 21 }}>
+                  {q}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </Animated.View>
       </ScrollView>
 
-      {/* sticky start bar */}
-      <View
+      {/* sticky start bar — rises in after the content settles */}
+      <Animated.View
+        entering={FadeInUp.duration(320)
+          .delay(220)
+          .easing(easeOutQuint)
+          .reduceMotion(ReduceMotion.System)}
         style={{
           position: 'absolute',
           left: 0,
@@ -180,7 +199,7 @@ export default function DeckDetail() {
           onPress={start}
           icon={<Play size={16} color={c.onAccent} fill={c.onAccent} />}
         />
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }
