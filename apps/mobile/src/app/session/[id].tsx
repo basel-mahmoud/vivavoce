@@ -5,8 +5,9 @@ import { ScrollView } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Crypto from 'expo-crypto';
-import { X, RefreshCw } from 'lucide-react-native';
+import { X, RefreshCw, Volume2, VolumeX } from 'lucide-react-native';
 import { entrance } from '@/ui/motion';
+import { getVoiceEnabled, setVoiceEnabled, speak, stopSpeaking } from '@/lib/speech';
 import { Text } from '@/ui/Text';
 import { Button } from '@/ui/Button';
 import { Pill } from '@/ui/Pill';
@@ -47,6 +48,11 @@ export default function SessionScreen() {
   const clientSessionKey = useRef(Crypto.randomUUID()).current;
   const [serverSessionId, setServerSessionId] = useState<string | null>(null);
   const revealed = useRef(false);
+  const [voiceOn, setVoiceOn] = useState(true);
+
+  useEffect(() => {
+    void getVoiceEnabled().then(setVoiceOn);
+  }, []);
 
   const question = followUp ?? questions[qIndex]!;
   const onLastBase = qIndex >= questions.length - 1;
@@ -60,12 +66,19 @@ export default function SessionScreen() {
     });
   const recorder = useRecorder();
 
+  // The examiner reads each fresh question aloud (never over your answer).
+  useEffect(() => {
+    if (voiceOn && state === 'idle') speak(question);
+    return () => stopSpeaking();
+  }, [question, voiceOn]); // eslint-disable-line react-hooks/exhaustive-deps -- speak only on new questions, not state churn
+
   // Drive both the recorder and the session state machine together.
   const onMicPress = async () => {
     if (state === 'listening') {
       const audio = await recorder.stop();
       await stop(audio);
     } else {
+      stopSpeaking(); // the candidate has the floor
       await recorder.start(); // begins real capture; session falls back if it fails
       start();
     }
@@ -139,7 +152,20 @@ export default function SessionScreen() {
           <X size={24} color={c.textMuted} />
         </Pressable>
         <Pill label={`${modeName(mode)} · Q${qIndex + 1}/${questions.length}`} tone="muted" />
-        <View style={{ width: 24 }} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={voiceOn ? 'Mute the examiner voice' : 'Unmute the examiner voice'}
+          onPress={() => {
+            const next = !voiceOn;
+            setVoiceOn(next);
+            setVoiceEnabled(next);
+            if (!next) stopSpeaking();
+            else if (state === 'idle') speak(question);
+          }}
+          hitSlop={12}
+        >
+          {voiceOn ? <Volume2 size={22} color={c.accent} /> : <VolumeX size={22} color={c.textFaint} />}
+        </Pressable>
       </View>
 
       <ScrollView
