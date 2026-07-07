@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import Animated from 'react-native-reanimated';
@@ -9,13 +9,22 @@ import { Chip } from '@/ui/kit';
 import { entrance, PressableScale } from '@/ui/motion';
 import { ModeIcon } from '@/components/ModeIcon';
 import { useTheme } from '@/theme';
+import { useProfile } from '@/data/profile';
 import { haptics } from '@/lib/haptics';
-import { modes, featuredDecks, deckById, estMinutes } from '@/data/content';
+import { modes, featuredDecks, deckById, decksForSubjects, estMinutes } from '@/data/content';
 
 export default function Practice() {
   const { c, space, radius } = useTheme();
+  const { profile } = useProfile();
   const [deckId, setDeckId] = useState(featuredDecks[0]!.id);
   const deck = deckById(deckId)!;
+
+  // Deck chips calibrated to the user's subjects (whole catalogue reachable
+  // via Library); the selected deck always stays visible in the row.
+  const chips = useMemo(() => {
+    const rec = decksForSubjects(profile.subjects).slice(0, 14);
+    return rec.some((d) => d.id === deckId) ? rec : [deck, ...rec].slice(0, 14);
+  }, [profile.subjects, deckId, deck]);
 
   const start = (mode: string) => {
     haptics.press();
@@ -41,7 +50,7 @@ export default function Practice() {
         contentContainerStyle={{ gap: space.sm, paddingRight: space.xl }}
         style={{ marginHorizontal: -space.xl, paddingHorizontal: space.xl }}
       >
-        {featuredDecks.map((d) => (
+        {chips.map((d) => (
           <Chip
             key={d.id}
             label={d.title}
