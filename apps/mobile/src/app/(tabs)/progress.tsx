@@ -232,7 +232,7 @@ export default function Progress() {
                         <Text variant="bodyMedium" numberOfLines={1} style={{ fontSize: 14 }}>
                           {s.deckTitle}
                         </Text>
-                        <Text variant="caption" tone="textFaint">
+                        <Text variant="caption" tone="textFaint" numberOfLines={1}>
                           {modeName(s.mode)} · fix {s.weakest} · {s.when}
                         </Text>
                       </View>

@@ -90,7 +90,7 @@ export function HeatGrid({ data }: { data: { day: string; count: number }[] }) {
           marginTop: space.md,
         }}
       >
-        <Text variant="caption" tone="textFaint">
+        <Text variant="caption" tone="textFaint" numberOfLines={1} style={{ flexShrink: 1 }}>
           {total} {total === 1 ? 'ANSWER' : 'ANSWERS'} · 12 WEEKS
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>

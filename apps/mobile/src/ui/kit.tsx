@@ -66,23 +66,27 @@ export function StatTile({
           borderColor: c.border,
           borderWidth: 1,
           borderRadius: radius.lg,
-          padding: space.lg,
+          paddingVertical: space.lg,
+          paddingHorizontal: space.md,
         },
         style,
       ]}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs, minWidth: 0 }}>
         {icon}
-        <Text variant="caption" tone="textFaint">
+        <Text variant="caption" tone="textFaint" numberOfLines={1} style={{ flexShrink: 1 }}>
           {label.toUpperCase()}
         </Text>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: space.xs, marginTop: space.sm }}>
-        <Text variant="display2">{value}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: space.xs, marginTop: space.sm, minWidth: 0 }}>
+        <Text variant="display2" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+          {value}
+        </Text>
         {delta ? (
           <Text
             variant="caption"
-            style={{ color: deltaUp ? c.success : c.textMuted, marginBottom: 4 }}
+            numberOfLines={1}
+            style={{ color: deltaUp ? c.success : c.textMuted, marginBottom: 4, flexShrink: 1 }}
           >
             {deltaUp ? '▲' : ''} {delta}
           </Text>
