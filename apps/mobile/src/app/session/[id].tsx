@@ -39,14 +39,17 @@ export default function SessionScreen() {
   const deck = deckById(deckId ?? '') ?? starterDecks[0]!;
   const questions = deck.questions;
   const [qIndex, setQIndex] = useState(0);
+  // Mock Viva chains one AI follow-up per base question, aimed at the weakest
+  // axis of the answer just given (PRODUCT.md's adaptive examiner).
+  const [followUp, setFollowUp] = useState<string | null>(null);
   // Idempotency key for creating the session; the SERVER id comes back from
   // startSession and is what answers must be submitted against.
   const clientSessionKey = useRef(Crypto.randomUUID()).current;
   const [serverSessionId, setServerSessionId] = useState<string | null>(null);
   const revealed = useRef(false);
 
-  const question = questions[qIndex]!;
-  const isLast = qIndex >= questions.length - 1;
+  const question = followUp ?? questions[qIndex]!;
+  const onLastBase = qIndex >= questions.length - 1;
 
   const { state, elapsedMs, result, error, usedFallback, start, stop, cancel, retry, reset } =
     useSession({
@@ -94,11 +97,23 @@ export default function SessionScreen() {
     if (state !== 'feedback') revealed.current = false;
   }, [state]);
 
+  // In viva mode, an answer to a base question earns one adaptive follow-up
+  // before the deck advances; other modes walk the deck linearly.
+  const nextFollowUp =
+    mode === 'mock_viva' && !followUp ? result?.suggestedFollowUp?.trim() || null : null;
+  const isLast = onLastBase && !nextFollowUp;
+
   const next = () => {
-    if (isLast) {
+    if (nextFollowUp) {
+      setFollowUp(nextFollowUp);
+      reset();
+      return;
+    }
+    if (onLastBase) {
       router.back();
       return;
     }
+    setFollowUp(null);
     setQIndex((i) => i + 1);
     reset();
   };
@@ -131,10 +146,10 @@ export default function SessionScreen() {
         contentContainerStyle={{ padding: space.xl, paddingBottom: space['4xl'], flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* question — re-keyed per question so each one slides in fresh */}
-        <Animated.View key={qIndex} entering={entrance(0)}>
-          <Text variant="caption" tone="textFaint">
-            {deck.subject.toUpperCase()}
+        {/* question — re-keyed per question/phase so each one slides in fresh */}
+        <Animated.View key={`${qIndex}-${followUp ? 'f' : 'b'}`} entering={entrance(0)}>
+          <Text variant="caption" tone={followUp ? 'accent' : 'textFaint'}>
+            {followUp ? 'FOLLOW-UP · DIGGING DEEPER' : deck.subject.toUpperCase()}
           </Text>
           <Text variant="display2" style={{ marginTop: space.sm, lineHeight: 32 }}>
             {question}
