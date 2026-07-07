@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, type PressableProps, type ViewStyle } from 'react-native';
+import { Pressable, View, type PressableProps, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, {
   FadeInDown,
   Easing,
@@ -11,8 +11,12 @@ import Animated, {
   withTiming,
   withDelay,
   withSequence,
+  withRepeat,
+  cancelAnimation,
 } from 'react-native-reanimated';
+import { useTheme } from '@/theme';
 import { haptics } from '@/lib/haptics';
+import { Text } from './Text';
 
 /**
  * "The Practice Room" motion kit (DESIGN.md → Motion). One vocabulary for the
@@ -151,6 +155,95 @@ export function useFillProgress(value: number, delay = 0) {
   }, [clamped, delay, reduced, progress]);
 
   return progress;
+}
+
+/**
+ * Loading skeleton block (pattern ported from 21st.dev hero_ui/skeleton):
+ * a quiet opacity shimmer on a surface-toned rounded rect. Compose into
+ * placeholder layouts while first data loads; renders static under reduced motion.
+ */
+export function Skeleton({ style }: { style?: ViewStyle }) {
+  const { c, radius } = useTheme();
+  const reduced = useReducedMotion();
+  const glow = useSharedValue(0.55);
+
+  useEffect(() => {
+    if (reduced) return;
+    glow.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 700, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0.55, { duration: 700, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1,
+    );
+    return () => cancelAnimation(glow);
+  }, [reduced, glow]);
+
+  const shimmer = useAnimatedStyle(() => ({ opacity: glow.value }));
+  return (
+    <Animated.View
+      accessibilityElementsHidden
+      style={[{ backgroundColor: c.surface2, borderRadius: radius.md }, shimmer, style]}
+    />
+  );
+}
+
+/** One rolling digit column: 0–9 stacked, translated to the target digit. */
+function RollingDigit({
+  digit,
+  height,
+  textStyle,
+}: {
+  digit: number;
+  height: number;
+  textStyle: TextStyle;
+}) {
+  const reduced = useReducedMotion();
+  const y = useSharedValue(reduced ? -digit * height : 0);
+
+  useEffect(() => {
+    if (reduced) {
+      y.value = -digit * height;
+      return;
+    }
+    y.value = withTiming(-digit * height, { duration: 900, easing: easeOutQuint });
+  }, [digit, height, reduced, y]);
+
+  const roll = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+  return (
+    <View style={{ height, overflow: 'hidden' }}>
+      <Animated.View style={roll}>
+        {Array.from({ length: 10 }, (_, n) => (
+          <Text key={n} style={[textStyle, { height, textAlign: 'center' }]}>
+            {n}
+          </Text>
+        ))}
+      </Animated.View>
+    </View>
+  );
+}
+
+/**
+ * Odometer-style number: each digit rolls to its place (the classic
+ * "number flow" reveal). Digits-only values; reduced motion renders static.
+ */
+export function DigitRoll({
+  value,
+  height = 34,
+  textStyle,
+}: {
+  value: number;
+  height?: number;
+  textStyle: TextStyle;
+}) {
+  const digits = String(Math.max(0, Math.round(value))).split('');
+  return (
+    <View style={{ flexDirection: 'row' }} accessibilityLabel={String(value)} accessible>
+      {digits.map((d, i) => (
+        <RollingDigit key={`${i}-${digits.length}`} digit={Number(d)} height={height} textStyle={textStyle} />
+      ))}
+    </View>
+  );
 }
 
 /** A one-shot attention pulse (scale 1 → 1.06 → 1). For streak/goal moments. */

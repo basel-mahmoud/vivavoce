@@ -70,6 +70,8 @@ export interface UserStats {
   minutesThisWeek: number;
   axisAverages: Record<string, number>;
   confidenceTrend: number[];
+  /** Per-day answer counts for the last 12 weeks (practice heat grid). */
+  heatmap: { day: string; count: number }[];
   recent: {
     id: string;
     deckTitle: string;

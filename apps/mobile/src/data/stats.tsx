@@ -22,6 +22,7 @@ export const EMPTY_STATS: UserStats = {
   minutesThisWeek: 0,
   axisAverages: { correctness: 0, clarity: 0, structure: 0, conciseness: 0, confidence: 0 },
   confidenceTrend: [],
+  heatmap: [],
   recent: [],
   hasData: false,
 };
@@ -35,6 +36,8 @@ export function weeklyProgress(minutes: number): number {
 interface Ctx {
   stats: UserStats;
   loading: boolean;
+  /** False until the first fetch settles — drives skeletons exactly once. */
+  ready: boolean;
   refresh: () => Promise<void>;
 }
 
@@ -51,6 +54,7 @@ export function StatsProvider({
 }) {
   const [stats, setStats] = useState<UserStats>(EMPTY_STATS);
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!api || !enabled) return;
@@ -62,20 +66,33 @@ export function StatsProvider({
       // Keep the last-known stats; a transient failure shouldn't blank the screen.
     } finally {
       setLoading(false);
+      setReady(true);
     }
   }, [api, enabled]);
 
   useEffect(() => {
     if (enabled) void refresh();
-    else setStats(EMPTY_STATS);
+    else {
+      setStats(EMPTY_STATS);
+      // Demo/local mode has nothing to fetch; treat as settled.
+      setReady(true);
+    }
   }, [enabled, refresh]);
 
-  const value = useMemo(() => ({ stats, loading, refresh }), [stats, loading, refresh]);
+  const value = useMemo(
+    () => ({ stats, loading, ready, refresh }),
+    [stats, loading, ready, refresh],
+  );
   return <StatsContext.Provider value={value}>{children}</StatsContext.Provider>;
 }
 
 export function useStats(): Ctx {
   return (
-    useContext(StatsContext) ?? { stats: EMPTY_STATS, loading: false, refresh: async () => {} }
+    useContext(StatsContext) ?? {
+      stats: EMPTY_STATS,
+      loading: false,
+      ready: true,
+      refresh: async () => {},
+    }
   );
 }

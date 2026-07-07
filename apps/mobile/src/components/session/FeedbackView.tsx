@@ -6,7 +6,7 @@ import { Card } from '@/ui/Card';
 import { Pill } from '@/ui/Pill';
 import { Button } from '@/ui/Button';
 import { ScoreBar, bandColor } from '@/ui/ScoreBar';
-import { entrance, Stamp, useCountUp } from '@/ui/motion';
+import { entrance, Stamp, DigitRoll } from '@/ui/motion';
 import { useTheme } from '@/theme';
 import { rubricAxes } from '@/data/content';
 import type { EvaluationResult } from '@/lib/api';
@@ -24,10 +24,8 @@ export function FeedbackView({
   onRetry: () => void;
   onNext: () => void;
 }) {
-  const { c, space } = useTheme();
+  const { c, space, type } = useTheme();
   const scores = result.scores as Record<string, number>;
-  // The reveal: the mark stamps down while the number counts up to meet it.
-  const shownOverall = useCountUp(result.overall, 800);
 
   return (
     <View style={{ gap: space.lg }}>
@@ -40,9 +38,12 @@ export function FeedbackView({
               OVERALL
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 4 }}>
-              <Text variant="display" style={{ color: bandColor(result.overall, c) }}>
-                {shownOverall}
-              </Text>
+              {/* Odometer reveal: digits roll to the mark while the stamp lands. */}
+              <DigitRoll
+                value={result.overall}
+                height={type.display.lineHeight}
+                textStyle={{ ...type.display, color: bandColor(result.overall, c) }}
+              />
               <Text variant="body" tone="textFaint" style={{ marginBottom: 6 }}>
                 /100
               </Text>

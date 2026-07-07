@@ -8,7 +8,8 @@ import { Text } from '@/ui/Text';
 import { Card } from '@/ui/Card';
 import { ScoreBar } from '@/ui/ScoreBar';
 import { SectionHeader, ProgressRing, EmptyState } from '@/ui/kit';
-import { entrance, useFillProgress, useCountUp } from '@/ui/motion';
+import { entrance, useFillProgress, useCountUp, Skeleton } from '@/ui/motion';
+import { HeatGrid } from '@/components/HeatGrid';
 import { useTheme } from '@/theme';
 import { rubricAxes, modeName } from '@/data/content';
 import { useStats, weeklyProgress } from '@/data/stats';
@@ -71,7 +72,7 @@ function achievementsFor(s: UserStats) {
 
 export default function Progress() {
   const { space, c, radius } = useTheme();
-  const { stats, refresh } = useStats();
+  const { stats, ready, refresh } = useStats();
 
   useFocusEffect(
     useCallback(() => {
@@ -93,7 +94,14 @@ export default function Progress() {
         </Text>
       </Animated.View>
 
-      {!stats.hasData ? (
+      {!ready ? (
+        // First-load skeleton (shimmer pattern ported from 21st.dev hero_ui).
+        <View style={{ marginTop: space.xl, gap: space.md }}>
+          <Skeleton style={{ height: 132 }} />
+          <Skeleton style={{ height: 84 }} />
+          <Skeleton style={{ height: 180 }} />
+        </View>
+      ) : !stats.hasData ? (
         <Animated.View entering={entrance(1)} style={{ marginTop: space['3xl'] }}>
           <EmptyState
             icon={<TrendingUp size={22} color={c.textMuted} />}
@@ -151,9 +159,17 @@ export default function Progress() {
           </Card>
           </Animated.View>
 
+          {/* practice heat grid — real per-day counts from analytics_daily */}
+          <Animated.View entering={entrance(3)}>
+            <SectionHeader title="Practice heat" style={{ marginTop: space['2xl'] }} />
+            <Card>
+              <HeatGrid data={stats.heatmap} />
+            </Card>
+          </Animated.View>
+
           {/* confidence trend */}
           {trend.length >= 2 ? (
-            <Animated.View entering={entrance(3)}>
+            <Animated.View entering={entrance(4)}>
               <SectionHeader title="Confidence trend" style={{ marginTop: space['2xl'] }} />
               <Card>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: space.sm }}>
@@ -170,7 +186,7 @@ export default function Progress() {
           ) : null}
 
           {/* average by axis */}
-          <Animated.View entering={entrance(4)}>
+          <Animated.View entering={entrance(5)}>
           <SectionHeader title="Average by axis" style={{ marginTop: space['2xl'] }} />
           <Card>
             {rubricAxes.map((a, i) => (
@@ -181,7 +197,7 @@ export default function Progress() {
 
           {/* recent history */}
           {stats.recent.length ? (
-            <Animated.View entering={entrance(5)}>
+            <Animated.View entering={entrance(6)}>
               <SectionHeader title="Recent sessions" style={{ marginTop: space['2xl'] }} />
               <Card style={{ paddingVertical: space.xs }}>
                 {stats.recent.map((s, i) => {
@@ -230,7 +246,7 @@ export default function Progress() {
       )}
 
       {/* achievements — always visible, honestly gated */}
-      <Animated.View entering={entrance(6)}>
+      <Animated.View entering={entrance(7)}>
       <SectionHeader title="Achievements" style={{ marginTop: space['2xl'] }} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md }}>
         {achievements.map((a) => (

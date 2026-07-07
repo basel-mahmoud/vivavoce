@@ -106,6 +106,8 @@ export interface UserStats {
   minutesThisWeek: number;
   axisAverages: Record<string, number>;
   confidenceTrend: number[];
+  /** Per-day answer counts for the last 12 weeks (practice heat grid). */
+  heatmap: { day: string; count: number }[];
   recent: {
     id: string;
     deckTitle: string;
@@ -169,6 +171,13 @@ export async function getUserStats(userId: string): Promise<UserStats> {
     limit 6
   `) as Record<string, unknown>[];
 
+  const heatRows = (await sqlClient`
+    select day::text as day, answers_count::int as count
+    from analytics_daily
+    where user_id = ${userId} and day >= (current_date - interval '83 day')
+    order by day asc
+  `) as Record<string, unknown>[];
+
   const axisAverages = {
     correctness: num(a.correctness),
     clarity: num(a.clarity),
@@ -191,6 +200,7 @@ export async function getUserStats(userId: string): Promise<UserStats> {
     minutesThisWeek: num(weekRows[0]?.mins),
     axisAverages,
     confidenceTrend,
+    heatmap: heatRows.map((r) => ({ day: String(r.day), count: num(r.count) })),
     recent: recentRows.map((r) => ({
       id: String(r.id),
       deckTitle: (r.deck_title as string) ?? 'Practice session',

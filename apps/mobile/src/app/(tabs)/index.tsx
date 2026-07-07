@@ -7,7 +7,7 @@ import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { SectionHeader, StatTile, ProgressRing } from '@/ui/kit';
 import { ScoreBar } from '@/ui/ScoreBar';
-import { entrance, useCountUp, usePulse, PressableScale } from '@/ui/motion';
+import { entrance, useCountUp, usePulse, PressableScale, Skeleton } from '@/ui/motion';
 import { DeckCard } from '@/components/DeckCard';
 import { useTheme } from '@/theme';
 import { tipOfTheDay, rubricAxes, decksForSubjects } from '@/data/content';
@@ -25,7 +25,7 @@ function greeting() {
 export default function Home() {
   const { c, space, radius } = useTheme();
   const { profile } = useProfile();
-  const { stats, refresh } = useStats();
+  const { stats, ready, refresh } = useStats();
   const tip = tipOfTheDay();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -92,38 +92,46 @@ export default function Home() {
         </Text>
       </Animated.View>
 
-      {/* stat row: streak, minutes, weekly goal ring */}
-      <Animated.View
-        entering={entrance(1)}
-        style={{ flexDirection: 'row', gap: space.md, marginTop: space.xl }}
-      >
-        <Animated.View style={[{ flex: 1 }, streakPulse]}>
-          <StatTile
-            label="Streak"
-            value={`${streakShown}d`}
-            icon={<Flame size={14} color={c.accent} />}
-          />
-        </Animated.View>
-        <StatTile label="This week" value={`${minutesShown}m`} />
-        <View
-          style={{
-            backgroundColor: c.surface,
-            borderColor: c.border,
-            borderWidth: 1,
-            borderRadius: radius.lg,
-            padding: space.md,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <ProgressRing
-            progress={weekPct}
-            size={64}
-            stroke={7}
-            label={`${Math.round(weekPct * 100)}%`}
-          />
+      {/* stat row: streak, minutes, weekly goal ring (skeleton on first load) */}
+      {!ready ? (
+        <View style={{ flexDirection: 'row', gap: space.md, marginTop: space.xl }}>
+          <Skeleton style={{ flex: 1, height: 88, borderRadius: radius.lg }} />
+          <Skeleton style={{ flex: 1, height: 88, borderRadius: radius.lg }} />
+          <Skeleton style={{ width: 88, height: 88, borderRadius: radius.lg }} />
         </View>
-      </Animated.View>
+      ) : (
+        <Animated.View
+          entering={entrance(1)}
+          style={{ flexDirection: 'row', gap: space.md, marginTop: space.xl }}
+        >
+          <Animated.View style={[{ flex: 1 }, streakPulse]}>
+            <StatTile
+              label="Streak"
+              value={`${streakShown}d`}
+              icon={<Flame size={14} color={c.accent} />}
+            />
+          </Animated.View>
+          <StatTile label="This week" value={`${minutesShown}m`} />
+          <View
+            style={{
+              backgroundColor: c.surface,
+              borderColor: c.border,
+              borderWidth: 1,
+              borderRadius: radius.lg,
+              padding: space.md,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <ProgressRing
+              progress={weekPct}
+              size={64}
+              stroke={7}
+              label={`${Math.round(weekPct * 100)}%`}
+            />
+          </View>
+        </Animated.View>
+      )}
 
       {/* resume / quick start */}
       <Animated.View entering={entrance(2)}>
