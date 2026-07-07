@@ -4,7 +4,7 @@ import { router, Link } from 'expo-router';
 import Animated from 'react-native-reanimated';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
-import { useSignUp, useSSO } from '@clerk/clerk-expo';
+import { useSignUp, useSSO, useClerk } from '@clerk/clerk-expo';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { Button } from '@/ui/Button';
@@ -17,28 +17,46 @@ WebBrowser.maybeCompleteAuthSession();
 /** Google via Clerk SSO — one tap covers both sign-up and sign-in. */
 function GoogleButton({ onError }: { onError: (msg: string) => void }) {
   const { startSSOFlow } = useSSO();
+  const clerk = useClerk();
   const [busy, setBusy] = useState(false);
+
+  // See sign-in.tsx: after a reinstall a live browser-cookie session can make
+  // the flow return without a new session id — activate the existing one.
+  const activateExisting = useCallback(async () => {
+    const sid =
+      clerk.client?.lastActiveSessionId ?? clerk.client?.sessions?.[0]?.id ?? null;
+    if (!sid) return false;
+    await clerk.setActive({ session: sid });
+    router.replace('/');
+    return true;
+  }, [clerk]);
 
   const go = useCallback(async () => {
     if (busy) return;
     setBusy(true);
     try {
-      const { createdSessionId, setActive } = await startSSOFlow({
+      const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
         strategy: 'oauth_google',
         redirectUrl: AuthSession.makeRedirectUri({ scheme: 'vivavoce' }),
       });
-      if (createdSessionId && setActive) {
-        await setActive({ session: createdSessionId });
+      const sessionId =
+        createdSessionId ?? signIn?.createdSessionId ?? signUp?.createdSessionId ?? null;
+      if (sessionId && setActive) {
+        await setActive({ session: sessionId });
         router.replace('/');
-      } else {
+      } else if (!(await activateExisting())) {
         onError('Google sign-up was not completed. Try again.');
       }
-    } catch {
+    } catch (err) {
+      const code = (err as { errors?: { code?: string }[] })?.errors?.[0]?.code;
+      if (code === 'session_exists' && (await activateExisting().catch(() => false))) {
+        return;
+      }
       onError('Google sign-up failed. You can use email instead.');
     } finally {
       setBusy(false);
     }
-  }, [busy, startSSOFlow, onError]);
+  }, [busy, startSSOFlow, onError, activateExisting]);
 
   return <Button label="Continue with Google" onPress={go} loading={busy} />;
 }
