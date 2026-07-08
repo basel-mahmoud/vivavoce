@@ -108,4 +108,5 @@ export const globalLimiters = {
   evaluate: new PgFixedWindow('evaluate', 30, 60 * 1000),
   deckGenerate: new PgFixedWindow('deck_generate', 6, 60 * 60 * 1000),
   demoEval: new PgFixedWindow('demo_eval', 4, 60 * 60 * 1000),
+  dailyFive: new PgFixedWindow('daily_five', 3, 24 * 60 * 60 * 1000),
 } as const;

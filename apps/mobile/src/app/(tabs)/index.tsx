@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, ScrollView, RefreshControl } from 'react-native';
+import { View, ScrollView, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import Animated from 'react-native-reanimated';
 import { Flame, Mic, Target, Lightbulb, Sparkles, ArrowRight, CalendarClock, RotateCcw } from 'lucide-react-native';
@@ -10,7 +10,7 @@ import { ScoreBar } from '@/ui/ScoreBar';
 import { entrance, useCountUp, usePulse, PressableScale, Skeleton } from '@/ui/motion';
 import { DeckCard } from '@/components/DeckCard';
 import { useTheme } from '@/theme';
-import { tipOfTheDay, rubricAxes, decksForSubjects, registerLocalDeck } from '@/data/content';
+import { tipOfTheDay, rubricAxes, decksForSubjects, registerLocalDeck, registerServerDecks } from '@/data/content';
 import { useStats, weeklyProgress } from '@/data/stats';
 import { useProfile } from '@/data/profile';
 import { useApi } from '@/data/api-context';
@@ -47,6 +47,24 @@ export default function Home() {
       }
     }, [refresh, api]),
   );
+
+  const [dailyBusy, setDailyBusy] = useState(false);
+  const startDailyFive = async () => {
+    if (!api || dailyBusy) return;
+    setDailyBusy(true);
+    haptics.press();
+    const res = await api.dailyFive();
+    setDailyBusy(false);
+    if (res.ok) {
+      const [deck] = registerServerDecks([res.data.deck]);
+      router.push({
+        pathname: '/session/[id]',
+        params: { id: 'new', mode: 'quick', deckId: deck!.id },
+      });
+    } else {
+      Alert.alert('Daily 5 unavailable', 'We could not build today’s five. Try again in a moment.');
+    }
+  };
 
   const startReview = () => {
     haptics.press();
@@ -266,6 +284,42 @@ export default function Home() {
               <ArrowRight size={16} color={c.onAccent} />
             </View>
           </View>
+        </PressableScale>
+      </Animated.View>
+
+      {/* Daily 5 — the daily ritual: reviews due + weakest-axis drills */}
+      <Animated.View entering={entrance(3)}>
+        <PressableScale
+          haptic={false}
+          onPress={startDailyFive}
+          accessibilityRole="button"
+          accessibilityLabel="Start your Daily 5"
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: space.md,
+            marginTop: space.md,
+            padding: space.lg,
+            borderRadius: radius.lg,
+            backgroundColor: c.surface,
+            borderWidth: 1.5,
+            borderColor: c.accent,
+          }}
+        >
+          {dailyBusy ? (
+            <ActivityIndicator color={c.accent} />
+          ) : (
+            <Sparkles size={18} color={c.accent} />
+          )}
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text variant="bodyMedium">Daily 5</Text>
+            <Text variant="small" tone="textMuted" numberOfLines={1}>
+              {dailyBusy
+                ? 'Building today’s five…'
+                : 'Five questions tuned to what you got wrong'}
+            </Text>
+          </View>
+          <ArrowRight size={16} color={c.accent} />
         </PressableScale>
       </Animated.View>
 

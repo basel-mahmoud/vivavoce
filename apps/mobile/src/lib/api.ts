@@ -210,6 +210,12 @@ export function createApi(getToken: GetToken) {
     getDueReviews: () =>
       request<{ reviews: { prompt: string; lastScore: number | null }[] }>('/api/v1/reviews/due'),
 
+    dailyFive: () =>
+      request<{ deck: ServerDeck; fresh: boolean }>('/api/v1/daily-five', {
+        method: 'POST',
+        retries: 0,
+      }),
+
     generateDeck: (body: { topic: string; count?: number }) =>
       request<{ deck: ServerDeck }>('/api/v1/decks/generate', {
         method: 'POST',
