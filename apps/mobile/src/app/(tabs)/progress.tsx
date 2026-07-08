@@ -142,6 +142,9 @@ export default function Progress() {
                 <View>
                   <Text variant="mono" style={{ fontSize: 17 }}>{stats.streak.longest}d</Text>
                   <Text variant="caption" tone="textFaint">best streak</Text>
+                  <Text variant="caption" tone={stats.streak.freezeAvailable ? 'success' : 'textFaint'}>
+                    {stats.streak.freezeAvailable ? 'freeze ready' : 'freeze used'}
+                  </Text>
                 </View>
               </View>
             </View>

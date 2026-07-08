@@ -66,7 +66,7 @@ export interface ProfilePatch {
 
 /** Real per-user progress (mirrors GET /api/v1/me/stats). */
 export interface UserStats {
-  streak: { current: number; longest: number };
+  streak: { current: number; longest: number; freezeAvailable: boolean };
   overall: number;
   overallDelta: number;
   sessionsTotal: number;

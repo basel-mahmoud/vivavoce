@@ -1,0 +1,1 @@
+ALTER TABLE "streaks" ADD COLUMN "freeze_used_on" date;

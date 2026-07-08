@@ -14,7 +14,7 @@ import type { Api, UserStats } from '@/lib/api';
  * numbers. Screens read `useStats()` and refresh on focus after a session.
  */
 export const EMPTY_STATS: UserStats = {
-  streak: { current: 0, longest: 0 },
+  streak: { current: 0, longest: 0, freezeAvailable: true },
   overall: 0,
   overallDelta: 0,
   sessionsTotal: 0,

@@ -18,6 +18,36 @@ function daysBetween(a: string, b: string): number {
   return Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000);
 }
 
+export interface StreakState {
+  current: number;
+  lastPracticedOn: string | null;
+  freezeUsedOn: string | null;
+}
+
+/**
+ * The streak rule, pure and testable. Consecutive days extend the streak;
+ * exactly ONE missed day is absorbed by the weekly freeze (at most one freeze
+ * per 7 days); anything worse resets to 1. Same-day practice changes nothing.
+ */
+export function nextStreak(
+  prev: StreakState,
+  today: string,
+): { current: number; freezeUsedOn: string | null; frozeToday: boolean } {
+  if (!prev.lastPracticedOn) return { current: 1, freezeUsedOn: prev.freezeUsedOn, frozeToday: false };
+  if (prev.lastPracticedOn === today)
+    return { current: prev.current, freezeUsedOn: prev.freezeUsedOn, frozeToday: false };
+
+  const gap = daysBetween(prev.lastPracticedOn, today);
+  if (gap === 1) return { current: prev.current + 1, freezeUsedOn: prev.freezeUsedOn, frozeToday: false };
+
+  const freezeAvailable = !prev.freezeUsedOn || daysBetween(prev.freezeUsedOn, today) > 7;
+  if (gap === 2 && freezeAvailable) {
+    const missedDay = new Date(Date.parse(today) - 86_400_000).toISOString().slice(0, 10);
+    return { current: prev.current + 1, freezeUsedOn: missedDay, frozeToday: true };
+  }
+  return { current: 1, freezeUsedOn: prev.freezeUsedOn, frozeToday: false };
+}
+
 /**
  * Record one completed answer: advance the streak (calendar-day based) and roll
  * up today's analytics row. Best-effort — never throws into the request path.
@@ -47,14 +77,21 @@ export async function recordPractice(
         lastPracticedOn: today,
       });
     } else if (streak.lastPracticedOn !== today) {
-      const gap = streak.lastPracticedOn ? daysBetween(streak.lastPracticedOn, today) : 999;
-      const current = gap === 1 ? streak.current + 1 : 1;
+      const next = nextStreak(
+        {
+          current: streak.current,
+          lastPracticedOn: streak.lastPracticedOn,
+          freezeUsedOn: streak.freezeUsedOn,
+        },
+        today,
+      );
       await db
         .update(schema.streaks)
         .set({
-          current,
-          longest: Math.max(streak.longest, current),
+          current: next.current,
+          longest: Math.max(streak.longest, next.current),
           lastPracticedOn: today,
+          freezeUsedOn: next.freezeUsedOn,
           updatedAt: new Date(),
         })
         .where(eq(schema.streaks.userId, userId));
@@ -98,7 +135,7 @@ export async function recordPractice(
 }
 
 export interface UserStats {
-  streak: { current: number; longest: number };
+  streak: { current: number; longest: number; freezeAvailable: boolean };
   overall: number;
   overallDelta: number;
   sessionsTotal: number;
@@ -188,8 +225,14 @@ export async function getUserStats(userId: string): Promise<UserStats> {
   const weakest =
     Object.entries(axisAverages).sort((x, y) => x[1] - y[1])[0]?.[0] ?? 'structure';
 
+  const todayIso = new Date().toISOString().slice(0, 10);
   return {
-    streak: { current: streak?.current ?? 0, longest: streak?.longest ?? 0 },
+    streak: {
+      current: streak?.current ?? 0,
+      longest: streak?.longest ?? 0,
+      freezeAvailable:
+        !streak?.freezeUsedOn || daysBetween(streak.freezeUsedOn, todayIso) > 7,
+    },
     overall: num(a.overall),
     overallDelta:
       confidenceTrend.length >= 2

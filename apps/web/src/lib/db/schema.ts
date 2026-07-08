@@ -425,6 +425,8 @@ export const streaks = pgTable(
     current: integer('current').notNull().default(0),
     longest: integer('longest').notNull().default(0),
     lastPracticedOn: date('last_practiced_on'),
+    // The missed day a weekly streak freeze absorbed (one freeze per 7 days).
+    freezeUsedOn: date('freeze_used_on'),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex('streaks_user_uq').on(t.userId)],
