@@ -6,7 +6,7 @@ import { limiters, globalLimiters } from '@/lib/security/ratelimit';
 import { audit } from '@/lib/security/audit';
 import { db, schema } from '@/lib/db/client';
 import { getOwnedSession, findAnswerByClientKey } from '@/lib/db/sessions.repo';
-import { recordPractice } from '@/lib/db/practice.repo';
+import { recordPractice, recordReview } from '@/lib/db/practice.repo';
 import { evaluateAnswer, transcribeAudio } from '@/lib/ai';
 import { estimateWpm } from '@/lib/ai/fallback';
 
@@ -148,11 +148,15 @@ export async function POST(req: NextRequest) {
     .set({ status: 'evaluated', updatedAt: new Date() })
     .where(eqId(answer!.id));
 
-  // 5. Roll up streak + daily analytics for this user (best-effort, never throws).
+  // 5. Roll up streak + daily analytics + the review ladder (best-effort).
   await recordPractice(ctx.userId, ctx.tenantId, ctx.timezone, {
     durationMs: input.durationMs ?? null,
     overall: evaluation.overall,
     confidence: evaluation.scores.confidence,
+  });
+  await recordReview(ctx.userId, ctx.tenantId, ctx.timezone, {
+    prompt: input.questionPrompt,
+    overall: evaluation.overall,
   });
 
   await audit({

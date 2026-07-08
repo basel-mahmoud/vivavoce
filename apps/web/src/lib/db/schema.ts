@@ -432,6 +432,34 @@ export const streaks = pgTable(
   (t) => [uniqueIndex('streaks_user_uq').on(t.userId)],
 );
 
+/* spaced repetition: one row per (user, question-prompt) that needs revisiting.
+   Keyed by a hash of the normalized prompt so bundled decks (no server rows)
+   and AI decks share one identity. Ladder: stage 0→2d, 1→7d, 2→21d, then
+   retired (row deleted). Mastery (≥85) or finishing the ladder deletes. */
+export const questionReviews = pgTable(
+  'question_reviews',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    promptHash: text('prompt_hash').notNull(),
+    prompt: text('prompt').notNull(),
+    lastScore: integer('last_score'),
+    timesSeen: integer('times_seen').notNull().default(1),
+    stage: integer('stage').notNull().default(0),
+    dueAt: date('due_at').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('question_reviews_user_prompt_uq').on(t.userId, t.promptHash),
+    index('question_reviews_due_idx').on(t.userId, t.dueAt),
+  ],
+);
+
 /* daily per-user rollups for fast analytics (denormalized, recomputable). */
 export const analyticsDaily = pgTable(
   'analytics_daily',

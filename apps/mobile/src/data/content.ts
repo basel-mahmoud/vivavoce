@@ -1217,6 +1217,13 @@ export function generatedDecks(): Deck[] {
   return [...generatedRegistry.values()];
 }
 
+/** Register a synthetic on-device deck (review sessions, Daily 5) so the
+ *  deck-detail and session screens can resolve it like any other deck. */
+export function registerLocalDeck(deck: Deck): Deck {
+  generatedRegistry.set(deck.id, deck);
+  return deck;
+}
+
 export function deckById(id: string): Deck | undefined {
   return starterDecks.find((d) => d.id === id) ?? generatedRegistry.get(id);
 }

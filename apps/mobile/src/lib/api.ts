@@ -207,6 +207,9 @@ export function createApi(getToken: GetToken) {
 
     deleteMe: () => request<{ deleted: true }>('/api/v1/me', { method: 'DELETE', retries: 0 }),
 
+    getDueReviews: () =>
+      request<{ reviews: { prompt: string; lastScore: number | null }[] }>('/api/v1/reviews/due'),
+
     generateDeck: (body: { topic: string; count?: number }) =>
       request<{ deck: ServerDeck }>('/api/v1/decks/generate', {
         method: 'POST',

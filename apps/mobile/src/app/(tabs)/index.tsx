@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import Animated from 'react-native-reanimated';
-import { Flame, Mic, Target, Lightbulb, Sparkles, ArrowRight, CalendarClock } from 'lucide-react-native';
+import { Flame, Mic, Target, Lightbulb, Sparkles, ArrowRight, CalendarClock, RotateCcw } from 'lucide-react-native';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { SectionHeader, StatTile, ProgressRing } from '@/ui/kit';
@@ -10,9 +10,10 @@ import { ScoreBar } from '@/ui/ScoreBar';
 import { entrance, useCountUp, usePulse, PressableScale, Skeleton } from '@/ui/motion';
 import { DeckCard } from '@/components/DeckCard';
 import { useTheme } from '@/theme';
-import { tipOfTheDay, rubricAxes, decksForSubjects } from '@/data/content';
+import { tipOfTheDay, rubricAxes, decksForSubjects, registerLocalDeck } from '@/data/content';
 import { useStats, weeklyProgress } from '@/data/stats';
 import { useProfile } from '@/data/profile';
+import { useApi } from '@/data/api-context';
 import { haptics } from '@/lib/haptics';
 
 function greeting() {
@@ -26,16 +27,44 @@ export default function Home() {
   const { c, space, radius } = useTheme();
   const { profile } = useProfile();
   const { stats, ready, refresh } = useStats();
+  const api = useApi();
   const tip = tipOfTheDay();
   const [refreshing, setRefreshing] = useState(false);
+  const [dueReviews, setDueReviews] = useState<string[]>([]);
 
-  // Keep the dashboard honest: re-pull stats whenever the tab regains focus
-  // (e.g. right after finishing a session), so the streak reflects reality.
+  // Keep the dashboard honest: re-pull stats + due reviews whenever the tab
+  // regains focus (e.g. right after finishing a session).
   useFocusEffect(
     useCallback(() => {
       void refresh();
-    }, [refresh]),
+      if (api) {
+        api
+          .getDueReviews()
+          .then((res) => {
+            if (res.ok) setDueReviews(res.data.reviews.map((r) => r.prompt));
+          })
+          .catch(() => {});
+      }
+    }, [refresh, api]),
   );
+
+  const startReview = () => {
+    haptics.press();
+    const deck = registerLocalDeck({
+      id: `review-${new Date().toISOString().slice(0, 10)}`,
+      title: 'Review due',
+      subject: 'Spaced review',
+      subjectKey: 'review',
+      difficulty: 'intermediate',
+      description: 'Questions you struggled with, back at the right moment.',
+      tags: ['Review'],
+      questions: dueReviews,
+    });
+    router.push({
+      pathname: '/session/[id]',
+      params: { id: 'new', mode: 'flash_recall', deckId: deck.id },
+    });
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -139,6 +168,40 @@ export default function Home() {
           </View>
         </Animated.View>
       )}
+
+      {/* spaced-repetition debt — appears only when reviews are actually due */}
+      {dueReviews.length > 0 ? (
+        <Animated.View entering={entrance(2)}>
+          <PressableScale
+            haptic={false}
+            onPress={startReview}
+            accessibilityRole="button"
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: space.md,
+              marginTop: space.md,
+              padding: space.lg,
+              borderRadius: radius.lg,
+              backgroundColor: c.text,
+            }}
+          >
+            <RotateCcw size={18} color={c.accent} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text variant="bodyMedium" style={{ color: c.bg }}>
+                Review due
+              </Text>
+              <Text variant="small" style={{ color: c.bg, opacity: 0.75 }}>
+                {dueReviews.length} {dueReviews.length === 1 ? 'question' : 'questions'} you
+                struggled with, back at the right time
+              </Text>
+            </View>
+            <Text variant="display2" style={{ color: c.accent }}>
+              {dueReviews.length}
+            </Text>
+          </PressableScale>
+        </Animated.View>
+      ) : null}
 
       {/* exam countdown — real date, set in Settings */}
       {examDays != null ? (

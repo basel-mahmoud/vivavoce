@@ -3,7 +3,8 @@
  * stats the mobile dashboard reads. Everything is scoped by the trusted
  * (tenantId, userId) from the auth context — no cross-user reads.
  */
-import { and, eq } from 'drizzle-orm';
+import { createHash } from 'node:crypto';
+import { and, asc, eq, lte } from 'drizzle-orm';
 import { db, schema, sqlClient } from './client';
 
 /** Today's date in the user's timezone, as YYYY-MM-DD. */
@@ -132,6 +133,121 @@ export async function recordPractice(
   } catch (err) {
     console.error('record_practice_failed', { error: String(err) });
   }
+}
+
+/* ── spaced repetition ────────────────────────────────────────────────────── */
+
+const REVIEW_INTERVALS_DAYS = [2, 7, 21] as const;
+
+function promptHash(prompt: string): string {
+  return createHash('sha256').update(prompt.trim().toLowerCase()).digest('hex');
+}
+
+function addDays(from: string, days: number): string {
+  return new Date(Date.parse(from) + days * 86_400_000).toISOString().slice(0, 10);
+}
+
+/**
+ * Update the review ladder for one answered question. Weak answers (<65)
+ * (re)start the ladder at 2 days; decent answers (65–84) advance a rung;
+ * strong answers (≥85) or completing the ladder retire the question.
+ * Best-effort — never throws into the answer path.
+ */
+export async function recordReview(
+  userId: string,
+  tenantId: string,
+  timezone: string,
+  input: { prompt: string; overall: number },
+): Promise<void> {
+  const today = todayInTz(timezone);
+  const hash = promptHash(input.prompt);
+  try {
+    const [existing] = await db
+      .select()
+      .from(schema.questionReviews)
+      .where(
+        and(
+          eq(schema.questionReviews.userId, userId),
+          eq(schema.questionReviews.promptHash, hash),
+        ),
+      )
+      .limit(1);
+
+    if (input.overall >= 85) {
+      if (existing) {
+        await db.delete(schema.questionReviews).where(eq(schema.questionReviews.id, existing.id));
+      }
+      return;
+    }
+
+    if (input.overall < 65) {
+      // (Re)start the ladder at the shortest interval.
+      if (existing) {
+        await db
+          .update(schema.questionReviews)
+          .set({
+            lastScore: input.overall,
+            timesSeen: existing.timesSeen + 1,
+            stage: 0,
+            dueAt: addDays(today, REVIEW_INTERVALS_DAYS[0]),
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.questionReviews.id, existing.id));
+      } else {
+        await db.insert(schema.questionReviews).values({
+          tenantId,
+          userId,
+          promptHash: hash,
+          prompt: input.prompt.slice(0, 1000),
+          lastScore: input.overall,
+          stage: 0,
+          dueAt: addDays(today, REVIEW_INTERVALS_DAYS[0]),
+        });
+      }
+      return;
+    }
+
+    // 65–84: progress an existing ladder; never start one for a decent answer.
+    if (existing) {
+      const nextStage = existing.stage + 1;
+      if (nextStage >= REVIEW_INTERVALS_DAYS.length) {
+        await db.delete(schema.questionReviews).where(eq(schema.questionReviews.id, existing.id));
+      } else {
+        await db
+          .update(schema.questionReviews)
+          .set({
+            lastScore: input.overall,
+            timesSeen: existing.timesSeen + 1,
+            stage: nextStage,
+            dueAt: addDays(today, REVIEW_INTERVALS_DAYS[nextStage]!),
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.questionReviews.id, existing.id));
+      }
+    }
+  } catch (err) {
+    console.error('record_review_failed', { error: String(err) });
+  }
+}
+
+/** Questions due for review today or earlier, oldest debt first. */
+export async function getDueReviews(
+  userId: string,
+  timezone: string,
+): Promise<{ prompt: string; lastScore: number | null }[]> {
+  const today = todayInTz(timezone);
+  const rows = await db
+    .select({
+      prompt: schema.questionReviews.prompt,
+      lastScore: schema.questionReviews.lastScore,
+    })
+    .from(schema.questionReviews)
+    .where(
+      and(eq(schema.questionReviews.userId, userId), lte(schema.questionReviews.dueAt, today)),
+    )
+    .orderBy(asc(schema.questionReviews.dueAt))
+    .limit(10);
+  return rows;
 }
 
 export interface UserStats {
