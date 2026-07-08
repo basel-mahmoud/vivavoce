@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
     studyLevel: user?.studyLevel ?? null,
     level: user?.level ?? null,
     goal: user?.goal ?? null,
+    sourceText: input.sourceText ?? null,
   });
 
   await db.insert(schema.modelUsageLogs).values({

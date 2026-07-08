@@ -31,6 +31,7 @@ export default function LibraryScreen() {
   const [aiDecks, setAiDecks] = useState<Deck[]>(generatedDecks());
   const [aiOpen, setAiOpen] = useState(false);
   const [topic, setTopic] = useState('');
+  const [notes, setNotes] = useState('');
   const [count, setCount] = useState(6);
   const [generating, setGenerating] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -53,13 +54,20 @@ export default function LibraryScreen() {
     if (!api || generating || topic.trim().length < 3) return;
     setGenerating(true);
     setAiError(null);
-    const res = await api.generateDeck({ topic: topic.trim(), count });
+    const trimmedNotes = notes.trim();
+    const res = await api.generateDeck({
+      topic: topic.trim(),
+      count,
+      // The API floor for material is 40 chars; anything shorter is noise.
+      ...(trimmedNotes.length >= 40 ? { sourceText: trimmedNotes.slice(0, 8000) } : {}),
+    });
     setGenerating(false);
     if (res.ok) {
       const [deck] = registerServerDecks([res.data.deck]);
       setAiDecks(generatedDecks());
       setAiOpen(false);
       setTopic('');
+      setNotes('');
       haptics.success();
       router.push({ pathname: '/deck/[id]', params: { id: deck!.id } });
     } else {
@@ -270,6 +278,29 @@ export default function LibraryScreen() {
                 fontSize: 16,
               }}
               accessibilityLabel="Deck topic"
+            />
+
+            <TextInput
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Paste your notes (optional) — questions come from your material"
+              placeholderTextColor={c.textFaint}
+              multiline
+              maxLength={8000}
+              textAlignVertical="top"
+              style={{
+                height: 120,
+                borderRadius: radius.md,
+                borderWidth: 1.5,
+                borderColor: notes.trim().length >= 40 ? c.accent : c.border,
+                backgroundColor: c.surface,
+                paddingHorizontal: space.lg,
+                paddingVertical: space.md,
+                color: c.text,
+                fontFamily: 'Archivo_400Regular',
+                fontSize: 15,
+              }}
+              accessibilityLabel="Paste study notes"
             />
 
             <Text variant="caption" tone="textFaint" style={{ marginTop: space.sm }}>

@@ -216,7 +216,7 @@ export function createApi(getToken: GetToken) {
         retries: 0,
       }),
 
-    generateDeck: (body: { topic: string; count?: number }) =>
+    generateDeck: (body: { topic: string; count?: number; sourceText?: string }) =>
       request<{ deck: ServerDeck }>('/api/v1/decks/generate', {
         method: 'POST',
         body: JSON.stringify(body),
