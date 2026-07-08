@@ -72,6 +72,32 @@ export default function SessionScreen() {
     return () => stopSpeaking();
   }, [question, voiceOn]); // eslint-disable-line react-hooks/exhaustive-deps -- speak only on new questions, not state churn
 
+  // Rapid Fire is actually timed: 60s per question, warning haptic at 10s,
+  // auto-submit at zero. The clock is the point of the mode.
+  const RAPID_MS = 60_000;
+  const isRapid = mode === 'rapid_fire';
+  const remainingMs = Math.max(0, RAPID_MS - elapsedMs);
+  const warned = useRef(false);
+  const autoStopped = useRef(false);
+  useEffect(() => {
+    if (!isRapid || state !== 'listening') {
+      warned.current = false;
+      autoStopped.current = false;
+      return;
+    }
+    if (remainingMs <= 10_000 && !warned.current) {
+      warned.current = true;
+      haptics.press();
+    }
+    if (remainingMs <= 0 && !autoStopped.current) {
+      autoStopped.current = true;
+      void (async () => {
+        const audio = await recorder.stop();
+        await stop(audio);
+      })();
+    }
+  }, [isRapid, state, remainingMs, recorder, stop]);
+
   // Drive both the recorder and the session state machine together.
   const onMicPress = async () => {
     if (state === 'listening') {
@@ -204,8 +230,22 @@ export default function SessionScreen() {
               </View>
             )}
             <RecordButton listening={state === 'listening'} onPress={onMicPress} />
-            <Text variant="mono" tone="textMuted" style={{ marginTop: space.lg }}>
-              {state === 'listening' ? formatTime(elapsedMs) : 'Tap to answer aloud'}
+            <Text
+              variant="mono"
+              style={{
+                marginTop: space.lg,
+                color:
+                  isRapid && state === 'listening' && remainingMs <= 10_000
+                    ? c.live
+                    : c.textMuted,
+                fontSize: isRapid && state === 'listening' ? 22 : 14,
+              }}
+            >
+              {state === 'listening'
+                ? formatTime(isRapid ? remainingMs : elapsedMs)
+                : isRapid
+                  ? '60s on the clock · tap to start'
+                  : 'Tap to answer aloud'}
             </Text>
             {state === 'listening' && (
               <Pressable onPress={onCancel} style={{ marginTop: space.md }} hitSlop={8}>
