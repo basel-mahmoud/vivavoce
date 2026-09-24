@@ -201,9 +201,10 @@ function makePoses(aspect: number, insets: Insets): Record<string, Pose> {
   const compact = aspect < 1.05;
   const R = compact
     ? {
-        hero: { x0: 0.03, x1: 0.97, y0: insets.hero + 0.02, y1: 0.93 },
+        // y1 stops above the phone key under the room (about 85% down).
+        hero: { x0: 0.03, x1: 0.97, y0: insets.hero + 0.035, y1: 0.83 },
         beat: { x0: 0.08, x1: 0.92, y0: insets.beat + 0.03, y1: 0.87 },
-        outro: { x0: 0.03, x1: 0.97, y0: insets.outro + 0.02, y1: 0.9 },
+        outro: { x0: 0.03, x1: 0.97, y0: insets.outro + 0.02, y1: 0.83 },
       }
     : {
         hero: { x0: 0.46, x1: 0.985, y0: 0.12, y1: 0.86 },
@@ -229,7 +230,7 @@ function makePoses(aspect: number, insets: Insets): Record<string, Pose> {
   // The outro rises over the whole marked bench. Phones keep a frontal angle
   // so the placards face the reader.
   const outro = compact
-    ? frame(panel, V(0, 0.8, -1.0), V(0.05, 0.62, 1).normalize(), aspect, R.outro, 40, 'top')
+    ? frame(panel, V(0, 0.8, -1.0), V(0.05, 0.62, 1).normalize(), aspect, R.outro, 40)
     : frame([...panel, ...deskTop, ...deskBase], V(0, 0.4, -0.6), V(0.12, 0.9, 1).normalize(), aspect, R.outro);
 
   const poses: Record<string, Pose> = { hero, outro };
@@ -772,7 +773,8 @@ function Desk() {
 function Speech({ round, reduce }: { round: RoundState; reduce: boolean }) {
   const size = useThree((st) => st.size);
   // Pull edge bubbles toward the middle so they never leave the frame.
-  const pull = size.width / Math.max(1, size.height) < 1.05 ? 0.55 : 0.88;
+  const compact = size.width / Math.max(1, size.height) < 1.05;
+  const pull = compact ? 0.55 : 0.88;
   const r = ROUNDS[round.index % ROUNDS.length]!;
   const weakest = weakestIndex(r.scores);
   const speaker = round.phase === 'ask' ? 2 : round.phase === 'follow' ? weakest : -1;
@@ -787,7 +789,11 @@ function Speech({ round, reduce }: { round: RoundState; reduce: boolean }) {
           zIndexRange={[6, 0]}
           style={{ pointerEvents: 'none' }}
         >
-          <div className="relative w-[min(16rem,62vw)] -translate-y-3 rounded-2xl border border-line bg-card px-4 py-3 text-[0.92rem] font-bold leading-snug text-ink shadow-[0_10px_24px_-14px_rgb(var(--vv-shadow)/0.55)]">
+          <div
+            className={`relative -translate-y-3 rounded-2xl border border-line bg-card font-bold leading-snug text-ink shadow-[0_10px_24px_-14px_rgb(var(--vv-shadow)/0.55)] ${
+              compact ? 'w-[min(15rem,64vw)] px-3.5 py-2.5 text-[0.85rem]' : 'w-[min(16rem,62vw)] px-4 py-3 text-[0.92rem]'
+            }`}
+          >
             <p className="mb-1 text-xs font-bold text-verm-text">
               {round.phase === 'ask' ? 'Examiner' : `${AXES[weakest]!.label} examiner`}
             </p>

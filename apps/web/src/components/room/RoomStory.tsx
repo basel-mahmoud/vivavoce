@@ -266,7 +266,7 @@ function PhoneLegend({
         return (
           <li key={a.key} className="flex min-w-0 flex-col items-center gap-1.5">
             <span
-              className="marks grid h-10 w-10 place-items-center rounded-full text-sm font-bold ring-1 ring-line transition-colors duration-300"
+              className="marks grid h-10 w-10 place-items-center rounded-full text-sm font-bold ring-1 ring-ink/25 transition-colors duration-300"
               style={{ backgroundColor: fill, color: inkOn(fill) }}
             >
               {marked ? r.scores[i] : ''}
