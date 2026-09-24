@@ -28,7 +28,8 @@ candidate. Refuses the category default of a dark AI landing with a glowing
 voice orb, a centered headline and a feature grid.
 
 OWN-WORLD: Porcelain floor, a saturated cobalt table, five clay-matte examiner
-figures in ink, cobalt, butter, paper and vermilion, round score paddles set in
+figures in ink, butter, paper, stone and cobalt (vermilion is worn only by
+whoever is speaking), round score paddles set in
 JetBrains Mono, a desk microphone facing the visitor. Archivo Black expanded
 for every headline. Flat colour fields, soft contact shadows, no glow, no glass,
 no gradient text. State is carried by pose and height as well as colour. Lights

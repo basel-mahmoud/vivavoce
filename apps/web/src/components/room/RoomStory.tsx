@@ -16,7 +16,7 @@ import { RiseText } from '@/components/ui/RiseText';
 import { AXES, ROUNDS, ROUND_TIMELINE, type RoundPhase } from './data';
 import { BEATS, HERO_END, OUTRO, ramp } from './story';
 import { RoomFallback } from './RoomFallback';
-import type { RoundState } from './Scene';
+import type { Insets, RoundState } from './Scene';
 
 const Scene = dynamic(() => import('./Scene'), { ssr: false });
 
@@ -123,7 +123,7 @@ function BeatCaption({ index, progress }: { index: number; progress: MotionValue
     <motion.article
       style={{ opacity, y }}
       aria-label={`${axis.label}: ${axis.ask}`}
-      className="tile max-w-[30rem] p-6 shadow-[0_24px_60px_-36px_rgb(var(--vv-shadow)/0.55)] sm:p-8"
+      className="tile max-w-[30rem] p-6 shadow-[0_6px_14px_-8px_rgb(var(--vv-shadow)/0.35)] sm:p-8"
     >
       <div className="flex items-start justify-between gap-4">
         <h2 className="display text-[clamp(2rem,3.6vw,3.2rem)]">{axis.label}</h2>
@@ -236,6 +236,10 @@ export function RoomStory() {
   const [ready, setReady] = useState(false);
   const [active, setActive] = useState(true);
   const [inHero, setInHero] = useState(true);
+  // The room opens on the marked panel, paddles up, before the round plays.
+  const [intro, setIntro] = useState(true);
+  const captions = useRef<HTMLDivElement>(null);
+  const [insets, setInsets] = useState<Insets>({ hero: 0.5, beat: 0.42, outro: 0.42 });
 
   const { scrollYProgress } = useScroll({ target: section, offset: ['start start', 'end end'] });
 
@@ -254,7 +258,40 @@ export function RoomStory() {
     return () => io.disconnect();
   }, []);
 
-  const playing = ready && active && inHero && pageVisible && !reduce;
+  useEffect(() => {
+    if (!ready) return;
+    const id = setTimeout(() => setIntro(false), 2600);
+    return () => clearTimeout(id);
+  }, [ready]);
+
+  // Where each caption ends, so the camera can frame the room below it on
+  // narrow screens. Layout boxes only (offsets), so scroll transforms don't skew it.
+  useEffect(() => {
+    const box = captions.current;
+    const stageEl = box?.parentElement;
+    if (!box || !stageEl) return;
+    const measure = () => {
+      const h = stageEl.clientHeight || window.innerHeight;
+      const bottomOf = (name: string, fallback: number) => {
+        const el = box.querySelector<HTMLElement>(`[data-cap="${name}"]`);
+        if (!el) return fallback;
+        return Math.min(0.72, (box.offsetTop + el.offsetTop + el.offsetHeight) / h);
+      };
+      const next = { hero: bottomOf('hero', 0.5), beat: bottomOf('beat', 0.42), outro: bottomOf('outro', 0.42) };
+      setInsets((prev) =>
+        Math.abs(prev.hero - next.hero) + Math.abs(prev.beat - next.beat) + Math.abs(prev.outro - next.outro) < 0.004
+          ? prev
+          : next,
+      );
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(box);
+    ro.observe(stageEl);
+    return () => ro.disconnect();
+  }, [reduce]);
+
+  const playing = ready && !intro && active && inHero && pageVisible && !reduce;
   const round = useExampleRound(playing);
   const onReady = useCallback(() => setReady(true), []);
   const labelOpacity = useTransform(scrollYProgress, (v) => ramp(v, [0, HERO_END], [1, 0]));
@@ -279,7 +316,8 @@ export function RoomStory() {
           active={active}
           reduce={reduce}
           dark={dark}
-          round={inHero && !reduce ? round : null}
+          round={inHero && !reduce && !intro ? round : null}
+          insets={insets}
           onReady={onReady}
         />
       )}
@@ -298,8 +336,13 @@ export function RoomStory() {
       <>
         <section ref={section} aria-label="VivaVoce" className="relative h-[100svh] min-h-[640px] overflow-hidden">
           {stage}
-          <div className="absolute inset-x-0 top-0 z-10 px-5 pt-20 md:inset-y-0 md:right-auto md:grid md:w-[46%] md:content-center md:pl-10 md:pt-0 lg:pl-16">
-            <HeroCopy progress={scrollYProgress} still />
+          <div
+            ref={captions}
+            className="absolute inset-x-0 top-0 z-10 px-5 pt-20 md:inset-y-0 md:right-auto md:grid md:w-[46%] md:content-center md:pl-10 md:pt-0 lg:pl-16"
+          >
+            <div data-cap="hero">
+              <HeroCopy progress={scrollYProgress} still />
+            </div>
           </div>
         </section>
         <section aria-label="The five axes" className="mx-auto grid max-w-[1360px] gap-3 px-3 py-12 sm:px-5 md:grid-cols-2 lg:grid-cols-5">
@@ -319,14 +362,19 @@ export function RoomStory() {
     <section ref={section} aria-label="VivaVoce, the viva room" className="relative h-[520svh]">
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         {stage}
-        <div className="absolute inset-x-0 top-0 z-10 grid px-4 pt-20 [grid-template-areas:'s'] *:[grid-area:s] sm:px-5 md:inset-y-0 md:right-auto md:w-[46%] md:content-center md:pl-10 md:pt-0 lg:pl-16">
-          <HeroCopy progress={scrollYProgress} still={false} />
+        <div
+          ref={captions}
+          className="absolute inset-x-0 top-0 z-10 grid px-4 pt-20 [grid-template-areas:'s'] *:[grid-area:s] sm:px-5 md:inset-y-0 md:right-auto md:w-[46%] md:content-center md:pl-10 md:pt-0 lg:pl-16"
+        >
+          <div data-cap="hero" className="self-start md:self-center">
+            <HeroCopy progress={scrollYProgress} still={false} />
+          </div>
           {AXES.map((a, i) => (
-            <div key={a.key} className="self-start md:self-center">
+            <div key={a.key} data-cap={i === 0 ? 'beat' : undefined} className="self-start md:self-center">
               <BeatCaption index={i} progress={scrollYProgress} />
             </div>
           ))}
-          <div className="self-start md:self-center">
+          <div data-cap="outro" className="self-start md:self-center">
             <OutroCaption progress={scrollYProgress} />
           </div>
         </div>
