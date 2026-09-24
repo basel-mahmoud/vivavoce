@@ -13,7 +13,7 @@ import {
 } from 'motion/react';
 import { ArrowRight, Mic } from 'lucide-react';
 import { RiseText } from '@/components/ui/RiseText';
-import { AXES, ROUNDS, ROUND_TIMELINE, type RoundPhase } from './data';
+import { AXES, CLAYS, ROUNDS, ROUND_TIMELINE, weakestIndex, type RoundPhase } from './data';
 import { BEATS, HERO_END, OUTRO, ramp } from './story';
 import { RoomFallback } from './RoomFallback';
 import type { Insets, RoundState } from './Scene';
@@ -219,6 +219,68 @@ function RailTick({
   );
 }
 
+/** Text colour that reads on a clay (by relative luminance). */
+function inkOn(hex: string): string {
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const l = c.map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  const lum = 0.2126 * l[0]! + 0.7152 * l[1]! + 0.0722 * l[2]!;
+  return lum > 0.18 ? '#161412' : '#FBFAF8';
+}
+
+/**
+ * Phones only: five placards across 390px are too small to letter, so the
+ * room's key sits under it instead. One disc per examiner in its clay, the
+ * axis name, and the mark once the paddles are up (and in the outro).
+ */
+function PhoneLegend({
+  progress,
+  round,
+  dark,
+}: {
+  progress: MotionValue<number>;
+  round: RoundState | null;
+  dark: boolean;
+}) {
+  const opacity = useTransform(progress, (v) =>
+    ramp(v, [0, HERO_END - 0.03, HERO_END, OUTRO - 0.06, OUTRO - 0.025], [1, 1, 0, 0, 1]),
+  );
+  const [pastHero, setPastHero] = useState(false);
+  useMotionValueEvent(progress, 'change', (v) => {
+    const next = v > HERO_END;
+    setPastHero((prev) => (prev === next ? prev : next));
+  });
+  const r = ROUNDS[(pastHero ? 0 : (round?.index ?? 0)) % ROUNDS.length]!;
+  const marked = pastHero || !round || round.phase === 'mark' || round.phase === 'follow';
+  const weakest = weakestIndex(r.scores);
+
+  return (
+    <motion.ol
+      aria-hidden
+      style={{ opacity }}
+      className="pointer-events-none absolute inset-x-0 bottom-[4.25rem] z-10 grid grid-cols-5 gap-1 px-3 md:hidden"
+    >
+      {AXES.map((a, i) => {
+        const hot = marked && i === weakest;
+        const clay = dark ? CLAYS[i]!.night : CLAYS[i]!.day;
+        const fill = hot ? '#FF4D26' : clay;
+        return (
+          <li key={a.key} className="flex min-w-0 flex-col items-center gap-1.5">
+            <span
+              className="marks grid h-10 w-10 place-items-center rounded-full text-sm font-bold ring-1 ring-line transition-colors duration-300"
+              style={{ backgroundColor: fill, color: inkOn(fill) }}
+            >
+              {marked ? r.scores[i] : ''}
+            </span>
+            <span className="max-w-full text-[0.72rem] font-bold leading-none text-ink [font-stretch:78%]">
+              {a.label}
+            </span>
+          </li>
+        );
+      })}
+    </motion.ol>
+  );
+}
+
 /* ── The story ────────────────────────────────────────────────────────────── */
 
 /**
@@ -378,6 +440,7 @@ export function RoomStory() {
             <OutroCaption progress={scrollYProgress} />
           </div>
         </div>
+        <PhoneLegend progress={scrollYProgress} round={inHero && !intro ? round : null} dark={dark} />
         <Rail progress={scrollYProgress} onJump={jump} />
       </div>
     </section>

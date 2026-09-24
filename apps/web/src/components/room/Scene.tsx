@@ -6,7 +6,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows, Environment, Html, Lightformer, RoundedBox, Text } from '@react-three/drei';
 import type { MotionValue } from 'motion/react';
 import { configureTextBuilder } from 'troika-three-text';
-import { AXES, ROUNDS, weakestIndex, type RoundPhase } from './data';
+import { AXES, CLAYS, ROUNDS, weakestIndex, type RoundPhase } from './data';
 import { HERO_END, OUTRO, STOPS, STOP_POSES, beatAt, settle, type PoseName } from './story';
 import { TypeLine } from './TypeLine';
 
@@ -41,12 +41,17 @@ const DESK_D = 2.5;
 const PADDLE_DROP = 3.5;
 /** Per-examiner silhouettes and clays. Vermilion is reserved for whoever is speaking. */
 const BUILD = [
-  { body: 1.0, head: 0.46, extra: 'none', clay: '#2B2723', clayDark: '#8C8378', eye: COLOR.paper },
-  { body: 1.1, head: 0.44, extra: 'bun', clay: '#FFC838', clayDark: '#FFC838', eye: COLOR.coal },
-  { body: 1.32, head: 0.47, extra: 'none', clay: '#EEEAE2', clayDark: '#EEEAE2', eye: COLOR.coal },
-  { body: 1.04, head: 0.45, extra: 'glasses', clay: '#C9C4BB', clayDark: '#C9C4BB', eye: COLOR.coal },
-  { body: 0.92, head: 0.48, extra: 'none', clay: '#3347FF', clayDark: '#7280FF', eye: COLOR.paper },
-] as const;
+  { body: 1.0, head: 0.46, extra: 'none' },
+  { body: 1.1, head: 0.44, extra: 'bun' },
+  { body: 1.32, head: 0.47, extra: 'none' },
+  { body: 1.04, head: 0.45, extra: 'glasses' },
+  { body: 0.92, head: 0.48, extra: 'none' },
+].map((b, i) => ({
+  ...b,
+  clay: CLAYS[i]!.day,
+  clayDark: CLAYS[i]!.night,
+  eye: CLAYS[i]!.on === '#FBFAF8' ? COLOR.paper : COLOR.coal,
+}));
 
 /* ── Motion helpers ───────────────────────────────────────────────────────── */
 
@@ -211,7 +216,8 @@ function makePoses(aspect: number, insets: Insets): Record<string, Pose> {
   const deskTop = [V(-half, TOP, 1.4), V(half, TOP, 1.4), V(-half, TOP, -1.4), V(half, TOP, -1.4)];
   const deskBase = [V(-half, FLOOR, 1.3), V(half, FLOOR, 1.3)];
   // Headroom for the examiner's speech bubble above the panel.
-  const bubble = XS.map((x) => V(x * (compact ? 0.55 : 0.88), 4.5, SEAT_Z));
+  // (On phones the bubble is larger relative to the room, so it needs more.)
+  const bubble = XS.map((x) => V(x * (compact ? 0.55 : 0.88), compact ? 5.5 : 4.5, SEAT_Z));
 
   // The hero is the hot seat: a wide lens from just across the bench, the
   // panel fitted and looking back, the near edge and your mic looming (and

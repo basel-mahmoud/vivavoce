@@ -37,6 +37,20 @@ export const AXES = [
 
 export type AxisKey = (typeof AXES)[number]['key'];
 
+/**
+ * Each examiner's clay, in AXES order: ink, butter, paper, stone, cobalt.
+ * `night` is the lifted value used in the lights-off scheme; `on` is the text
+ * colour that reads on the clay. Vermilion is never a resting clay: it is
+ * reserved for whoever is speaking.
+ */
+export const CLAYS = [
+  { day: '#2B2723', night: '#8C8378', on: '#FBFAF8' },
+  { day: '#FFC838', night: '#FFC838', on: '#161412' },
+  { day: '#EEEAE2', night: '#EEEAE2', on: '#161412' },
+  { day: '#C9C4BB', night: '#C9C4BB', on: '#161412' },
+  { day: '#3347FF', night: '#7280FF', on: '#FBFAF8' },
+] as const;
+
 export interface ExampleRound {
   question: string;
   answer: string;
