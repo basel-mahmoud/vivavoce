@@ -56,7 +56,7 @@ export function Footer() {
         </div>
 
         <div className="relative overflow-hidden px-2 pb-1 text-verm">
-          <KineticWordmark className="font-sans text-[clamp(3.2rem,15vw,15.5rem)]" />
+          <KineticWordmark className="font-sans text-[clamp(2.6rem,13.4vw,13rem)]" />
         </div>
 
         <div className="flex flex-col gap-2 border-t border-line-dark px-7 py-5 text-xs text-paper-mut sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-12">

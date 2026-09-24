@@ -3,16 +3,17 @@
 import { useEffect, useRef } from 'react';
 
 const WORD = 'VivaVoce';
-// Archivo's variable axes: letters near the pointer swell in weight and width.
-const REST = { wght: 640, wdth: 84 };
-const PEAK = { wght: 900, wdth: 125 };
-const RADIUS = 300;
+// Archivo's variable axes. The word rests black and expanded, like every
+// headline; letters near the pointer give way, thinning and narrowing.
+const REST = { wght: 900, wdth: 118 };
+const PEAK = { wght: 460, wdth: 70 };
+const RADIUS = 260;
 
 /**
- * The footer wordmark. On a fine pointer, letters under the cursor inflate
- * along Archivo's weight and width axes, like a voice filling a room. Writes
- * straight to style in a rAF loop that only runs while something is moving.
- * Touch and reduced motion get the static black word.
+ * The footer wordmark. On a fine pointer, letters under the cursor give way
+ * along Archivo's weight and width axes, pressed like a key, and spring back
+ * when it leaves. Writes straight to style in a rAF loop that only runs while
+ * something is moving. Touch and reduced motion get the resting word.
  */
 export function KineticWordmark({ className }: { className?: string }) {
   const root = useRef<HTMLDivElement>(null);
@@ -94,7 +95,7 @@ export function KineticWordmark({ className }: { className?: string }) {
       ref={root}
       aria-hidden
       className={`group select-none whitespace-nowrap text-center leading-[0.8] ${className ?? ''}`}
-      style={{ fontVariationSettings: "'wght' 900, 'wdth' 100" }}
+      style={{ fontVariationSettings: "'wght' 900, 'wdth' 118" }}
     >
       {WORD.split('').map((ch, i) => (
         <span

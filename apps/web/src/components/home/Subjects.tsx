@@ -41,7 +41,7 @@ const TONE: Record<Tone, string> = {
 };
 const TAG: Record<Tone, string> = {
   card: 'text-verm-text',
-  cobalt: 'text-paper-mut',
+  cobalt: 'text-paper',
   coal: 'text-verm',
   butter: 'text-coal/70',
 };
@@ -49,7 +49,7 @@ const TAG: Record<Tone, string> = {
 function Chip({ subject, q, tone }: { subject: string; q: string; tone: Tone }) {
   return (
     <li className={cn('flex shrink-0 items-center gap-3 rounded-full px-5 py-3.5', TONE[tone])}>
-      <span className={cn('marks text-[0.7rem] font-bold uppercase', TAG[tone])}>{subject}</span>
+      <span className={cn('text-[0.82rem] font-bold', TAG[tone])}>{subject}</span>
       <span className="whitespace-nowrap text-[1.02rem] font-bold">{q}</span>
     </li>
   );

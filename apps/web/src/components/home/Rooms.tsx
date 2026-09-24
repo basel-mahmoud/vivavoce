@@ -115,7 +115,7 @@ export function Rooms({ showHeading = true }: { showHeading?: boolean }) {
         </>
       )}
 
-      <div className={cn('flex flex-col gap-3 lg:h-[32rem] lg:flex-row', showHeading && 'mt-12')}>
+      <div className={cn('grid gap-3 md:grid-cols-2 xl:flex xl:h-[32rem] xl:flex-row', showHeading && 'mt-12')}>
         {ROOMS.map((r, i) => {
           const t = TONES[r.tone];
           const on = open === i;
@@ -128,19 +128,21 @@ export function Rooms({ showHeading = true }: { showHeading?: boolean }) {
                 'group relative flex min-w-0 flex-col overflow-hidden rounded-[1.75rem] p-6 sm:p-8',
                 'transition-[flex-grow] duration-500 ease-[cubic-bezier(0.77,0,0.175,1)] motion-reduce:transition-none',
                 t.field,
-                on ? 'lg:grow-[3.2]' : 'lg:grow',
-                'lg:basis-0',
+                on ? 'xl:grow-[2.4]' : 'xl:grow',
+                'xl:basis-0',
               )}
             >
-              <h3 className="text-[clamp(1.6rem,2.3vw,2.1rem)] font-black leading-[1.02] tracking-[-0.02em]">{r.title}</h3>
+              <h3 className="text-[clamp(1.6rem,4vw,2.1rem)] font-black leading-[1.02] tracking-[-0.02em] xl:text-[clamp(1.4rem,1.8vw,1.8rem)]">
+                {r.title}
+              </h3>
               <div
                 className={cn(
-                  'mt-4 flex flex-1 flex-col transition-opacity duration-300 lg:w-[26rem] lg:max-w-full',
-                  on ? 'lg:opacity-100 lg:delay-200' : 'lg:opacity-0',
+                  'mt-4 flex flex-1 flex-col transition-opacity duration-300 xl:w-[26rem] xl:max-w-full',
+                  on ? 'xl:opacity-100 xl:delay-200' : 'xl:opacity-0',
                 )}
               >
                 <p className={cn('max-w-md text-[1.02rem] font-medium leading-relaxed', t.mut)}>{r.body}</p>
-                <div className="mt-6 lg:mt-auto">
+                <div className="mt-6 md:mt-auto">
                   <Artifact id={r.id} />
                 </div>
                 <Link

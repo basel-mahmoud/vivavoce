@@ -107,17 +107,22 @@ export function Nav() {
           </Link>
         </nav>
 
-        <button
-          ref={menuButton}
-          type="button"
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          aria-expanded={open}
-          aria-controls="mobile-menu"
-          onClick={() => setOpen((v) => !v)}
-          className="pressable grid h-11 w-11 cursor-pointer place-items-center rounded-full text-ink md:hidden"
-        >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        <div className="flex items-center gap-1 md:hidden">
+          <Link href="/waitlist" className="btn btn-verm h-9 px-3.5 text-[0.82rem] max-[359px]:hidden">
+            Get early access
+          </Link>
+          <button
+            ref={menuButton}
+            type="button"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            onClick={() => setOpen((v) => !v)}
+            className="pressable grid h-11 w-11 cursor-pointer place-items-center rounded-full text-ink"
+          >
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>

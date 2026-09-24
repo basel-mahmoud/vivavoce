@@ -6,10 +6,10 @@ import { useOnScreen } from '@/components/ui/hooks';
 import { cn } from '@/lib/cn';
 
 const SCRIPT = [
-  ['YOU', 'Um, so, there are many reasons, like nerves, and also…'],
-  ['VIVAVOCE', 'Stop. You buried your claim. Lead with it, then defend it.'],
-  ['YOU', 'Candidates fail because structure collapses under pressure. Three reasons. First…'],
-  ['VIVAVOCE', 'That is an opening an examiner can follow. Again, faster.'],
+  ['You', 'Um, so, there are many reasons, like nerves, and also…'],
+  ['VivaVoce', 'Stop. You buried your claim. Lead with it, then defend it.'],
+  ['You', 'Candidates fail because structure collapses under pressure. Three reasons. First…'],
+  ['VivaVoce', 'That is an opening an examiner can follow. Again, faster.'],
 ] as const;
 
 /** The coaching exchange, typing itself out while it is on screen. */
@@ -61,10 +61,10 @@ export function Interrupts() {
         <div className="flex min-h-[18rem] flex-col justify-center gap-5" aria-label="Example coaching exchange">
           {SCRIPT.slice(0, visible).map(([who, text], i) => {
             const typing = !all && i === shown;
-            const coach = who === 'VIVAVOCE';
+            const coach = who === 'VivaVoce';
             return (
               <p key={i} className={cn('text-lg leading-snug sm:text-xl', coach ? 'pl-6 sm:pl-10' : '')}>
-                <span className={cn('marks mr-3 text-xs font-bold', coach ? 'text-verm' : 'text-paper-mut')}>{who}</span>
+                <span className={cn('mr-3 text-sm font-bold', coach ? 'text-verm' : 'text-paper-mut')}>{who}</span>
                 <span className={cn(coach ? 'font-black text-paper' : 'font-medium text-paper-mut', typing && 'caret')}>
                   {typing ? text.slice(0, chars) : text}
                 </span>
