@@ -41,11 +41,11 @@ const DESK_D = 2.5;
 const PADDLE_DROP = 3.5;
 /** Per-examiner silhouettes and clays. Vermilion is reserved for whoever is speaking. */
 const BUILD = [
-  { body: 1.0, head: 0.46, extra: 'none', clay: '#2B2723', clayDark: '#80776C', eye: COLOR.paper },
+  { body: 1.0, head: 0.46, extra: 'none', clay: '#2B2723', clayDark: '#8C8378', eye: COLOR.paper },
   { body: 1.1, head: 0.44, extra: 'bun', clay: '#FFC838', clayDark: '#FFC838', eye: COLOR.coal },
   { body: 1.32, head: 0.47, extra: 'none', clay: '#EEEAE2', clayDark: '#EEEAE2', eye: COLOR.coal },
   { body: 1.04, head: 0.45, extra: 'glasses', clay: '#C9C4BB', clayDark: '#C9C4BB', eye: COLOR.coal },
-  { body: 0.92, head: 0.48, extra: 'none', clay: '#3347FF', clayDark: '#4A5CFF', eye: COLOR.paper },
+  { body: 0.92, head: 0.48, extra: 'none', clay: '#3347FF', clayDark: '#7280FF', eye: COLOR.paper },
 ] as const;
 
 /* ── Motion helpers ───────────────────────────────────────────────────────── */
@@ -66,7 +66,10 @@ function stepSpring(s: Spring, target: number, dt: number, k = 150, c = 15) {
 /** Live animation targets for one examiner; the director writes, the figure reads. */
 interface Rig {
   focus: number;
+  /** step back by scale and height */
   recede: number;
+  /** fade in value toward the room; strong only during the scroll beats */
+  fade: number;
   paddle: number;
   hot: number;
   speaking: boolean;
@@ -147,6 +150,7 @@ function frame(
   aspect: number,
   r: Region,
   fov = FOV,
+  align: 'center' | 'top' = 'center',
 ): Pose {
   scratch.fov = fov;
   scratch.aspect = aspect;
@@ -184,7 +188,7 @@ function frame(
     look: look.clone(),
     fov,
     sx: (r.x0 + r.x1) / 2 - (b.x0 + b.x1) / 2,
-    sy: (r.y0 + r.y1) / 2 - (b.y0 + b.y1) / 2,
+    sy: align === 'top' ? r.y0 - b.y0 : (r.y0 + r.y1) / 2 - (b.y0 + b.y1) / 2,
   };
 }
 
@@ -214,10 +218,13 @@ function makePoses(aspect: number, insets: Insets): Record<string, Pose> {
   // left free to bleed off the frame). Phones take a steeper angle so the
   // bench top fills the height the narrow width leaves over.
   const hero = compact
-    ? frame([...panel, ...deskTop, ...deskBase, ...bubble], V(0, 1.0, -1.0), V(0, 0.62, 1).normalize(), aspect, R.hero, 40)
+    ? frame([...panel, ...bubble], V(0, 1.0, -1.0), V(0, 0.62, 1).normalize(), aspect, R.hero, 40, 'top')
     : frame([...panel, ...bubble], V(0, 1.5, -1.6), V(0, 0.3, 1).normalize(), aspect, R.hero, 46);
-  // The outro rises over the whole marked bench.
-  const outro = frame([...panel, ...deskTop, ...deskBase], V(0, 0.4, -0.6), V(0.12, 0.9, 1).normalize(), aspect, R.outro);
+  // The outro rises over the whole marked bench. Phones keep a frontal angle
+  // so the placards face the reader.
+  const outro = compact
+    ? frame(panel, V(0, 0.8, -1.0), V(0.05, 0.62, 1).normalize(), aspect, R.outro, 40, 'top')
+    : frame([...panel, ...deskTop, ...deskBase], V(0, 0.4, -0.6), V(0.12, 0.9, 1).normalize(), aspect, R.outro);
 
   const poses: Record<string, Pose> = { hero, outro };
   XS.forEach((x, i) => {
@@ -342,6 +349,7 @@ function Director({
       const rig = list[i]!;
       rig.focus = 0;
       rig.recede = 0;
+      rig.fade = 0;
       rig.paddle = 0;
       rig.hot = 0;
       rig.speaking = false;
@@ -361,6 +369,7 @@ function Director({
           rig.hot = i === weakest ? 1 : 0;
           rig.focus = i === weakest ? 1 : 0;
           rig.recede = i === weakest ? 0 : 1;
+          rig.fade = i === weakest ? 0 : 0.18;
           rig.speaking = i === weakest && since < 2.4;
         }
       } else if (heroW > 0.5 && !round) {
@@ -372,12 +381,14 @@ function Director({
         rig.focus = i === beat ? 1 : 0;
         rig.paddle = i === beat ? 1 : 0;
         rig.recede = i === beat ? 0 : 1;
+        rig.fade = i === beat ? 0 : 1;
         rig.delay = 0;
       } else if (outroW > 0.5) {
         rig.paddle = 1;
         rig.hot = i === weakest ? 1 : 0;
         rig.focus = i === weakest ? 1 : 0;
         rig.recede = i === weakest ? 0 : 0.5;
+        rig.fade = i === weakest ? 0 : 0.18;
       }
     }
     micRef.current = micLive;
@@ -418,6 +429,7 @@ function Examiner({
     focus: { x: 0, v: 0 },
     paddle: { x: 0, v: 0 },
     recede: 0,
+    fade: 0,
     hot: 0,
     nextBlink: 1.5 + index * 0.9,
     blink: 0,
@@ -427,7 +439,9 @@ function Examiner({
       clay: new THREE.Color(restClay),
       verm: new THREE.Color(COLOR.verm),
       coal: new THREE.Color(COLOR.coal),
-      ground: new THREE.Color(dark ? '#3B3631' : '#E4E1DA'),
+      // Light: fade toward the porcelain. Dark: toward a mid warm grey, never
+      // toward the night ground, so a faded figure still clears 3:1 on it.
+      ground: new THREE.Color(dark ? '#7A7269' : '#E4E1DA'),
     }),
     [restClay, dark],
   );
@@ -447,11 +461,13 @@ function Examiner({
       st.focus.x = rig.focus;
       st.paddle.x = rig.paddle;
       st.recede = rig.recede;
+      st.fade = rig.fade;
       st.hot = rig.hot;
     } else {
       stepSpring(st.focus, rig.focus, dt, 120, 16);
       stepSpring(st.paddle, rig.paddle, dt, 150, 14);
       st.recede = damp(st.recede, rig.recede, 5, dt);
+      st.fade = damp(st.fade, rig.fade, 5, dt);
       st.hot = damp(st.hot, rig.hot, 8, dt);
     }
     const f = st.focus.x;
@@ -482,7 +498,7 @@ function Examiner({
 
     clayMat.color.lerpColors(colors.clay, colors.verm, THREE.MathUtils.clamp(f, 0, 1));
     // Stepping back means fading toward the room, so the one in focus owns the frame.
-    clayMat.color.lerp(colors.ground, THREE.MathUtils.clamp(st.recede, 0, 1) * 0.62);
+    clayMat.color.lerp(colors.ground, THREE.MathUtils.clamp(st.fade, 0, 1) * (dark ? 0.5 : 0.62));
 
     // Paddle: up from behind the desk and flipped to face the room.
     const pv = st.paddle.x;
@@ -798,7 +814,7 @@ function Room({ progress, round, reduce, dark, insets }: Omit<SceneProps, 'activ
     return o;
   }, []);
   const rigsRef = useRef<Rig[]>(
-    AXES.map(() => ({ focus: 0, recede: 0, paddle: 0, hot: 0, speaking: false, delay: 0 })),
+    AXES.map(() => ({ focus: 0, recede: 0, fade: 0, paddle: 0, hot: 0, speaking: false, delay: 0 })),
   );
   const micRef = useRef(0);
   const dingRef = useRef(-1e9);
@@ -825,8 +841,8 @@ function Room({ progress, round, reduce, dark, insets }: Omit<SceneProps, 'activ
           <spotLight
             position={[0, 11, 5.5]}
             target={lampTarget}
-            angle={0.56}
-            penumbra={0.95}
+            angle={0.8}
+            penumbra={0.7}
             decay={0}
             intensity={3.4}
             color="#FFF1DC"
@@ -838,7 +854,7 @@ function Room({ progress, round, reduce, dark, insets }: Omit<SceneProps, 'activ
         </>
       )}
       {/* ...and a stage backlight, so every figure keeps a rim against the dark. */}
-      {dark && <directionalLight position={[0, 6, -12]} intensity={1.7} color="#FFE6CC" />}
+      {dark && <directionalLight position={[0, 6, -12]} intensity={2.4} color="#FFE6CC" />}
       <directionalLight
         position={[5, 12, 9]}
         intensity={dark ? 0.35 : 2.5}
