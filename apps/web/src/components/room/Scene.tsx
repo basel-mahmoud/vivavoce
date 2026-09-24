@@ -41,7 +41,7 @@ const DESK_D = 2.5;
 const PADDLE_DROP = 3.5;
 /** Per-examiner silhouettes and clays. Vermilion is reserved for whoever is speaking. */
 const BUILD = [
-  { body: 1.0, head: 0.46, extra: 'none', clay: '#2B2723', clayDark: '#4A433C', eye: COLOR.paper },
+  { body: 1.0, head: 0.46, extra: 'none', clay: '#2B2723', clayDark: '#80776C', eye: COLOR.paper },
   { body: 1.1, head: 0.44, extra: 'bun', clay: '#FFC838', clayDark: '#FFC838', eye: COLOR.coal },
   { body: 1.32, head: 0.47, extra: 'none', clay: '#EEEAE2', clayDark: '#EEEAE2', eye: COLOR.coal },
   { body: 1.04, head: 0.45, extra: 'glasses', clay: '#C9C4BB', clayDark: '#C9C4BB', eye: COLOR.coal },
@@ -101,6 +101,8 @@ export interface SceneProps {
 interface Pose {
   pos: THREE.Vector3;
   look: THREE.Vector3;
+  /** vertical field of view, degrees: the hero's hot seat is a wider lens */
+  fov: number;
   /** lens shift as a fraction of the frame: +x moves the subject right, +y down */
   sx: number;
   sy: number;
@@ -126,7 +128,7 @@ function figurePoints(i: number, lift = 0): THREE.Vector3[] {
     for (const z of [SEAT_Z - 0.64, SEAT_Z + 0.64]) pts.push(V(x + dx, TOP, z), V(x + dx, crown, z));
   }
   for (const dx of [0.44, 1.52]) pts.push(V(x + dx, 2.02 + lift, SEAT_Z + 0.62), V(x + dx, 3.1 + lift, SEAT_Z + 0.62));
-  for (const dx of [-0.97, 0.97]) pts.push(V(x + dx, TOP, SEAT_Z + 1.3), V(x + dx, TOP + 0.54, SEAT_Z + 1.05));
+  for (const dx of [-1.02, 1.02]) pts.push(V(x + dx, TOP, SEAT_Z + 1.3), V(x + dx, TOP + 0.6, SEAT_Z + 1.05));
   return pts;
 }
 
@@ -138,7 +140,15 @@ const probe = new THREE.Vector3();
  * region, then lens-shifts so the points sit centred in it. Holds at any
  * aspect ratio, so nothing the story needs is ever cropped.
  */
-function frame(points: THREE.Vector3[], look: THREE.Vector3, dir: THREE.Vector3, aspect: number, r: Region): Pose {
+function frame(
+  points: THREE.Vector3[],
+  look: THREE.Vector3,
+  dir: THREE.Vector3,
+  aspect: number,
+  r: Region,
+  fov = FOV,
+): Pose {
+  scratch.fov = fov;
   scratch.aspect = aspect;
   scratch.updateProjectionMatrix();
   const measure = (d: number) => {
@@ -172,6 +182,7 @@ function frame(points: THREE.Vector3[], look: THREE.Vector3, dir: THREE.Vector3,
   return {
     pos: look.clone().addScaledVector(dir, hi),
     look: look.clone(),
+    fov,
     sx: (r.x0 + r.x1) / 2 - (b.x0 + b.x1) / 2,
     sy: (r.y0 + r.y1) / 2 - (b.y0 + b.y1) / 2,
   };
@@ -186,7 +197,7 @@ function makePoses(aspect: number, insets: Insets): Record<string, Pose> {
         outro: { x0: 0.03, x1: 0.97, y0: insets.outro + 0.02, y1: 0.9 },
       }
     : {
-        hero: { x0: 0.47, x1: 0.985, y0: 0.12, y1: 0.9 },
+        hero: { x0: 0.46, x1: 0.985, y0: 0.12, y1: 0.86 },
         beat: { x0: 0.5, x1: 0.96, y0: 0.15, y1: 0.86 },
         outro: { x0: 0.47, x1: 0.985, y0: 0.14, y1: 0.88 },
       };
@@ -198,14 +209,13 @@ function makePoses(aspect: number, insets: Insets): Record<string, Pose> {
   // Headroom for the examiner's speech bubble above the panel.
   const bubble = XS.map((x) => V(x * (compact ? 0.55 : 0.88), 4.5, SEAT_Z));
 
-  // The hero is the hot seat: low, across the bench, the panel looking back.
-  const hero = frame(
-    [...panel, ...deskTop, ...bubble],
-    V(0, 1.4, -1.2),
-    V(0, compact ? 0.22 : 0.14, 1).normalize(),
-    aspect,
-    R.hero,
-  );
+  // The hero is the hot seat: a wide lens from just across the bench, the
+  // panel fitted and looking back, the near edge and your mic looming (and
+  // left free to bleed off the frame). Phones take a steeper angle so the
+  // bench top fills the height the narrow width leaves over.
+  const hero = compact
+    ? frame([...panel, ...deskTop, ...deskBase, ...bubble], V(0, 1.0, -1.0), V(0, 0.62, 1).normalize(), aspect, R.hero, 40)
+    : frame([...panel, ...bubble], V(0, 1.5, -1.6), V(0, 0.3, 1).normalize(), aspect, R.hero, 46);
   // The outro rises over the whole marked bench.
   const outro = frame([...panel, ...deskTop, ...deskBase], V(0, 0.4, -0.6), V(0.12, 0.9, 1).normalize(), aspect, R.outro);
 
@@ -248,6 +258,7 @@ function Director({
   );
   const look = useRef(new THREE.Vector3().copy(poses.hero!.look));
   const shift = useRef({ x: poses.hero!.sx, y: poses.hero!.sy });
+  const fovRef = useRef(poses.hero!.fov);
   const pointer = useRef({ x: 0, y: 0 });
   const phaseStart = useRef(0);
   const targetRef = useRef({ pos: new THREE.Vector3(), look: new THREE.Vector3() });
@@ -285,6 +296,7 @@ function Director({
     target.look.lerpVectors(a.look, b.look, t);
     const targetSx = a.sx + (b.sx - a.sx) * t;
     const targetSy = a.sy + (b.sy - a.sy) * t;
+    const targetFov = a.fov + (b.fov - a.fov) * t;
 
     const heroW = 1 - THREE.MathUtils.smoothstep(p, HERO_END - 0.02, HERO_END + 0.05);
     target.pos.x += pointer.current.x * 0.6 * heroW;
@@ -295,6 +307,7 @@ function Director({
       look.current.copy(target.look);
       shift.current.x = targetSx;
       shift.current.y = targetSy;
+      fovRef.current = targetFov;
       first.current = false;
     } else {
       cam.position.x = damp(cam.position.x, target.pos.x, 4.2, dt);
@@ -305,7 +318,9 @@ function Director({
       look.current.z = damp(look.current.z, target.look.z, 4.8, dt);
       shift.current.x = damp(shift.current.x, targetSx, 4.2, dt);
       shift.current.y = damp(shift.current.y, targetSy, 4.2, dt);
+      fovRef.current = damp(fovRef.current, targetFov, 4.2, dt);
     }
+    cam.fov = fovRef.current;
     cam.lookAt(look.current);
     // Lens shift: render a window offset from centre so the subject sits
     // clear of the captions without changing perspective.
@@ -408,8 +423,13 @@ function Examiner({
     blink: 0,
   });
   const colors = useMemo(
-    () => ({ clay: new THREE.Color(restClay), verm: new THREE.Color(COLOR.verm), coal: new THREE.Color(COLOR.coal) }),
-    [restClay],
+    () => ({
+      clay: new THREE.Color(restClay),
+      verm: new THREE.Color(COLOR.verm),
+      coal: new THREE.Color(COLOR.coal),
+      ground: new THREE.Color(dark ? '#3B3631' : '#E4E1DA'),
+    }),
+    [restClay, dark],
   );
   const bodyY = 0.35 + build.body / 2;
   const headY = 0.35 + build.body + 0.62 + build.head * 0.92;
@@ -461,6 +481,8 @@ function Examiner({
     }
 
     clayMat.color.lerpColors(colors.clay, colors.verm, THREE.MathUtils.clamp(f, 0, 1));
+    // Stepping back means fading toward the room, so the one in focus owns the frame.
+    clayMat.color.lerp(colors.ground, THREE.MathUtils.clamp(st.recede, 0, 1) * 0.62);
 
     // Paddle: up from behind the desk and flipped to face the room.
     const pv = st.paddle.x;
@@ -542,13 +564,13 @@ function Examiner({
 
       {/* Name placard on the desk */}
       <group position={[0, TOP + 0.25, 1.15]} rotation={[-0.3, 0, 0]}>
-        <RoundedBox args={[1.9, 0.52, 0.06]} radius={0.025} smoothness={3} castShadow receiveShadow>
+        <RoundedBox args={[2.0, 0.58, 0.06]} radius={0.025} smoothness={3} castShadow receiveShadow>
           <meshStandardMaterial color={COLOR.paper} roughness={0.7} />
         </RoundedBox>
         <Text
           font={FONT_DISPLAY}
-          fontSize={0.2}
-          letterSpacing={-0.01}
+          fontSize={0.245}
+          letterSpacing={-0.015}
           position={[0, 0, 0.035]}
           color={COLOR.coal}
           anchorX="center"
@@ -815,6 +837,8 @@ function Room({ progress, round, reduce, dark, insets }: Omit<SceneProps, 'activ
           />
         </>
       )}
+      {/* ...and a stage backlight, so every figure keeps a rim against the dark. */}
+      {dark && <directionalLight position={[0, 6, -12]} intensity={1.7} color="#FFE6CC" />}
       <directionalLight
         position={[5, 12, 9]}
         intensity={dark ? 0.35 : 2.5}
