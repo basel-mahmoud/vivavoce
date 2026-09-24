@@ -62,6 +62,7 @@ function Paddle({
   hot,
   waiting,
   index,
+  note,
 }: {
   label: string;
   score: number | null;
@@ -69,6 +70,8 @@ function Paddle({
   hot: boolean;
   waiting: boolean;
   index: number;
+  /** Shown under the label when this axis was left unmarked. */
+  note?: string;
 }) {
   return (
     <div className="flex min-w-0 items-center gap-4 sm:flex-col sm:gap-0">
@@ -112,6 +115,7 @@ function Paddle({
         )}
       >
         {label}
+        {note && <span className="block text-[0.7rem] font-semibold text-paper-mut">{note}</span>}
       </span>
     </div>
   );
@@ -244,8 +248,24 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
 
   const listening = phase === 'listening';
   const marked = phase === 'marked' && result !== null;
-  const weakestKey = result?.weakestAxis;
+  // The offline fallback cannot judge correctness (it has no reference answer),
+  // so that paddle stays down and "fix first" comes only from what it measured.
+  const fallback = marked && result.source === 'heuristic';
+  const judged: readonly (typeof AXES)[number][] = fallback
+    ? AXES.filter((a) => a.key !== 'correctness')
+    : AXES;
+  const isJudged = (key: string) => judged.some((a) => a.key === key);
+  const weakestKey = !marked
+    ? undefined
+    : fallback
+      ? judged.reduce((lo, a) => ((result.scores[a.key] ?? 0) < (result.scores[lo.key] ?? 0) ? a : lo)).key
+      : result.weakestAxis;
   const weakest = AXES.find((a) => a.key === weakestKey);
+  const overall = !marked
+    ? 0
+    : fallback
+      ? Math.round(judged.reduce((sum, a) => sum + (result.scores[a.key] ?? 0), 0) / judged.length)
+      : result.overall;
 
   return (
     <section id={id} aria-labelledby={`${id}-title`} className="mx-auto w-full max-w-[1360px] scroll-mt-20 px-3 py-3 sm:px-5">
@@ -364,9 +384,10 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
                   index={i}
                   label={a.label}
                   score={marked ? (result.scores[a.key] ?? 0) : null}
-                  up={marked}
+                  up={marked && isJudged(a.key)}
                   hot={marked && a.key === weakestKey}
                   waiting={phase === 'scoring'}
+                  note={marked && !isJudged(a.key) ? 'Needs the AI coach' : undefined}
                 />
               ))}
             </div>
@@ -376,7 +397,7 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
                 <>
                   <div className="flex items-start gap-4">
                     <div className="stamp shrink-0 rounded-2xl bg-verm px-4 py-2.5 text-coal">
-                      <span className="marks block text-4xl font-bold leading-none">{result.overall}</span>
+                      <span className="marks block text-4xl font-bold leading-none">{overall}</span>
                       <span className="marks text-[0.7rem] font-bold">/100 overall</span>
                     </div>
                     <div className="min-w-0">
@@ -421,7 +442,7 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
                 {marked &&
                   (result.source === 'model'
                     ? ' Marked by the AI coach.'
-                    : ' Marked by the quick fallback while the AI coach is busy.')}
+                    : ' A quick check while the AI coach is busy: correctness needs the coach, so it is left unmarked.')}
               </p>
             </div>
           </div>
