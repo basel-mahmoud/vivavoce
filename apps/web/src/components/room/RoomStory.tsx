@@ -127,11 +127,14 @@ function BeatCaption({ index, progress }: { index: number; progress: MotionValue
     >
       <div className="flex items-start justify-between gap-4">
         <h2 className="display text-[clamp(2rem,3.6vw,3.2rem)]">{axis.label}</h2>
-        <span
-          className="marks mt-1 grid h-12 w-12 shrink-0 place-items-center rounded-full bg-coal text-base font-bold text-paper"
-          title="Example mark"
-        >
-          {score}
+        <span className="mt-1 flex shrink-0 flex-col items-center gap-1">
+          <span className="marks grid h-12 w-12 place-items-center rounded-full bg-coal text-base font-bold text-paper dark:bg-paper dark:text-coal">
+            <span className="sr-only">Example mark: </span>
+            {score}
+          </span>
+          <span aria-hidden className="text-[0.7rem] font-bold text-ink-mut">
+            Example
+          </span>
         </span>
       </div>
       <p className="mt-4 text-xl font-black leading-snug sm:text-[1.4rem]">{axis.ask}</p>
@@ -356,7 +359,10 @@ export function RoomStory() {
   const playing = ready && !intro && active && inHero && pageVisible && !reduce;
   const round = useExampleRound(playing);
   const onReady = useCallback(() => setReady(true), []);
-  const labelOpacity = useTransform(scrollYProgress, (v) => ramp(v, [0, HERO_END], [1, 0]));
+  // The example label shows wherever the whole panel's marks do: the hero and the outro.
+  const labelOpacity = useTransform(scrollYProgress, (v) =>
+    ramp(v, [0, HERO_END, OUTRO - 0.07, OUTRO - 0.025], [1, 0, 0, 1]),
+  );
 
   const jump = useCallback((p: number) => {
     const el = section.current;

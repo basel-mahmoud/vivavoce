@@ -11,8 +11,16 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-/* Same ratio bucketing as the mobile heat grid, on the vermilion ramp. */
-const RAMP = ['var(--color-card-2)', '#FFD2C2', '#FF4D26', '#D63A17'] as const;
+/*
+ * Same ratio bucketing as the mobile heat grid. Each step mixes more vermilion
+ * into the empty cell, so busier days read hotter on both the day and night canvas.
+ */
+const RAMP = [
+  'var(--color-card-2)',
+  'color-mix(in oklab, var(--color-verm) 38%, var(--color-card-2))',
+  'color-mix(in oklab, var(--color-verm) 70%, var(--color-card-2))',
+  'var(--color-verm)',
+] as const;
 function level(count: number, max: number): 0 | 1 | 2 | 3 {
   if (count === 0 || max === 0) return 0;
   const r = count / max;
@@ -105,23 +113,23 @@ export default async function DashboardPage() {
           {/* marks row */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="tile tile-ink p-6">
-              <p className="marks text-xs text-paper-mut">OVERALL AVERAGE</p>
+              <p className="text-xs font-bold text-paper-mut">Overall average</p>
               <p className="display mt-2 text-6xl">{stats.hasData ? stats.overall : '–'}</p>
             </div>
             <div className="tile p-6">
-              <p className="marks text-xs text-ink-faint">STREAK</p>
+              <p className="text-xs font-bold text-ink-mut">Streak</p>
               <p className="display mt-2 text-6xl">{stats.streak.current}d</p>
               <p className="marks mt-1 text-xs text-ink-mut">best {stats.streak.longest}d</p>
             </div>
             <div className="tile p-6">
-              <p className="marks text-xs text-ink-faint">THIS WEEK</p>
+              <p className="text-xs font-bold text-ink-mut">This week</p>
               <p className="display mt-2 text-6xl">{stats.minutesThisWeek}m</p>
               <p className="marks mt-1 text-xs text-ink-mut">goal 60m</p>
             </div>
             <div className="tile tile-cobalt p-6">
-              <p className="marks text-xs text-paper-mut">LIFETIME</p>
+              <p className="text-xs font-bold text-paper">Lifetime</p>
               <p className="display mt-2 text-6xl">{stats.answersTotal}</p>
-              <p className="marks mt-1 text-xs text-paper-mut">
+              <p className="marks mt-1 text-xs text-paper">
                 answers · {stats.sessionsTotal} sessions
               </p>
             </div>
@@ -130,7 +138,7 @@ export default async function DashboardPage() {
           <div className="mt-3 grid gap-3 lg:grid-cols-2">
             {/* heat */}
             <div className="tile p-6">
-              <p className="marks text-xs text-ink-faint">PRACTICE HEAT · 12 WEEKS</p>
+              <p className="text-xs font-bold text-ink-mut">Practice heat, last 12 weeks</p>
               <div className="mt-5">
                 <HeatGrid heatmap={stats.heatmap} />
               </div>
@@ -138,7 +146,7 @@ export default async function DashboardPage() {
 
             {/* axes */}
             <div className="tile p-6">
-              <p className="marks text-xs text-ink-faint">AVERAGE BY AXIS</p>
+              <p className="text-xs font-bold text-ink-mut">Average by axis</p>
               <div className="mt-5 flex flex-col gap-4">
                 {bars.map((b) => (
                   <div key={b.label}>
@@ -160,7 +168,7 @@ export default async function DashboardPage() {
 
           {/* recent sessions */}
           <div className="mt-3 tile p-6">
-            <p className="marks text-xs text-ink-faint">RECENT SESSIONS</p>
+            <p className="text-xs font-bold text-ink-mut">Recent sessions</p>
             {stats.recent.length === 0 ? (
               <div className="mt-5">
                 <p className="text-lg font-bold">No sessions yet.</p>
@@ -183,7 +191,7 @@ export default async function DashboardPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-bold">{s.deckTitle}</p>
-                      <p className="marks text-xs text-ink-mut">
+                      <p className="text-xs font-semibold text-ink-mut">
                         {s.mode} · fix {s.weakest} · {s.when}
                       </p>
                     </div>
@@ -193,8 +201,8 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          <p className="marks mt-6 text-center text-xs text-ink-faint">
-            SCORES ARE GUIDANCE, NOT GRADES.
+          <p className="mt-6 text-center text-xs font-semibold text-ink-mut">
+            Scores are guidance, not grades.
           </p>
         </div>
       </section>

@@ -2,7 +2,8 @@ import { AXES, ROUNDS, weakestIndex } from './data';
 
 /**
  * Flat rendition of the room for browsers without WebGL: the cobalt bench
- * and the five paddles, marked with the first example round.
+ * and the five paddles, marked with the first example round. Paddles keep the
+ * 3D room's paper rim so they hold their edge on the night canvas.
  */
 export function RoomFallback() {
   const scores = ROUNDS[0]!.scores;
@@ -14,13 +15,13 @@ export function RoomFallback() {
           {AXES.map((a, i) => (
             <div key={a.key} className="flex flex-col items-center gap-2">
               <span
-                className={`marks grid aspect-square w-[clamp(3rem,7vw,4.6rem)] place-items-center rounded-full text-[clamp(1rem,2.2vw,1.5rem)] font-bold ${
+                className={`marks grid aspect-square w-[clamp(3rem,7vw,4.6rem)] place-items-center rounded-full text-[clamp(1rem,2.2vw,1.5rem)] font-bold ring-2 ring-paper ${
                   i === weakest ? 'bg-verm text-coal' : 'bg-coal text-paper'
                 }`}
               >
                 {scores[i]}
               </span>
-              <span className="h-10 w-1 rounded-full bg-coal" />
+              <span className="h-10 w-1 rounded-full bg-coal dark:bg-paper-mut" />
             </div>
           ))}
         </div>

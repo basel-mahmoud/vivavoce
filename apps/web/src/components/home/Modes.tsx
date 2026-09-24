@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { cn } from '@/lib/cn';
 import { useLoop, useOnScreen } from '@/components/ui/hooks';
@@ -196,16 +196,18 @@ function Explain() {
         {parts.map((p, i) => {
           if (p.length === 1) return <span key={i}>{p[0]}</span>;
           const at = 700 + swap++ * 1100;
+          // Each phrase holds together, but the swap may break between the
+          // struck words and their replacement on narrow screens.
           return (
-            <span key={i} className="whitespace-nowrap">
-              <span className="relative text-ink-mut">
+            <Fragment key={i}>
+              <del className="relative whitespace-nowrap text-ink-mut no-underline">
                 {p[0]}
                 <span aria-hidden className="grow-x absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-verm" style={d(at)} />
-              </span>{' '}
-              <span className="seq rounded-md bg-butter px-1 text-coal" style={d(at + 350)}>
+              </del>{' '}
+              <ins className="seq whitespace-nowrap rounded-md bg-butter px-1 text-coal no-underline" style={d(at + 350)}>
                 {p[1]}
-              </span>
-            </span>
+              </ins>
+            </Fragment>
           );
         })}
       </p>
@@ -213,7 +215,9 @@ function Explain() {
         <span className="text-sm font-black">Clarity</span>
         <span className="marks relative inline-grid h-9 w-14 place-items-center overflow-hidden rounded-full bg-card-2 text-sm font-bold">
           <span className="seq-out col-start-1 row-start-1" style={d(3600)}>52</span>
-          <span className="seq col-start-1 row-start-1 text-pass" style={d(3800)}>81</span>
+          <span className="seq col-start-1 row-start-1 grid h-full w-full place-items-center bg-pass text-paper" style={d(3800)}>
+            81
+          </span>
         </span>
         <span className="seq text-sm text-ink-mut" style={d(3900)}>
           Same idea, no jargon.
@@ -267,7 +271,7 @@ function Rapid({ cycle }: { cycle: number }) {
         </span>
       </div>
       <p className="marks mt-5 text-xs font-bold text-ink-mut">
-        QUESTION {(cycle % 10) + 1} OF 10
+        Question {(cycle % 10) + 1} of 10
       </p>
       <p className="seq mt-2 max-w-sm text-xl font-black leading-tight" style={d(0)}>
         {RAPID[cycle % RAPID.length]}
@@ -395,6 +399,9 @@ export function Modes() {
               <Preview id={active} cycle={cycle} />
             </motion.div>
           </AnimatePresence>
+          <p className="mt-6 text-xs font-semibold text-ink-mut">
+            Example previews. Scores are guidance, not grades.
+          </p>
         </div>
       </div>
     </section>

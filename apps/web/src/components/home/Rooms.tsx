@@ -32,7 +32,7 @@ function Artifact({ id }: { id: string }) {
           <li
             key={l}
             className={cn(
-              'marks grid h-12 w-12 place-items-center rounded-xl text-lg font-bold',
+              'grid h-12 w-12 place-items-center rounded-xl text-xl font-black',
               l === 'R' ? 'bg-verm text-coal' : 'bg-paper text-coal',
             )}
           >
@@ -44,7 +44,7 @@ function Artifact({ id }: { id: string }) {
   if (id === 'talks')
     return (
       <div className="w-full max-w-[17rem] rounded-2xl bg-coal p-4 text-paper">
-        <p className="marks text-xs font-bold text-paper-mut">SLIDE 7 OF 12</p>
+        <p className="marks text-xs font-bold text-paper-mut">Slide 7 of 12</p>
         <p className="mt-2 text-sm font-bold leading-snug">
           Conciseness keeps flagging the middle. Cut it.
         </p>
