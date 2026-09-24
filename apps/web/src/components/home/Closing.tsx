@@ -42,7 +42,7 @@ export function Privacy() {
 export function Close() {
   return (
     <section aria-labelledby="close-title" className="mx-auto w-full max-w-[1360px] px-3 pb-3 sm:px-5 sm:pb-5">
-      <div className="tile tile-verm relative overflow-hidden rounded-[2rem] px-6 py-14 sm:px-12 sm:py-20 lg:px-16">
+      <div className="tile tile-verm relative overflow-hidden rounded-field px-6 py-14 sm:px-12 sm:py-20 lg:px-16">
         <div className="grid gap-12 lg:grid-cols-[1.45fr_1fr] lg:items-end">
           <div>
             <h2 id="close-title" className="display text-[clamp(2.8rem,5.8vw,5.4rem)]">

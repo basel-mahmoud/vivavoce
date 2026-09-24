@@ -24,11 +24,11 @@ export default function WaitlistPage() {
       />
       <section aria-label="Join the early-access list" className="mx-auto w-full max-w-[1360px] px-3 pb-24 sm:px-5 sm:pb-32">
         <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr]">
-          <div className="tile tile-verm flex flex-col justify-between gap-10 rounded-[2rem] p-7 sm:p-12">
+          <div className="tile tile-verm flex flex-col justify-between gap-10 rounded-field p-7 sm:p-12">
             <p className="display text-[clamp(1.8rem,3.4vw,2.8rem)]">One email. No spam. A spot when it opens.</p>
             <WaitlistForm tone="verm" />
           </div>
-          <div className="tile flex flex-col rounded-[2rem] p-7 sm:p-12">
+          <div className="tile flex flex-col rounded-field p-7 sm:p-12">
             <ul className="space-y-7">
               {perks.map(([lead, body]) => (
                 <li key={lead}>

@@ -13,7 +13,7 @@ const groups = [
 export function Footer() {
   return (
     <footer className="mx-auto w-full max-w-[1360px] px-3 pb-3 sm:px-5 sm:pb-5">
-      <div className="tile tile-ink overflow-hidden rounded-[2rem]">
+      <div className="tile tile-ink overflow-hidden rounded-field">
         <div className="grid gap-12 p-7 sm:p-10 lg:grid-cols-[1.1fr_1.6fr] lg:p-12">
           <div className="max-w-sm">
             <Logo />

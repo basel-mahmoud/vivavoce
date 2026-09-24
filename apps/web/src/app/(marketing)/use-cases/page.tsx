@@ -36,7 +36,7 @@ export default function UseCasesPage() {
       <Rooms showHeading={false} />
 
       <section aria-labelledby="week-title" className="mx-auto w-full max-w-[1360px] px-3 pb-24 sm:px-5 sm:pb-32">
-        <div className="tile tile-ink rounded-[2rem] p-7 sm:p-12 lg:p-16">
+        <div className="tile tile-ink rounded-field p-7 sm:p-12 lg:p-16">
           <h2 id="week-title" className="display max-w-2xl text-[clamp(2.1rem,4.2vw,3.6rem)] text-paper">
             How a week of sparring goes.
           </h2>

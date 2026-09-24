@@ -269,7 +269,7 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
 
   return (
     <section id={id} aria-labelledby={`${id}-title`} className="mx-auto w-full max-w-[1360px] scroll-mt-20 px-3 py-3 sm:px-5">
-      <div className="tile tile-ink rounded-[2rem] p-5 sm:p-8 lg:p-12">
+      <div className="tile tile-ink rounded-field p-5 sm:p-8 lg:p-12">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-14">
           {/* The candidate's side */}
           <div className="flex min-w-0 flex-col">

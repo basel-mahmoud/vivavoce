@@ -126,7 +126,7 @@ export function Rooms({ showHeading = true }: { showHeading?: boolean }) {
               onFocus={() => setOpen(i)}
               className={cn(
                 'group relative flex min-w-0 flex-col overflow-hidden rounded-[1.75rem] p-6 sm:p-8',
-                'transition-[flex-grow] duration-500 ease-[cubic-bezier(0.77,0,0.175,1)] motion-reduce:transition-none',
+                'transition-[flex-grow] duration-500 ease-in-out-strong motion-reduce:transition-none',
                 t.field,
                 on ? 'xl:grow-[2.4]' : 'xl:grow',
                 'xl:basis-0',

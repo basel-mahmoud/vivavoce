@@ -48,7 +48,7 @@ export function Interrupts() {
 
   return (
     <section aria-labelledby="interrupts-title" className="mx-auto w-full max-w-[1360px] px-3 pb-24 sm:px-5 sm:pb-32">
-      <div ref={ref} className="tile tile-ink grid gap-12 rounded-[2rem] p-7 sm:p-12 lg:grid-cols-[1fr_1.3fr] lg:p-16">
+      <div ref={ref} className="tile tile-ink grid gap-12 rounded-field p-7 sm:p-12 lg:grid-cols-[1fr_1.3fr] lg:p-16">
         <div>
           <h2 id="interrupts-title" className="display text-[clamp(2.3rem,4.6vw,4rem)] text-paper">
             It interrupts, like the room will.

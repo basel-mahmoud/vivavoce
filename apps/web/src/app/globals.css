@@ -60,20 +60,13 @@
   --color-paper: #fbfaf8;
   --color-paper-mut: #c9c4bb;
   --color-verm: #ff4d26;
-  --color-verm-deep: #d63a17;
-  --color-verm-soft: #ffd2c2;
   --color-cobalt: #2e45ff;
   --color-cobalt-deep: #1f31c9;
-  --color-cobalt-bright: #8391ff;
   --color-butter: #ffc838;
   --color-line-dark: rgb(251 250 248 / 0.16);
 
   /* semantics */
   --color-pass: #2c7a4b;
-  --color-alarm: #c92c0e;
-
-  /* legacy alias: the dark block */
-  --color-inktile: #161412;
 
   --font-sans: var(--font-archivo), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, 'SF Mono', monospace;
@@ -83,7 +76,6 @@
 
   --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
-  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @layer base {
@@ -187,19 +179,6 @@
     background: var(--color-cobalt);
     border-color: var(--color-cobalt);
     color: var(--color-paper);
-  }
-
-  /* Lift on hover: a real offset shadow tinted to the ground, pointer-fine only. */
-  .tile-lift {
-    transition:
-      transform 220ms var(--ease-out-quint),
-      box-shadow 220ms var(--ease-out-quint);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .tile-lift:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 18px 40px -22px rgb(var(--vv-shadow) / 0.35);
-    }
   }
 
   /* ── Buttons ──────────────────────────────────────────────────────────── */
