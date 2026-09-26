@@ -1176,21 +1176,37 @@
       filter: url(#vv-hedge-4);
     }
   }
+  /* Each card lands below the last one's question, so every ask stays readable. */
   .vv-int-pile {
+    --dx: 6%;
+    --dy: 5.4rem;
     position: relative;
-    height: 15rem;
+    height: 17rem;
     margin-top: -1rem;
-    margin-left: 8%;
   }
   .vv-int-card {
+    --card-w: min(17.5rem, 86%);
     position: absolute;
-    width: min(17.5rem, 78%);
+    top: calc(var(--i) * var(--dy));
+    left: calc(var(--i) * var(--dx));
+    width: var(--card-w);
     padding: 0.85rem 1.1rem 1.1rem;
     border-top: 3px solid var(--color-verm);
     border-radius: 0.75rem;
     background: var(--color-paper);
     color: var(--color-coal);
     box-shadow: 0 2px 4px rgb(var(--vv-shadow) / 0.18), 0 22px 38px -18px rgb(var(--vv-shadow) / 0.6);
+  }
+  @media (width >= 40rem) {
+    .vv-int-pile {
+      --dx: 12%;
+      --dy: 5.9rem;
+      height: 18.5rem;
+      margin-left: 8%;
+    }
+    .vv-int-card {
+      --card-w: min(19.5rem, 76%);
+    }
   }
   .vv-int-caption {
     margin-top: 0.75rem;

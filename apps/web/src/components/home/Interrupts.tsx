@@ -1,22 +1,25 @@
 'use client';
 
-import { useId, useRef } from 'react';
+import { useId, useRef, type CSSProperties } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Portrait, type ExaminerAxis } from '@/components/ui/Portrait';
 import { SPRING } from '@/lib/motion';
 import { cn } from '@/lib/cn';
 import { useBeat, usePageVisible, useReducedMarkup, useSeen } from './useHome';
 
-const FOLLOW_UPS: readonly { axis: ExaminerAxis; name: string; ask: string; x: string; y: string; r: number }[] = [
-  { axis: 'correctness', name: 'Correctness', ask: 'Why?', x: '0%', y: '0rem', r: -3 },
-  { axis: 'conciseness', name: 'Conciseness', ask: 'Say it in one line.', x: '11%', y: '4.1rem', r: 2.2 },
-  { axis: 'clarity', name: 'Clarity', ask: 'Give me an example.', x: '22%', y: '8.2rem', r: -1.4 },
+const FOLLOW_UPS: readonly { axis: ExaminerAxis; name: string; ask: string; r: number }[] = [
+  { axis: 'correctness', name: 'Correctness', ask: 'Why?', r: -2.5 },
+  { axis: 'conciseness', name: 'Conciseness', ask: 'Say it in one line.', r: 1.6 },
+  { axis: 'clarity', name: 'Clarity', ask: 'Give me an example.', r: -1.2 },
 ];
 
 // The answer, the three cards landing one by one, then a long look.
 const STEPS = [1500, 1300, 1300, 3400] as const;
 
-/** Wobbly words: the hedges shake, like a voice that is not sure. */
+/**
+ * Wobbly words: the hedges shake, like a voice that is not sure. The filters
+ * have fixed ids (home.css steps through them), so render one Interrupts per page.
+ */
 function Hedge({ children }: { children: string }) {
   return <span className="vv-hedge">{children}</span>;
 }
@@ -77,7 +80,7 @@ export function Interrupts({ className }: { className?: string }) {
                 <motion.li
                   key={`${round}-${f.axis}`}
                   className="vv-int-card"
-                  style={{ left: f.x, top: f.y, zIndex: i + 1 }}
+                  style={{ '--i': i, zIndex: i + 1 } as CSSProperties}
                   initial={{ opacity: 0, y: -34, rotate: f.r + 9, scale: 1.08 }}
                   animate={{ opacity: 1, y: 0, rotate: f.r, scale: 1 }}
                   exit={{ opacity: 0, x: 48, transition: { duration: 0.26, delay: (FOLLOW_UPS.length - i) * 0.05 } }}
@@ -87,7 +90,7 @@ export function Interrupts({ className }: { className?: string }) {
                     <Portrait axis={f.axis} state="speaking" size={30} decorative />
                     <span className="text-[0.72rem] font-bold text-verm-text">{f.name} asks</span>
                   </span>
-                  <span className="mt-2 block text-[1.45rem] font-black leading-tight sm:text-[1.65rem]">{f.ask}</span>
+                  <span className="mt-2 block text-[1.3rem] font-black leading-tight sm:text-[1.65rem]">{f.ask}</span>
                 </motion.li>
               ))}
             </AnimatePresence>
