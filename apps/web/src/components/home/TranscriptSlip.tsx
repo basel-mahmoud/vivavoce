@@ -119,7 +119,8 @@ export function TranscriptSlip({ className }: { className?: string }) {
   return (
     <div ref={host} className={cn('vv-slip-desk', className)}>
       <div className="vv-slip" data-phase={shown} role="img" aria-label="An example transcript, blacked out word by word, then torn up. Not kept.">
-        <div ref={left} className="vv-slip-piece" style={{ clipPath: LEFT }} aria-hidden="true">
+        {/* Whole until it tears: the right piece lies exactly over it, so no seam shows. */}
+        <div ref={left} className="vv-slip-piece" style={{ clipPath: shown === 'torn' ? LEFT : undefined }} aria-hidden="true">
           <SlipFace />
         </div>
         <div ref={right} className="vv-slip-piece" style={{ clipPath: RIGHT }} aria-hidden="true">
@@ -137,7 +138,7 @@ export function TranscriptSlip({ className }: { className?: string }) {
               setPhase('plain');
               setRun((r) => r + 1);
             }}
-            className="btn btn-ghost btn-sm ml-auto gap-1.5 text-ink-mut"
+            className="btn btn-ghost btn-sm ml-auto gap-1.5 text-ink-mut pointer-coarse:h-11"
           >
             <RotateCcw size={14} aria-hidden />
             Run it again

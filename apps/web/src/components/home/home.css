@@ -840,7 +840,7 @@
   /* ── Privacy: the transcript slip that is not kept ─────────────────── */
 
   .vv-slip-desk {
-    max-width: 34rem;
+    max-width: 37rem;
     padding-inline: 0.5rem;
   }
   .vv-slip {
@@ -911,7 +911,7 @@
     text-transform: uppercase;
   }
   .vv-slip-line {
-    font-size: 1.02rem;
+    font-size: 1.1rem;
     line-height: 1.9rem;
   }
   .vv-slip-line + .vv-slip-line {
