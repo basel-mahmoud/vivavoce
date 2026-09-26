@@ -1,12 +1,13 @@
-import type { Metadata } from 'next';
 import { Muted, PageHero } from '@/components/site/PageHero';
 import { DocSection, Prose } from '@/components/site/Prose';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'Privacy',
   description:
     'How VivaVoce handles your data: especially your voice recordings and transcripts.',
-};
+  path: '/privacy',
+});
 
 const toc = [
   { id: 'short-version', title: 'The short version' },

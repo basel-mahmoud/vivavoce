@@ -1,15 +1,16 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PageHero } from '@/components/site/PageHero';
 import { Faq, type FaqEntry } from '@/components/site/Faq';
 import { PenTick } from '@/components/site/PenTick';
 import { Close } from '@/components/home/Closing';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'FAQ',
   description:
     'Common questions about VivaVoce: what happens to your voice data, how marking works, offline behaviour, and beta access.',
-};
+  path: '/faq',
+});
 
 const faqs: readonly FaqEntry[] = [
   {

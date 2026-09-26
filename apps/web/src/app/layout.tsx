@@ -19,6 +19,8 @@ const jetbrains = JetBrains_Mono({
   preload: false,
 });
 
+// Pages set their own canonical and social URL (pageMeta in lib/site.ts);
+// these are the defaults for anything that does not, such as the 404.
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
@@ -40,7 +42,6 @@ export const metadata: Metadata = {
     type: 'website',
     title: `${site.name}. ${site.tagline}`,
     description: site.description,
-    url: site.url,
     siteName: site.name,
   },
   twitter: {
@@ -48,8 +49,6 @@ export const metadata: Metadata = {
     title: `${site.name}. ${site.tagline}`,
     description: site.description,
   },
-  robots: { index: true, follow: true },
-  alternates: { canonical: '/' },
 };
 
 export const viewport: Viewport = {

@@ -1,11 +1,13 @@
-import type { Metadata } from 'next';
 import { Muted, PageHero } from '@/components/site/PageHero';
 import { DocSection, Prose } from '@/components/site/Prose';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'Accessibility',
-  description: 'VivaVoce’s commitment to accessible design across web and mobile.',
-};
+  description:
+    'VivaVoce’s commitment to accessible design across web and mobile.',
+  path: '/legal/accessibility',
+});
 
 const toc = [
   { id: 'our-target', title: 'Our target' },

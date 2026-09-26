@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SignInButton } from '@clerk/nextjs';
 import { Smartphone } from 'lucide-react';
@@ -8,11 +7,15 @@ import { ProgressBoard } from '@/components/site/Progress';
 import { exampleStats } from '@/components/site/progress-data';
 import { getAuthContext } from '@/lib/auth/context';
 import { getUserStats } from '@/lib/db/practice.repo';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'Dashboard',
-  description: 'Your practice, marked: streak, five-axis averages, and session history.',
-};
+  description:
+    'Your practice, marked: streak, five-axis averages, and session history.',
+  path: '/dashboard',
+  index: false,
+});
 
 export const dynamic = 'force-dynamic';
 

@@ -1,12 +1,14 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Muted, PageHero } from '@/components/site/PageHero';
 import { DocSection, Prose } from '@/components/site/Prose';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'Terms',
-  description: 'The terms for using VivaVoce, including the coaching-not-grading disclaimer.',
-};
+  description:
+    'The terms for using VivaVoce, including the coaching-not-grading disclaimer.',
+  path: '/terms',
+});
 
 const toc = [
   { id: 'coaching-not-grading', title: 'Coaching, not grading' },

@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import { HeroMark } from '@/components/site/HeroMark';
 import { PageHero } from '@/components/site/PageHero';
 import { AxesIndex } from '@/components/home/AxesIndex';
@@ -6,12 +5,14 @@ import { Interrupts } from '@/components/home/Interrupts';
 import { Modes } from '@/components/home/Modes';
 import { LiveEngine } from '@/components/engine/LiveEngine';
 import { Close } from '@/components/home/Closing';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'Features',
   description:
     'A five-axis marking scheme, six practice modes, a resilient voice engine, and progress that remembers your weak spots.',
-};
+  path: '/features',
+});
 
 export default function FeaturesPage() {
   return (

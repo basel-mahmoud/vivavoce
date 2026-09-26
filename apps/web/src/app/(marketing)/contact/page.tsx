@@ -1,14 +1,15 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { HeroMark } from '@/components/site/HeroMark';
 import { PageHero } from '@/components/site/PageHero';
-import { site } from '@/lib/site';
+import { pageMeta, site } from '@/lib/site';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'Contact',
-  description: 'Reach the VivaVoce team: support, security, and privacy.',
-};
+  description:
+    'Reach the VivaVoce team: support, security, and privacy.',
+  path: '/contact',
+});
 
 const channels = [
   { title: 'Support', body: 'Questions, feedback, or trouble with the app.', email: site.email, main: true },

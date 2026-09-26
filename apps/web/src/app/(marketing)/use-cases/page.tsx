@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { HeroMark } from '@/components/site/HeroMark';
@@ -6,12 +5,14 @@ import { PageHero } from '@/components/site/PageHero';
 import { Rooms } from '@/components/home/Rooms';
 import { Close } from '@/components/home/Closing';
 import { Portrait, type ExaminerAxis, type ExaminerState } from '@/components/ui/Portrait';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'Use cases',
   description:
     'Oral exams and vivas, interviews, presentations, and language practice. VivaVoce works anywhere the answer is spoken.',
-};
+  path: '/use-cases',
+});
 
 interface Story {
   who: string;

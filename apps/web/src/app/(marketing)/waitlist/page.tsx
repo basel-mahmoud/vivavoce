@@ -1,17 +1,19 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Smartphone } from 'lucide-react';
 import { HeroMark } from '@/components/site/HeroMark';
 import { AdmitSlip } from '@/components/home/AdmitSlip';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'Get early access',
   description: 'Join the VivaVoce early-access list. Students with upcoming exams first.',
-};
+  path: '/waitlist',
+});
 
+// Only what is true today.
 const perks = [
   ['Exam dates jump the queue.', 'First access as spots open, soonest exams first.'],
-  ['Founding-user pricing.', 'Locked in for good once you are in.'],
+  ['The Android beta, today.', 'Install the current build while you wait for your spot.'],
   ['A direct line.', 'Help shape what gets built next.'],
 ] as const;
 

@@ -9,17 +9,20 @@ import { Deferred } from '@/components/home/Deferred';
 import { EnginePlaceholder } from '@/components/home/EnginePlaceholder';
 import { SectionBoundary } from '@/components/home/SectionBoundary';
 import { StaticHero } from '@/components/home/StaticHero';
-import { site } from '@/lib/site';
+import { pageMeta, site } from '@/lib/site';
+
+export const metadata = pageMeta({ description: site.description, path: '/' });
 
 export default function HomePage() {
+  // Only what is true today: an Android beta, no published price.
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: site.name,
     applicationCategory: 'EducationApplication',
-    operatingSystem: 'Android, iOS',
+    operatingSystem: 'Android',
     description: site.description,
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    url: site.url,
   };
 
   return (
