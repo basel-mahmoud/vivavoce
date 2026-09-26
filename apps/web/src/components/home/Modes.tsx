@@ -147,7 +147,7 @@ function Flash() {
   return (
     <div className="flex h-full flex-col">
       <div className="mx-auto w-full max-w-sm [perspective:900px]">
-        <div className="relative h-44 [transform-style:preserve-3d] motion-safe:animate-[vv-flip_4.4s_var(--ease-in-out-strong)_both]">
+        <div className="relative h-44 [transform-style:preserve-3d] motion-safe:animate-[vv-flip_4.4s_var(--ease-in-out)_both]">
           <div className="absolute inset-0 grid place-items-center rounded-2xl border border-line bg-canvas p-5 text-center [backface-visibility:hidden]">
             <div>
               <p className="text-xs font-bold text-ink-mut">Contract law</p>
