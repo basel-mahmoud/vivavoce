@@ -635,6 +635,172 @@
   .vv-tick[data-pending] {
     opacity: 0;
   }
+
+  /* ── Documents: legal text on a sheet of exam paper ─────────────────── */
+
+  .vv-doc-grid {
+    display: grid;
+    gap: 2rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-doc-grid {
+      grid-template-columns: 14rem minmax(0, 53rem);
+      justify-content: start;
+      gap: 3.5rem;
+    }
+  }
+  .vv-toc {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .vv-toc {
+      position: sticky;
+      top: 6.5rem;
+      display: block;
+      align-self: start;
+      padding-top: 2.75rem;
+    }
+  }
+  .vv-toc-head {
+    color: var(--color-ink-mut);
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+  .vv-toc ul {
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.6rem;
+  }
+  .vv-toc-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    color: var(--color-ink-mut);
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: color var(--dur-hover) ease;
+  }
+  .vv-toc-link[aria-current] {
+    color: var(--color-ink);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-toc-link:hover {
+      color: var(--color-ink);
+    }
+  }
+  .vv-toc-link .vv-ink {
+    bottom: -0.3rem;
+  }
+
+  .vv-doc {
+    --doc-margin: 1.35rem;
+    position: relative;
+    min-width: 0;
+    padding: 1.5rem 1.15rem 2.25rem calc(var(--doc-margin) + 1.1rem);
+    border: 1px solid var(--color-line);
+    border-radius: 1.25rem;
+    background-color: var(--color-card);
+    background-image: linear-gradient(
+      to right,
+      transparent calc(var(--doc-margin) - 1px),
+      var(--color-margin) calc(var(--doc-margin) - 1px) var(--doc-margin),
+      transparent var(--doc-margin)
+    );
+    box-shadow: var(--shadow-paper);
+  }
+  @media (min-width: 640px) {
+    .vv-doc {
+      --doc-margin: 3.5rem;
+      padding: 2rem 3rem 3.25rem calc(var(--doc-margin) + 2.25rem);
+    }
+  }
+  .vv-doc-date {
+    margin-bottom: 1.75rem;
+    color: var(--color-ink-faint);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: right;
+  }
+  .vv-doc-body {
+    max-width: 68ch;
+    color: var(--color-ink-mut);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+  .vv-doc-body > * + *,
+  .vv-doc-section > * + * {
+    margin-top: 1.15rem;
+  }
+  .vv-doc-body > .vv-doc-section {
+    margin-top: 2.75rem;
+  }
+  .vv-doc-body > .vv-doc-section:first-child {
+    margin-top: 0;
+  }
+  .vv-doc-section h2 {
+    color: var(--color-ink);
+    font-size: clamp(1.35rem, 2vw, 1.6rem);
+    font-weight: 900;
+    font-stretch: 112%;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    scroll-margin-top: 6.5rem;
+  }
+  .vv-doc-body a {
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--color-ink-blue) 55%, transparent);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.22em;
+    transition: text-decoration-color var(--dur-hover) ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-doc-body a:hover {
+      text-decoration-color: var(--color-ink-blue);
+    }
+  }
+  .vv-doc-body strong {
+    color: var(--color-ink);
+    font-weight: 700;
+  }
+  .vv-doc-body ul {
+    padding-left: 1.3rem;
+    list-style: disc;
+  }
+  .vv-doc-body li + li {
+    margin-top: 0.45rem;
+  }
+  .vv-doc-body li::marker {
+    color: var(--color-ink-faint);
+  }
+  .vv-doc-fine {
+    color: var(--color-ink-faint);
+    font-size: 0.9rem;
+  }
+  /* The short version, written on ruled lines with its key words highlighted. */
+  .vv-doc-body .vv-doc-summary {
+    --gap: 2.25rem;
+    padding: 0;
+    list-style: none;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0 calc(var(--gap) - 1px),
+      var(--color-rule) calc(var(--gap) - 1px) var(--gap)
+    );
+    background-position: 0 -0.5rem;
+    line-height: var(--gap);
+  }
+  .vv-doc-body .vv-doc-summary li + li {
+    margin-top: 0;
+  }
+  .vv-doc-summary strong {
+    padding: 0.05em 0.2em;
+    border-radius: 0.2em;
+    background: color-mix(in oklab, var(--color-butter) 78%, transparent);
+    color: var(--color-coal);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

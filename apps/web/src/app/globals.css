@@ -681,57 +681,6 @@
     }
   }
 
-  /* ── Long-form content ────────────────────────────────────────────────── */
-
-  .prose-vv {
-    color: var(--color-ink-mut);
-    font-size: 1.0625rem;
-    line-height: 1.75;
-    max-width: 68ch;
-  }
-  .prose-vv > * + * {
-    margin-top: 1.15rem;
-  }
-  .prose-vv h2 {
-    color: var(--color-ink);
-    font-size: 1.6rem;
-    font-weight: 900;
-    font-stretch: 112%;
-    letter-spacing: -0.015em;
-    line-height: 1.1;
-    margin-top: 3rem;
-  }
-  .prose-vv h3 {
-    color: var(--color-ink);
-    font-size: 1.15rem;
-    font-weight: 800;
-    margin-top: 2rem;
-  }
-  .prose-vv a {
-    color: var(--color-ink);
-    text-decoration: underline;
-    text-decoration-color: color-mix(in oklab, var(--color-ink-blue) 55%, transparent);
-    transition: text-decoration-color var(--dur-hover) ease;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .prose-vv a:hover {
-      text-decoration-color: var(--color-ink-blue);
-    }
-  }
-  .prose-vv strong {
-    color: var(--color-ink);
-    font-weight: 700;
-  }
-  .prose-vv ul {
-    list-style: disc;
-    padding-left: 1.3rem;
-  }
-  .prose-vv li {
-    margin-top: 0.45rem;
-  }
-  .prose-vv li::marker {
-    color: var(--color-ink-faint);
-  }
 }
 
 /* Tabular figures in the current face, for counts that are not marks. */
