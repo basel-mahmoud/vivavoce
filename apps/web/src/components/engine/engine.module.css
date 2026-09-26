@@ -793,8 +793,15 @@
   .benchInner {
     max-width: 48rem;
   }
+  /* The stage above fills whatever height the rail leaves it: the rail must not grow when the
+     marks arrive, or the panel would jump smaller at the climax. The advice under the board keeps
+     three lines of room from the start, and the rail's items hang from its top. */
   .rail {
+    align-items: flex-start;
     padding-top: 0.9rem;
+  }
+  .fix {
+    min-height: calc(3 * 1.45em);
   }
 }
 
