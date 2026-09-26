@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
-import { HeroMark } from '@/components/site/HeroMark';
 import { PageHero } from '@/components/site/PageHero';
 import { pageMeta, site } from '@/lib/site';
 
@@ -21,15 +20,7 @@ export default function ContactPage() {
   return (
     <>
       <PageHero
-        title={
-          <>
-            We read{' '}
-            <HeroMark mark="underline">
-              everything
-            </HeroMark>
-            .
-          </>
-        }
+        title="We read everything."
         intro="A small team that cares about getting this right. Pick the right inbox and you will hear back quickly."
       />
       <section aria-label="Inboxes" className="mx-auto w-full max-w-[1360px] px-4 pb-24 sm:px-5 sm:pb-32">

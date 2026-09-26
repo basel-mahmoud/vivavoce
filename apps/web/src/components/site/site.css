@@ -649,13 +649,59 @@
     gap: 0.75rem;
     margin-top: 2rem;
   }
-  /* The examiner's tick after a heading. */
+  /* A heading with something in the margin: the exam script's left margin,
+     its red rule, and the examiner's mark in it beside the first line. */
+  .vv-hero[data-margin] {
+    --hero-mx: clamp(2.6rem, 7vw, 6rem);
+    display: grid;
+    grid-template-columns: var(--hero-mx) minmax(0, 1fr);
+  }
+  .vv-hero-margin {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 0.1rem;
+    padding-right: clamp(0.4rem, 1vw, 1rem);
+    border-right: 1.5px solid var(--color-margin);
+  }
+  .vv-hero[data-margin] .vv-hero-text {
+    padding-left: clamp(0.9rem, 2.2vw, 1.75rem);
+  }
   .vv-hero-tick {
+    display: block;
+    width: 100%;
+    max-width: 4.25rem;
+    height: auto;
+  }
+
+  /* The examiner's correction: a word struck in red pen, the right one after. */
+  .vv-rewrite-was {
+    position: relative;
     display: inline-block;
-    width: 0.68em;
-    height: 0.56em;
-    margin-left: 0.14em;
-    vertical-align: -0.02em;
+    color: var(--color-ink-mut);
+  }
+  .vv-rewrite-strike {
+    position: absolute;
+    left: -0.06em;
+    right: -0.06em;
+    top: 0.34em;
+    width: calc(100% + 0.12em);
+    height: 0.34em;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .vv-rewrite-strike path {
+    fill: none;
+    stroke: var(--color-verm-text);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-dasharray: 1 1;
+    animation: vv-strike-draw 420ms var(--ease-out) 520ms both;
+  }
+  @keyframes vv-strike-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
   }
 
   /* The red-pen tick (PenTick). */
@@ -1657,14 +1703,16 @@
   }
   @media (min-width: 640px) {
     .vv-entry-body {
-      padding: 1.9rem 2.25rem 2.1rem 2rem;
+      max-width: 44rem;
+      padding: 2.1rem 2.5rem 2.3rem 2.25rem;
     }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   /* Fewer and gentler: strokes and faces appear, nothing travels. */
-  .vv-ink path {
+  .vv-ink path,
+  .vv-rewrite-strike path {
     animation: none;
   }
   .vv-nav-toggle > span {

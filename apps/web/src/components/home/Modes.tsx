@@ -320,9 +320,13 @@ export function Modes({ className }: { className?: string }) {
       aria-labelledby={`${uid}-title`}
       className={cn('vv-modes mx-auto w-full max-w-[1360px] px-4 py-20 sm:px-5 sm:py-28', className)}
     >
-      <h2 id={`${uid}-title`} className="display max-w-[17ch] text-[clamp(2.1rem,3.9vw,3.3rem)] lg:max-w-none">
-        Six ways to spar. <span className="text-ink-mut">Deal yourself the room you are facing.</span>
-      </h2>
+      {/* Headed like one of its own index cards: the title, a red rule, the line under it. */}
+      <header className="vv-modes-head">
+        <h2 id={`${uid}-title`} className="vv-modes-title">
+          Six ways to spar.
+        </h2>
+        <p className="vv-modes-lead">Deal yourself the room you are facing.</p>
+      </header>
 
       <div role="region" aria-roledescription="carousel" aria-label="Practice modes" className="mt-10 sm:mt-14">
         <div ref={deck} className="vv-deck" data-narrow={narrow ? '' : undefined}>
@@ -388,8 +392,14 @@ export function Modes({ className }: { className?: string }) {
           </div>
         </div>
         <p className="mt-6 flex flex-wrap gap-x-6 gap-y-1 text-[0.8rem] font-semibold text-ink-mut">
-          <span className="vv-hint-fine">Drag or flick the card, or use the arrow keys.</span>
-          <span className="vv-hint-touch">Swipe the card for the next one.</span>
+          {reduce ? (
+            <span>Use the arrows or pick a mode by name.</span>
+          ) : (
+            <>
+              <span className="vv-hint-fine">Drag or flick the card, or use the arrow keys.</span>
+              <span className="vv-hint-touch">Swipe the card for the next one.</span>
+            </>
+          )}
           <span>Example previews. Scores are guidance, not grades.</span>
         </p>
         <p className="sr-only" aria-live="polite">

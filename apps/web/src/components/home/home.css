@@ -111,6 +111,28 @@
 
   /* ── Modes: the deck ────────────────────────────────────────────────── */
 
+  /* The section is headed the way each card is: a black title over a red rule. */
+  .vv-modes-head {
+    display: inline-block;
+    max-width: 100%;
+    padding-right: clamp(1rem, 3vw, 3rem);
+  }
+  .vv-modes-title {
+    padding-bottom: 0.2em;
+    border-bottom: 2px solid var(--color-margin);
+    font-size: clamp(2.15rem, 4.2vw, 3.6rem);
+    font-weight: 900;
+    letter-spacing: -0.022em;
+    line-height: 1.04;
+  }
+  .vv-modes-lead {
+    margin-top: 0.75rem;
+    color: var(--color-ink-mut);
+    font-size: clamp(1.05rem, 1.4vw, 1.25rem);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
   .vv-deck {
     --card-w: min(37rem, 100%);
     --card-h: 25.5rem;
@@ -793,6 +815,38 @@
 
   /* ── Rooms: ruled index rows that flood with their colour ───────────── */
 
+  /* A small label beside large row names: the rooms are the headline. */
+  .vv-rooms-grid {
+    display: grid;
+    gap: 1.75rem;
+  }
+  .vv-rooms-title {
+    max-width: 17rem;
+    font-size: 1.3rem;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+  .vv-rooms-lead {
+    max-width: 19rem;
+    margin-top: 0.55rem;
+    color: var(--color-ink-mut);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.55;
+  }
+  @media (min-width: 1024px) {
+    .vv-rooms-grid[data-label] {
+      grid-template-columns: 14.5rem minmax(0, 1fr);
+      gap: 3rem;
+    }
+    .vv-rooms-label {
+      position: sticky;
+      top: 7rem;
+      align-self: start;
+      padding-top: 1.4rem;
+    }
+  }
+
   .vv-room-list {
     border-bottom: 1px solid var(--color-line);
   }
@@ -1103,6 +1157,38 @@
   }
   .vv-slip:is([data-phase='redacting'], [data-phase='redacted'], [data-phase='torn']) .vv-redact::after {
     transform: scaleX(1);
+  }
+
+  /* The heading comes in blacked out; each bar lifts off its word, left to
+     right, as the heading scrolls into view. The words are always in the
+     markup and on the page underneath: without scroll timelines, or with
+     reduced motion, there are no bars at all. */
+  .vv-lift {
+    position: relative;
+    display: inline-block;
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .vv-lift::after {
+        content: '';
+        position: absolute;
+        inset: 0.1em -0.05em 0.04em;
+        border-radius: 1px;
+        background: var(--color-ink);
+        transform-origin: 100% 50%;
+        animation: vv-unredact linear both;
+        animation-timeline: view();
+        animation-range: entry calc(55% + var(--i) * 12%) cover calc(38% + var(--i) * 4%);
+      }
+    }
+  }
+  @keyframes vv-unredact {
+    from {
+      transform: scaleX(1);
+    }
+    to {
+      transform: scaleX(0);
+    }
   }
 
   .vv-promises > li {

@@ -1,4 +1,4 @@
-import { Muted, PageHero } from '@/components/site/PageHero';
+import { PageHero } from '@/components/site/PageHero';
 import { DocSection, Prose } from '@/components/site/Prose';
 import { pageMeta } from '@/lib/site';
 
@@ -20,11 +20,7 @@ export default function AccessibilityPage() {
   return (
     <>
       <PageHero
-        title={
-          <>
-            Built to be used <Muted>by everyone.</Muted>
-          </>
-        }
+        title="Built to be used by everyone."
         intro="Accessibility is a first-draft requirement here, not a retrofit. This is where we are and where we’re going."
       />
       <Prose toc={toc}>

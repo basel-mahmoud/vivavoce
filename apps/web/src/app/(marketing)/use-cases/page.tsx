@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { HeroMark } from '@/components/site/HeroMark';
+import { Rewrite } from '@/components/site/Rewrite';
 import { PageHero } from '@/components/site/PageHero';
 import { Rooms } from '@/components/home/Rooms';
 import { Close } from '@/components/home/Closing';
@@ -63,11 +63,7 @@ export default function UseCasesPage() {
       <PageHero
         title={
           <>
-            Anywhere the answer is{' '}
-            <HeroMark>
-              spoken
-            </HeroMark>
-            .
+            Anywhere the answer is <Rewrite from="written" to="spoken" />.
           </>
         }
         intro="Different rooms, one problem: you know the material, but saying it well is its own skill."

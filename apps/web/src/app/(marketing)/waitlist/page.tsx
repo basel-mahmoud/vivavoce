@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, Smartphone } from 'lucide-react';
-import { HeroMark } from '@/components/site/HeroMark';
 import { AdmitSlip } from '@/components/home/AdmitSlip';
+import { Stamp } from '@/components/ui/Stamp';
 import { pageMeta } from '@/lib/site';
 
 export const metadata = pageMeta({
@@ -23,14 +23,11 @@ export default function WaitlistPage() {
       <div className="vv-wl-grid">
         <div className="vv-wl-copy">
           <h1 id="wl-title" className="vv-hero-title display">
-            Get in before the exam{' '}
-            <HeroMark>
-              does
-            </HeroMark>
-            .
+            Get in before the exam <Stamp>does</Stamp>.
           </h1>
           <p className="vv-hero-intro">
-            VivaVoce is in private beta. Write your email on the slip and we will bring you in as spots open.
+            VivaVoce is in private beta. Write your email on the slip, tear off the stub, and we will bring you in as
+            spots open.
           </p>
         </div>
 
@@ -47,7 +44,7 @@ export default function WaitlistPage() {
               </li>
             ))}
           </ul>
-          <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-2 text-[0.95rem] font-bold">
+          <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-1 text-[0.95rem] font-bold">
             <a href="/download/apk" className="group inline-flex min-h-11 items-center gap-1.5">
               <Smartphone size={16} aria-hidden className="text-ink-blue" />
               <span className="link-quiet">Download the Android beta</span>

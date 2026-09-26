@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { SignInButton } from '@clerk/nextjs';
 import { Smartphone } from 'lucide-react';
-import { HeroMark } from '@/components/site/HeroMark';
 import { PageHero } from '@/components/site/PageHero';
 import { ProgressBoard } from '@/components/site/Progress';
 import { exampleStats } from '@/components/site/progress-data';
@@ -19,18 +18,10 @@ export const metadata = pageMeta({
 
 export const dynamic = 'force-dynamic';
 
-// Same rule as the root layout: sign-in only exists when Clerk has both keys.
+// Same rule as its layout: sign-in only exists when Clerk has both keys.
 const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
 
-const title = (
-  <>
-    Your practice,{' '}
-    <HeroMark>
-      marked
-    </HeroMark>
-    .
-  </>
-);
+const title = 'Your practice, marked.';
 
 export default async function DashboardPage() {
   const ctx = await getAuthContext();

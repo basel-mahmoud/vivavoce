@@ -3,6 +3,7 @@ import { PageHero } from '@/components/site/PageHero';
 import { Faq, type FaqEntry } from '@/components/site/Faq';
 import { PenTick } from '@/components/site/PenTick';
 import { Close } from '@/components/home/Closing';
+import { Deferred } from '@/components/home/Deferred';
 import { pageMeta } from '@/lib/site';
 
 export const metadata = pageMeta({
@@ -60,12 +61,8 @@ export default function FaqPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <PageHero
-        title={
-          <>
-            Questions, answered.
-            <PenTick delay={520} className="vv-hero-tick" />
-          </>
-        }
+        title="Questions, answered."
+        margin={<PenTick delay={520} className="vv-hero-tick" />}
         intro="The things people ask before they trust an app with their voice. If yours is missing, write to us."
       />
       <section aria-label="Frequently asked questions" className="mx-auto w-full max-w-[1360px] px-4 pb-24 sm:px-5 sm:pb-32">
@@ -86,10 +83,15 @@ export default function FaqPage() {
               </Link>
             </div>
           </aside>
-          <Faq items={faqs} />
+          <div>
+            <h2 className="sr-only">The questions</h2>
+            <Faq items={faqs} />
+          </div>
         </div>
       </section>
-      <Close />
+      <Deferred height="1000px">
+        <Close />
+      </Deferred>
     </>
   );
 }

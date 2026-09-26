@@ -1,4 +1,3 @@
-import { HeroMark } from '@/components/site/HeroMark';
 import { PageHero } from '@/components/site/PageHero';
 import { AxesIndex } from '@/components/home/AxesIndex';
 import { Interrupts } from '@/components/home/Interrupts';
@@ -18,15 +17,7 @@ export default function FeaturesPage() {
   return (
     <>
       <PageHero
-        title={
-          <>
-            Everything between knowing it and{' '}
-            <HeroMark mark="underline">
-              saying it well
-            </HeroMark>
-            .
-          </>
-        }
+        title="Everything between knowing it and saying it well."
         intro="The gap between knowledge and delivery is real, trainable, and worth closing before the room is watching. That gap is the whole product."
         flush
       />

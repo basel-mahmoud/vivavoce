@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import { ArrowRight, ArrowUpRight, Smartphone } from 'lucide-react';
 import { WordStamp } from '@/components/ui/WordStamp';
 import { cn } from '@/lib/cn';
@@ -11,9 +12,13 @@ const PROMISES = [
   ['Never shared across accounts.', 'Audio is the most protected thing we hold, and it stays in yours.'],
 ] as const;
 
+const TITLE = ['Your', 'voice', 'stays', 'yours.'] as const;
+
 /**
  * Privacy, said plainly beside a transcript that is not kept: the slip is
- * blacked out word by word and torn up.
+ * blacked out word by word and torn up. The heading arrives redacted and
+ * its bars lift, word by word, as it scrolls into view (CSS scroll timeline;
+ * without one, or with reduced motion, it is simply there).
  */
 export function Privacy({ className }: { className?: string }) {
   return (
@@ -21,8 +26,15 @@ export function Privacy({ className }: { className?: string }) {
       aria-labelledby="privacy-title"
       className={cn('vv-privacy mx-auto w-full max-w-[1360px] px-4 py-20 sm:px-5 sm:py-28', className)}
     >
-      <h2 id="privacy-title" className="display max-w-[12ch] text-[clamp(2.4rem,5.4vw,4.6rem)]">
-        Your voice stays yours.
+      <h2 id="privacy-title" className="display vv-privacy-title max-w-[12ch] text-[clamp(2.4rem,5.4vw,4.6rem)]">
+        {TITLE.map((w, i) => (
+          <span key={w}>
+            <span className="vv-lift" style={{ '--i': i } as CSSProperties}>
+              {w}
+            </span>
+            {i < TITLE.length - 1 ? ' ' : null}
+          </span>
+        ))}
       </h2>
       <div className="mt-12 grid gap-14 sm:mt-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-center lg:gap-20">
         <TranscriptSlip />
