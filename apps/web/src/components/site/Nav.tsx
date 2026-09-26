@@ -20,8 +20,10 @@ const SHEET_S = 0.5;
  * from behind the capsule on the drawer curve: focus is held inside it,
  * Escape or the scrim closes it, and the page behind is inert.
  */
-export function Nav() {
-  const pathname = usePathname();
+export function Nav({ markCurrent = true }: { markCurrent?: boolean }) {
+  const route = usePathname();
+  // The 404 is prerendered once, so it cannot know the path it will answer for.
+  const pathname = markCurrent ? route : null;
   const reduce = useReducedMotion() ?? false;
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -36,9 +38,9 @@ export function Nav() {
   });
 
   // Close on route change (render-phase reset, no effect needed).
-  const [lastPath, setLastPath] = useState(pathname);
-  if (pathname !== lastPath) {
-    setLastPath(pathname);
+  const [lastPath, setLastPath] = useState(route);
+  if (route !== lastPath) {
+    setLastPath(route);
     setOpen(false);
   }
 

@@ -1163,9 +1163,11 @@
     max-width: 48rem;
   }
   .vv-404-path {
+    min-height: 1.75rem;
     margin-top: 2.25rem;
     font-size: 1.125rem;
     font-weight: 600;
+    line-height: 1.75rem;
   }
   .vv-404-code {
     color: var(--color-ink);
@@ -1175,9 +1177,11 @@
     overflow-wrap: anywhere;
   }
   .vv-404-hint {
+    min-height: 1.75rem;
     margin-top: 0.5rem;
     font-size: 1.125rem;
     font-weight: 600;
+    line-height: 1.75rem;
   }
   .vv-404-copy {
     max-width: 34rem;

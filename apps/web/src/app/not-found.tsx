@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <MotionProvider>
-      <Nav />
+      <Nav markCurrent={false} />
       <main id="main" tabIndex={-1} className="outline-none">
         <NotOnThePaper />
       </main>

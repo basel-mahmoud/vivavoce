@@ -1,5 +1,6 @@
 'use client';
 
+import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
@@ -7,8 +8,23 @@ import { SplitFlap } from '@/components/ui/SplitFlap';
 import { RedPen } from '@/components/ui/RedPen';
 import { Portrait } from '@/components/ui/Portrait';
 import { suggestPath } from './paths';
+import { useFontsReady } from './useFontsReady';
 
 const BOARD = [[{ text: '404', tone: 'verm' as const }], 'NOT ON THE PAPER'] as const;
+
+const never = () => () => {};
+
+/**
+ * The address only exists in the browser: the 404 page is prerendered once,
+ * so the server cannot know which path missed. False until hydrated.
+ */
+function useInBrowser() {
+  return useSyncExternalStore(
+    never,
+    () => true,
+    () => false,
+  );
+}
 
 /**
  * The 404: the departures board flips to NOT ON THE PAPER, the examiner
@@ -16,8 +32,11 @@ const BOARD = [[{ text: '404', tone: 'verm' as const }], 'NOT ON THE PAPER'] as 
  * beside it, and the sceptical one says what examiners say.
  */
 export function NotOnThePaper() {
-  const pathname = usePathname() ?? '';
-  const suggestion = suggestPath(pathname);
+  const pathname = usePathname();
+  const inBrowser = useInBrowser();
+  const path = inBrowser ? (pathname ?? '') : '';
+  const suggestion = path ? suggestPath(path) : null;
+  const fontsReady = useFontsReady();
 
   return (
     <section className="vv-404 mx-auto w-full max-w-[1360px] px-4 sm:px-5">
@@ -28,23 +47,28 @@ export function NotOnThePaper() {
             <SplitFlap rows={BOARD} label="404. Not on the paper." size="lg" play="mount" stagger={30} />
           </div>
 
-          {pathname ? (
-            <p className="vv-404-path">
-              <span className="text-ink-mut">You asked for</span>{' '}
-              <RedPen mark="strike-through" play="mount" delay={1250} srLabel="struck through, not on the paper">
-                <code className="vv-404-code">{pathname}</code>
-              </RedPen>
-            </p>
-          ) : null}
-          {suggestion ? (
-            <p className="vv-404-hint">
-              Did you mean{' '}
-              <Link href={suggestion} className="link-inline font-bold text-ink-blue">
-                {suggestion}
-              </Link>
-              ?
-            </p>
-          ) : null}
+          {/* Both lines keep their room before hydration, so nothing jumps when the path arrives. */}
+          <p className="vv-404-path" aria-hidden={path ? undefined : true}>
+            {path ? (
+              <>
+                <span className="text-ink-mut">You asked for</span>{' '}
+                <RedPen mark="strike-through" play="manual" show={fontsReady} delay={1250} srLabel="struck through, not on the paper">
+                  <code className="vv-404-code">{path}</code>
+                </RedPen>
+              </>
+            ) : null}
+          </p>
+          <p className="vv-404-hint">
+            {suggestion ? (
+              <>
+                Did you mean{' '}
+                <Link href={suggestion} className="link-inline font-bold text-ink-blue">
+                  {suggestion}
+                </Link>
+                ?
+              </>
+            ) : null}
+          </p>
           <p className="vv-404-copy">
             There is no page at this address. It may have moved, or the link had a slip in it. Everything else is
             where it was.
@@ -63,7 +87,7 @@ export function NotOnThePaper() {
         <figure className="vv-404-examiner">
           <Portrait axis="correctness" state="sceptical" size={360} priority alt="The Correctness examiner, sceptical" />
           <figcaption className="vv-404-seeme">
-            <RedPen mark="underline" play="mount" delay={1700} iterations={2}>
+            <RedPen mark="underline" play="manual" show={fontsReady} delay={1700} iterations={2}>
               See me.
             </RedPen>
           </figcaption>
