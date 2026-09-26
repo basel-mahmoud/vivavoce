@@ -1,31 +1,37 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'motion/react';
-import { ArrowRight, Menu, X } from 'lucide-react';
+import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react';
 import { site } from '@/lib/site';
-import { cn } from '@/lib/cn';
+import { EASE, SPRING, exitDuration, staggerDelay } from '@/lib/motion';
+import { InkStroke } from './InkStroke';
+import { isCurrent } from './paths';
 import { Logo } from './Logo';
 
-const EASE_OUT = [0.23, 1, 0.32, 1] as const;
+const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const SHEET_S = 0.5;
 
 /**
- * A floating pill over the room. Transparent while you are at the top of the
- * page, a solid card once you scroll. A single hover pill slides between links.
+ * A floating capsule with a hairline edge that turns into a solid card once
+ * the page moves under it. One hover pill slides between the links (fine
+ * pointers). Below 768px the links live in a sheet of ruled paper that drops
+ * from behind the capsule on the drawer curve: focus is held inside it,
+ * Escape or the scrim closes it, and the page behind is inert.
  */
 export function Nav() {
   const pathname = usePathname();
+  const reduce = useReducedMotion() ?? false;
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
-  const menuButton = useRef<HTMLButtonElement>(null);
-  const firstLink = useRef<HTMLAnchorElement>(null);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const sheet = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, 'change', (y) => {
-    const next = y > 24;
+    const next = y > 16;
     setScrolled((prev) => (prev === next ? prev : next));
   });
 
@@ -36,91 +42,105 @@ export function Nav() {
     setOpen(false);
   }
 
+  const close = useCallback((refocus: boolean) => {
+    setOpen(false);
+    if (refocus) toggle.current?.focus();
+  }, []);
+
   useEffect(() => {
     if (!open) return;
-    firstLink.current?.focus();
+    const root = document.documentElement;
+    const behind = Array.from(document.querySelectorAll<HTMLElement>('body > main, body > footer'));
+    behind.forEach((el) => el.setAttribute('inert', ''));
+    const overflow = root.style.overflow;
+    root.style.overflow = 'hidden';
+    sheet.current?.querySelector<HTMLElement>('a[href]')?.focus({ preventScroll: true });
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setOpen(false);
-        menuButton.current?.focus();
+        e.preventDefault();
+        close(true);
+        return;
       }
+      if (e.key !== 'Tab' || !sheet.current || !toggle.current) return;
+      // The toggle (now "Close menu") and the sheet form one loop.
+      const loop = [toggle.current, ...Array.from(sheet.current.querySelectorAll<HTMLElement>(FOCUSABLE))];
+      const at = loop.indexOf(document.activeElement as HTMLElement);
+      const next = e.shiftKey ? (at <= 0 ? loop.length - 1 : at - 1) : at < 0 || at === loop.length - 1 ? 0 : at + 1;
+      e.preventDefault();
+      loop[next]?.focus();
+    };
+    const wide = window.matchMedia('(min-width: 768px)');
+    const onWide = () => {
+      if (wide.matches) setOpen(false);
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
+    wide.addEventListener('change', onWide);
+    return () => {
+      behind.forEach((el) => el.removeAttribute('inert'));
+      root.style.overflow = overflow;
+      window.removeEventListener('keydown', onKey);
+      wide.removeEventListener('change', onWide);
+    };
+  }, [open, close]);
 
   const solid = scrolled || open;
 
   return (
-    <header className="pointer-events-none fixed inset-x-0 top-0 z-40 px-3 pt-3 sm:px-5">
-      <div
-        className={cn(
-          'pointer-events-auto mx-auto flex h-14 w-full max-w-[1360px] items-center justify-between rounded-full border pl-4 pr-2 transition-[background-color,border-color,box-shadow] duration-200 ease-out sm:pl-5',
-          solid
-            ? 'border-line bg-card shadow-[0_12px_32px_-20px_rgb(var(--vv-shadow)/0.45)]'
-            : 'border-transparent bg-transparent',
-        )}
-      >
-        <Link href="/" aria-label="VivaVoce home" className="pressable text-ink">
+    <header className="vv-nav" data-solid={solid ? '' : undefined} data-open={open ? '' : undefined}>
+      <div className="vv-nav-capsule">
+        <Link href="/" aria-label="VivaVoce home" className="vv-nav-logo pressable">
           <Logo />
         </Link>
 
-        <nav
-          aria-label="Primary"
-          className="hidden items-center md:flex"
-          onMouseLeave={() => setHovered(null)}
-        >
+        <nav aria-label="Primary" className="vv-nav-links" onPointerLeave={() => setHovered(null)}>
           {site.nav.map((item) => {
-            const active = pathname === item.href;
+            const current = isCurrent(pathname, item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                aria-current={active ? 'page' : undefined}
-                onMouseEnter={() => setHovered(item.href)}
-                onFocus={() => setHovered(item.href)}
-                className={cn(
-                  'relative rounded-full px-3.5 py-2 text-sm font-bold transition-colors duration-150',
-                  active ? 'text-ink' : 'text-ink-mut hover:text-ink',
-                )}
+                aria-current={current ? 'page' : undefined}
+                data-app={item.href === '/dashboard' ? '' : undefined}
+                className="vv-nav-link"
+                onPointerEnter={(e) => {
+                  if (e.pointerType === 'mouse') setHovered(item.href);
+                }}
+                onFocus={(e) => {
+                  if (e.currentTarget.matches(':focus-visible')) setHovered(item.href);
+                }}
+                onBlur={() => setHovered(null)}
               >
                 {hovered === item.href && (
                   <motion.span
-                    layoutId="nav-hover"
+                    layoutId="vv-nav-pill"
                     aria-hidden
-                    className="absolute inset-0 -z-10 rounded-full bg-card-2"
-                    transition={{ type: 'spring', duration: 0.3, bounce: 0 }}
+                    className="vv-nav-pill"
+                    transition={reduce ? { duration: 0 } : SPRING.ui}
                   />
                 )}
-                {item.label}
-                {active && (
-                  <span
-                    aria-hidden
-                    className="absolute inset-x-3.5 -bottom-0.5 h-0.5 rounded-full bg-verm"
-                  />
-                )}
+                <span className="relative">{item.label}</span>
+                {current ? <InkStroke key={pathname} /> : null}
               </Link>
             );
           })}
-          <Link href="/waitlist" className="btn btn-primary ml-3 h-10 px-5 text-sm">
-            Get early access
-          </Link>
         </nav>
 
-        <div className="flex items-center gap-1 md:hidden">
-          <Link href="/waitlist" className="btn btn-primary h-9 px-3.5 text-[0.82rem] max-[359px]:hidden">
+        <div className="vv-nav-end">
+          <Link href="/waitlist" className="btn btn-primary btn-sm vv-nav-cta">
             Get early access
           </Link>
           <button
-            ref={menuButton}
+            ref={toggle}
             type="button"
+            className="vv-nav-toggle pressable"
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
-            aria-controls="mobile-menu"
+            aria-controls="vv-site-menu"
             onClick={() => setOpen((v) => !v)}
-            className="pressable grid h-11 w-11 cursor-pointer place-items-center rounded-full text-ink"
           >
-            {open ? <X size={22} /> : <Menu size={22} />}
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -128,42 +148,67 @@ export function Nav() {
       <AnimatePresence>
         {open && (
           <motion.div
-            id="mobile-menu"
-            initial={{ opacity: 0, transform: 'translateY(-8px) scale(0.98)' }}
-            animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
-            exit={{ opacity: 0, transform: 'translateY(-6px) scale(0.98)', transition: { duration: 0.14 } }}
-            transition={{ duration: 0.24, ease: EASE_OUT }}
-            style={{ transformOrigin: 'top right' }}
-            className="tile pointer-events-auto mx-auto mt-2 max-w-[1360px] p-3 shadow-[0_24px_48px_-24px_rgb(var(--vv-shadow)/0.5)] md:hidden"
+            key="scrim"
+            className="vv-sheet-scrim"
+            aria-hidden="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } }}
+            exit={{ opacity: 0, transition: { duration: 0.2, ease: 'easeOut' } }}
+            onClick={() => close(true)}
+          />
+        )}
+        {open && (
+          <motion.div
+            key="sheet"
+            ref={sheet}
+            id="vv-site-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
+            className="vv-sheet"
+            initial={reduce ? { opacity: 0 } : { transform: 'translateY(-100%)' }}
+            animate={
+              reduce
+                ? { opacity: 1, transition: { duration: 0.2, ease: 'easeOut' } }
+                : { transform: 'translateY(0%)', transition: { duration: SHEET_S, ease: EASE.drawer } }
+            }
+            exit={
+              reduce
+                ? { opacity: 0, transition: { duration: 0.15, ease: 'easeOut' } }
+                : { transform: 'translateY(-100%)', transition: { duration: exitDuration(SHEET_S), ease: EASE.drawer } }
+            }
           >
-            <nav aria-label="Mobile" className="flex flex-col">
-              {site.nav.map((item, i) => (
-                <motion.div
-                  key={item.href}
-                  initial={{ opacity: 0, transform: 'translateY(6px)' }}
-                  animate={{ opacity: 1, transform: 'translateY(0px)' }}
-                  transition={{ duration: 0.24, delay: 0.03 + i * 0.035, ease: EASE_OUT }}
-                >
-                  <Link
-                    ref={i === 0 ? firstLink : undefined}
-                    href={item.href}
-                    aria-current={pathname === item.href ? 'page' : undefined}
-                    onClick={() => setOpen(false)}
-                    className="display flex items-center justify-between rounded-2xl px-4 py-3.5 text-[1.6rem] text-ink transition-colors duration-150 active:bg-card-2 aria-[current=page]:text-verm"
+            <nav aria-label="Menu" className="vv-sheet-links">
+              {site.nav.map((item, i) => {
+                const current = isCurrent(pathname, item.href);
+                return (
+                  <motion.div
+                    key={item.href}
+                    initial={reduce ? false : { opacity: 0, transform: 'translateY(10px)' }}
+                    animate={{
+                      opacity: 1,
+                      transform: 'translateY(0px)',
+                      transition: { duration: 0.34, delay: 0.12 + staggerDelay(i, 0.04), ease: EASE.out },
+                    }}
                   >
-                    {item.label}
-                    <ArrowRight size={20} aria-hidden className="text-ink-faint" />
-                  </Link>
-                </motion.div>
-              ))}
-              <Link
-                href="/waitlist"
-                onClick={() => setOpen(false)}
-                className="btn btn-primary mt-2 h-13 w-full text-base"
-              >
-                Get early access
-              </Link>
+                    <Link
+                      href={item.href}
+                      aria-current={current ? 'page' : undefined}
+                      className="vv-sheet-link"
+                      onClick={() => setOpen(false)}
+                    >
+                      <span className="relative">
+                        {item.label}
+                        {current ? <InkStroke /> : null}
+                      </span>
+                    </Link>
+                  </motion.div>
+                );
+              })}
             </nav>
+            <Link href="/waitlist" className="btn btn-primary btn-lg vv-sheet-cta" onClick={() => setOpen(false)}>
+              Get early access
+            </Link>
           </motion.div>
         )}
       </AnimatePresence>
