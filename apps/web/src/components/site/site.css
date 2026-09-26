@@ -295,7 +295,7 @@
   .vv-foot {
     --bench-pad: clamp(3rem, 5.2vw, 4.5rem);
     --head-w: clamp(4.1rem, 11vw, 10.5rem);
-    margin-top: calc(var(--head-w) * 0.84 + 1.5rem);
+    margin-top: calc(var(--head-w) * 0.62 + 1.25rem);
   }
   .vv-foot-bench {
     position: relative;
@@ -1057,9 +1057,10 @@
   .vv-wl-more {
     grid-area: more;
   }
+  /* On wide screens the slip sits level with the pitch, not above empty space. */
   @media (min-width: 1024px) {
     .vv-wl-slip {
-      padding-top: 0.75rem;
+      align-self: center;
     }
   }
   .vv-slip-wl .vv-ticket {

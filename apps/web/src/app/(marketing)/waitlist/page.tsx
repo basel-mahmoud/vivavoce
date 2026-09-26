@@ -17,7 +17,7 @@ const perks = [
 
 export default function WaitlistPage() {
   return (
-    <section aria-labelledby="wl-title" className="vv-wl mx-auto w-full max-w-[1360px] px-4 pb-24 sm:px-5 sm:pb-32">
+    <section aria-labelledby="wl-title" className="vv-wl mx-auto w-full max-w-[1360px] px-4 pb-16 sm:px-5 sm:pb-20">
       <div className="vv-wl-grid">
         <div className="vv-wl-copy">
           <h1 id="wl-title" className="vv-hero-title display">

@@ -3,9 +3,9 @@ import { Nav } from '@/components/site/Nav';
 import { MotionProvider } from '@/components/site/MotionProvider';
 import { NotOnThePaper } from '@/components/site/NotOnThePaper';
 
+// Next marks 404 responses noindex by itself.
 export const metadata: Metadata = {
   title: 'Not on the paper',
-  robots: { index: false },
 };
 
 export default function NotFound() {
