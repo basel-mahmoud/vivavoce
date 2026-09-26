@@ -241,6 +241,127 @@
     mask-size: 220px 220px;
   }
 
+  /* ── Keycap ─────────────────────────────────────────────────────────── */
+
+  .vv-key {
+    --key-h: 2.75rem;
+    --key-w: 2.75rem;
+    --key-travel: 4px;
+    --key-radius: 0.7rem;
+    --key-face: var(--color-card);
+    --key-side: color-mix(in oklab, var(--color-ink) 16%, var(--color-card-2));
+    --key-edge: var(--color-line);
+    --key-ink: var(--color-ink);
+    --key-fill: color-mix(in oklab, var(--color-cobalt) 20%, transparent);
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    min-width: var(--key-w);
+    height: calc(var(--key-h) + var(--key-travel));
+    padding: 0;
+    border: 0;
+    border-radius: var(--key-radius);
+    background: none;
+    color: var(--key-ink);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  button.vv-key {
+    cursor: pointer;
+    touch-action: none;
+  }
+  button.vv-key:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  .vv-key[data-size='sm'] {
+    --key-h: 1.5em;
+    --key-w: 1.5em;
+    --key-travel: 2px;
+    --key-radius: 0.34em;
+    margin-inline: 0.1em;
+    font-size: 0.78em;
+    vertical-align: -0.36em;
+  }
+  .vv-key[data-size='sm'][data-wide] {
+    --key-w: 4.6em;
+  }
+  .vv-key[data-size='lg'] {
+    --key-h: 4.25rem;
+    --key-w: 4.25rem;
+    --key-travel: 6px;
+    --key-radius: 1.05rem;
+    font-size: 1.125rem;
+  }
+  .vv-key[data-wide] {
+    --key-w: 7.5em;
+  }
+  .vv-key[data-size='lg'][data-wide] {
+    --key-w: 16rem;
+  }
+  .vv-key[data-tone='coal'] {
+    --key-face: var(--color-coal-2);
+    --key-side: var(--color-coal);
+    --key-edge: var(--color-line-dark);
+    --key-ink: var(--color-paper);
+    --key-fill: color-mix(in oklab, var(--color-cobalt-lift) 26%, transparent);
+  }
+  .vv-key[data-tone='cobalt'] {
+    --key-face: var(--color-cobalt);
+    --key-side: var(--color-cobalt-deep);
+    --key-edge: transparent;
+    --key-ink: var(--color-paper);
+    --key-fill: color-mix(in oklab, var(--color-paper) 22%, transparent);
+  }
+  .vv-key-skirt {
+    position: absolute;
+    inset: var(--key-travel) 0 0;
+    border-radius: var(--key-radius);
+    background: var(--key-side);
+  }
+  .vv-key-cap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    height: var(--key-h);
+    padding-inline: 0.8em;
+    overflow: hidden;
+    border-radius: var(--key-radius);
+    background: var(--key-face);
+    box-shadow: inset 0 0 0 1px var(--key-edge);
+    transition: transform var(--key-release, 300ms var(--ease-out));
+  }
+  .vv-key[data-size='sm'] .vv-key-cap {
+    padding-inline: 0.45em;
+  }
+  .vv-key[data-pressed] .vv-key-cap {
+    transform: translateY(calc(var(--key-travel) - 1px));
+    transition: transform 70ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    button.vv-key:hover:not(:disabled) .vv-key-cap {
+      background: color-mix(in oklab, var(--key-face) 94%, var(--key-ink));
+    }
+  }
+  .vv-key-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--key-fill);
+    transform: scaleX(var(--key-progress, 0));
+    transform-origin: left center;
+  }
+  .vv-key-legend {
+    position: relative;
+    letter-spacing: 0.01em;
+  }
+
   /* ── Paddle ─────────────────────────────────────────────────────────── */
 
   .vv-paddle {
@@ -374,6 +495,232 @@
     background: color-mix(in oklab, var(--stick) 78%, var(--color-paper));
     transform: translateX(-50%);
   }
+
+  /* ── TearTicket ─────────────────────────────────────────────────────── */
+
+  .vv-ticket {
+    --notch: 11px;
+    --hole: 3.25px;
+    --pitch: 13px;
+    --radius: 14px;
+    --stub-w: clamp(6.25rem, 27%, 8.5rem);
+    --stub-bg: var(--color-cobalt);
+    --stub-ink: var(--color-paper);
+    --stub-focus: var(--color-paper);
+    position: relative;
+    display: flex;
+    width: 100%;
+    max-width: 36rem;
+    color: var(--color-coal);
+    /* Masks cut the paper, so the shadow has to follow its alpha. */
+    filter: drop-shadow(0 0 0.6px rgb(var(--vv-shadow) / 0.28))
+      drop-shadow(0 12px 18px rgb(var(--vv-shadow) / 0.14));
+  }
+  @media (prefers-color-scheme: dark) {
+    .vv-ticket {
+      filter: drop-shadow(0 14px 22px rgb(var(--vv-shadow) / 0.5));
+    }
+  }
+  .vv-ticket[data-stub='butter'] {
+    --stub-bg: var(--color-butter);
+    --stub-ink: var(--color-coal);
+    --stub-focus: var(--color-coal);
+  }
+  .vv-ticket[data-stub='paper'] {
+    --stub-bg: var(--color-paper);
+    --stub-ink: var(--color-coal);
+    --stub-focus: var(--color-cobalt);
+  }
+  .vv-ticket-body,
+  .vv-ticket-stub {
+    -webkit-mask-repeat: no-repeat, no-repeat, repeat-y;
+    mask-repeat: no-repeat, no-repeat, repeat-y;
+    -webkit-mask-size:
+      100% 100%,
+      100% 100%,
+      100% var(--pitch);
+    mask-size:
+      100% 100%,
+      100% 100%,
+      100% var(--pitch);
+    -webkit-mask-position:
+      0 0,
+      0 0,
+      0 50%;
+    mask-position:
+      0 0,
+      0 0,
+      0 50%;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+  .vv-ticket-body {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    border-radius: var(--radius) 0 0 var(--radius);
+    background: var(--color-paper);
+    -webkit-mask-image:
+      radial-gradient(circle var(--notch) at 100% 0, transparent 96%, #000),
+      radial-gradient(circle var(--notch) at 100% 100%, transparent 96%, #000),
+      radial-gradient(circle var(--hole) at 100% 50%, transparent 92%, #000);
+    mask-image:
+      radial-gradient(circle var(--notch) at 100% 0, transparent 96%, #000),
+      radial-gradient(circle var(--notch) at 100% 100%, transparent 96%, #000),
+      radial-gradient(circle var(--hole) at 100% 50%, transparent 92%, #000);
+  }
+  .vv-ticket-body:focus {
+    outline: none;
+  }
+  .vv-ticket-stub {
+    position: relative;
+    display: flex;
+    flex: none;
+    width: var(--stub-w);
+    padding: 0;
+    border: 0;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: var(--stub-bg);
+    color: var(--stub-ink);
+    font: inherit;
+    text-align: center;
+    cursor: grab;
+    touch-action: none;
+    transform-origin: 0 calc(100% - var(--notch));
+    filter: drop-shadow(
+      calc(var(--open, 0) * 3px) calc(var(--open, 0) * 5px) calc(var(--open, 0) * 7px)
+        rgb(var(--vv-shadow) / 0.22)
+    );
+    -webkit-mask-image:
+      radial-gradient(circle var(--notch) at 0 0, transparent 96%, #000),
+      radial-gradient(circle var(--notch) at 0 100%, transparent 96%, #000),
+      radial-gradient(circle var(--hole) at 0 50%, transparent 92%, #000);
+    mask-image:
+      radial-gradient(circle var(--notch) at 0 0, transparent 96%, #000),
+      radial-gradient(circle var(--notch) at 0 100%, transparent 96%, #000),
+      radial-gradient(circle var(--hole) at 0 50%, transparent 92%, #000);
+  }
+  .vv-ticket[data-phase='pulling'] .vv-ticket-stub {
+    cursor: grabbing;
+  }
+  .vv-ticket[data-phase='falling'] .vv-ticket-stub {
+    cursor: default;
+    pointer-events: none;
+  }
+  /* The mask would cut an outside ring away, so focus is drawn inside. */
+  .vv-ticket-stub:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 4px var(--stub-bg),
+      inset 0 0 0 6px var(--stub-focus);
+  }
+  .vv-ticket-stub-face {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 1.1rem 0.5rem 1rem 0.75rem;
+  }
+
+  /* ── Loader ─────────────────────────────────────────────────────────── */
+
+  .vv-loader {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65em;
+    color: inherit;
+  }
+  .vv-loader-waiting {
+    visibility: hidden;
+  }
+  .vv-loader-glyph {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+  }
+  .vv-loader-live,
+  .vv-loader-still {
+    grid-area: 1 / 1;
+  }
+  .vv-loader-live {
+    display: inline-flex;
+  }
+  .vv-loader-still {
+    display: none;
+    width: 100%;
+    height: 100%;
+  }
+  .vv-loader-label {
+    font-weight: 700;
+  }
+
+  /* ── Portrait ───────────────────────────────────────────────────────── */
+
+  .vv-portrait {
+    --tint: var(--color-coal);
+    position: relative;
+    display: inline-block;
+    flex: none;
+    max-width: 100%;
+    height: auto;
+    vertical-align: bottom;
+  }
+  .vv-portrait[data-axis='clarity'] {
+    --tint: var(--color-butter);
+  }
+  .vv-portrait[data-axis='structure'] {
+    --tint: var(--color-paper);
+  }
+  .vv-portrait[data-axis='conciseness'] {
+    /* stone: a warm grey */
+    --tint: color-mix(in oklab, var(--color-paper-mut) 75%, var(--color-butter));
+  }
+  .vv-portrait[data-axis='confidence'] {
+    --tint: var(--color-cobalt);
+  }
+  .vv-portrait-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: 50% 100%;
+    transition: opacity 220ms var(--ease-out);
+  }
+  .vv-portrait-img[data-entering] {
+    opacity: 0;
+  }
+  .vv-silhouette {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .vv-silhouette-body {
+    fill: color-mix(in oklab, var(--tint) 30%, color-mix(in oklab, var(--color-ink) 12%, var(--color-card-2)));
+    stroke: color-mix(in oklab, var(--color-ink) 16%, transparent);
+    stroke-width: 1;
+    paint-order: stroke;
+  }
+  .vv-silhouette-visor {
+    fill: color-mix(in oklab, var(--color-coal) 84%, var(--tint));
+  }
+  .vv-silhouette-eyes {
+    color: color-mix(in oklab, var(--color-paper) 78%, transparent);
+  }
+  .vv-silhouette-voice {
+    fill: var(--color-verm);
+  }
+  .vv-silhouette-floor {
+    fill: rgb(var(--vv-shadow) / 0.08);
+  }
+  .vv-silhouette-paddle {
+    fill: color-mix(in oklab, var(--color-ink) 22%, var(--color-card-2));
+  }
 }
 
 /* rough-notation's stroke animation, shipped here so no <style> is injected. */
@@ -383,7 +730,35 @@
   }
 }
 
+@keyframes vv-loader-breathe {
+  0%,
+  100% {
+    opacity: 0.32;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  /* Loaders: a still glyph whose parts fade in turn; nothing travels. */
+  .vv-loader-live {
+    display: none;
+  }
+  .vv-loader-still {
+    display: block;
+  }
+  .vv-loader-still [style*='--i'] {
+    animation: vv-loader-breathe 1.8s var(--ease-in-out) infinite;
+    animation-delay: calc(var(--i) * 240ms);
+  }
+
+  /* Keys snap down and up: the press stays, the travel is instant. */
+  .vv-key-cap,
+  .vv-key[data-pressed] .vv-key-cap {
+    transition: none;
+  }
+
   /* Paddles swap faces with a fade instead of turning over. */
   .vv-paddle-disc {
     transform: none !important;
