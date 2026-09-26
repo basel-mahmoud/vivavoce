@@ -97,8 +97,13 @@ describe('the departures board', () => {
       }),
     );
     expect(shapes.size).toBe(1);
-    expect(boardRows(SUBJECTS[0]!, 0, WIDE)).toHaveLength(2 + WIDE.questionRows);
-    expect(boardRows(SUBJECTS[0]!, 0, NARROW)).toHaveLength(2 + NARROW.questionRows);
+    expect(boardRows(SUBJECTS[0]!, 0, WIDE)).toHaveLength(1 + WIDE.questionRows);
+    expect(boardRows(SUBJECTS[0]!, 0, NARROW)).toHaveLength(1 + NARROW.questionRows);
+  });
+
+  it('is a three-row board on wide screens, four on phones', () => {
+    expect(boardRows(SUBJECTS[0]!, 0, WIDE)).toHaveLength(3);
+    expect(boardRows(SUBJECTS[0]!, 0, NARROW)).toHaveLength(4);
   });
 });
 

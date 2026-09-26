@@ -674,11 +674,59 @@
   .vv-marquee:focus-within .vv-marquee-track {
     animation-play-state: paused;
   }
+  .vv-marquee-group {
+    display: flex;
+    flex: none;
+  }
   .vv-marquee-set {
     display: flex;
     flex: none;
     gap: 0.6rem;
     padding-right: 0.6rem;
+  }
+  /* A chip has focus: the drift stops and the row becomes one you scroll, so
+     the focused chip is always wholly in view, never under the fade. */
+  .vv-marquee:focus-within {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+    scrollbar-width: thin;
+  }
+  .vv-marquee:focus-within .vv-marquee-track {
+    padding-inline: 1rem;
+    animation: none;
+  }
+  .vv-marquee:focus-within .vv-marquee-set[aria-hidden] {
+    display: none;
+  }
+
+  /* The departures board: the section's heading is painted on its frame. */
+  .vv-board-sign {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.35em 1.25em;
+  }
+  .vv-board-title {
+    max-width: none;
+    color: var(--color-paper);
+    font-size: max(1.55rem, calc(var(--cell) * 0.92));
+    line-height: 1.02;
+  }
+  .vv-board-next {
+    color: var(--color-paper-mut);
+    font-size: max(0.72rem, calc(var(--cell) * 0.3));
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  /* Pressed, the key stays down: the board and the marquee hold still. */
+  .vv-pause[aria-pressed='true'] {
+    --btn-lip: 0px;
+    --btn-edge: currentColor;
+    background-color: color-mix(in oklab, currentColor 10%, transparent);
   }
   .vv-marquee[data-still] {
     overflow-x: auto;

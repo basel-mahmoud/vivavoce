@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { EASE_CSS } from '@/lib/motion';
 import { cn } from '@/lib/cn';
@@ -35,8 +35,12 @@ function drumFor(ch: string) {
   return null;
 }
 
-/** The faces a flap shows on its way from `from` to `to`, ending on `to`. */
-function faces(from: string, to: string, max: number): string[] {
+/**
+ * The faces a flap shows on its way from `from` to `to`, ending on `to`: the
+ * drum turns forward from where it is, and a long way round is cut to the
+ * last `max` faces before the target, so it lands decisively.
+ */
+export function faces(from: string, to: string, max: number): string[] {
   if (from === to) return [];
   const drum = drumFor(to);
   if (!drum) return [to];
@@ -98,14 +102,20 @@ function partsOf(cell: HTMLSpanElement | null): CellParts | null {
   return { top, bottom, leafTop, leafBottom };
 }
 
+/** The leaf animations a cell has running, so stopping them never has to ask the page. */
+const running = new WeakMap<HTMLSpanElement, Animation[]>();
+
 /** Show `ch` on the resting halves, no motion. */
 function setStill(parts: CellParts, ch: string) {
   parts.top.textContent = ch;
   parts.bottom.textContent = ch;
-  for (const leaf of [parts.leafTop, parts.leafBottom]) {
-    leaf.parentElement!.getAnimations().forEach((a) => a.cancel());
-    leaf.parentElement!.style.visibility = 'hidden';
+  const live = running.get(parts.top);
+  if (live) {
+    live.forEach((a) => a.cancel());
+    running.delete(parts.top);
   }
+  parts.leafTop.parentElement!.style.visibility = 'hidden';
+  parts.leafBottom.parentElement!.style.visibility = 'hidden';
 }
 
 /** Turn one cell through `seq`. The top leaf falls, the bottom leaf lands. */
@@ -152,6 +162,7 @@ async function turn(
           ],
       { duration: last ? half * 2.2 : half, delay: half, easing: last ? 'linear' : EASE_CSS.out, fill: 'both' },
     );
+    running.set(parts.top, [fall, land]);
     // Interrupted: settle on the last whole face, never a torn one.
     const stop = () => setStill(parts, current);
     signal.addEventListener('abort', stop, { once: true });
@@ -164,6 +175,7 @@ async function turn(
     parts.bottom.textContent = next;
     fall.cancel();
     land.cancel();
+    running.delete(parts.top);
     upper.style.visibility = 'hidden';
     lower.style.visibility = 'hidden';
     current = next;
@@ -209,8 +221,12 @@ export interface SplitFlapProps {
   rows: readonly FlapRow[];
   /** What the board says, read to screen readers instead of the cells. */
   label: string;
-  /** inview (default): reveal once when scrolled into view. mount: reveal on mount. */
-  play?: 'inview' | 'mount';
+  /**
+   * inview (default): clear off screen, then reveal once when scrolled into view.
+   * mount: reveal as soon as it mounts. rest: no reveal; the board arrives
+   * showing its text, and only later changes turn flaps.
+   */
+  play?: 'inview' | 'mount' | 'rest';
   size?: 'sm' | 'md' | 'lg';
   /** Most faces a flap turns through before landing. Keep it low: decisive, not a casino. */
   flips?: number;
@@ -226,15 +242,18 @@ export interface SplitFlapProps {
    */
   columns?: number;
   lines?: number;
+  /** Printed on the board's frame above the flaps, like a station sign (a heading, say). */
+  header?: ReactNode;
   onSettled?: () => void;
   className?: string;
 }
 
 /**
  * A flat, on-brand split-flap board: the verdict board, the departures board.
- * The server renders the final text. Off screen it is cleared, and when it
- * arrives each flap turns forward through a few faces of its drum, column by
- * column, and lands. Changing `rows` later flips only the cells that change.
+ * The server renders the final text. By default it is cleared off screen and
+ * turned in when it arrives; `play="rest"` skips that and simply shows its
+ * text. When `rows` change, only the cells that change turn, each forward
+ * through its drum toward the new character, column by column, and land.
  * Reduced motion sets the faces at once. The work is WAAPI on small
  * elements; React never re-renders per flip.
  */
@@ -249,6 +268,7 @@ export function SplitFlap({
   live = false,
   columns = 1,
   lines = 0,
+  header,
   onSettled,
   className,
 }: SplitFlapProps) {
@@ -270,7 +290,7 @@ export function SplitFlap({
   const els = useRef<(HTMLSpanElement | null)[]>([]);
   const showing = useRef<string[] | null>(null);
   const run = useRef<AbortController | null>(null);
-  const revealed = useRef(false);
+  const revealed = useRef(play === 'rest');
   const settled = useRef(onSettled);
 
   useEffect(() => {
@@ -318,8 +338,8 @@ export function SplitFlap({
   // First reveal: clear the board while it is off screen, turn it when it arrives.
   useEffect(() => {
     const el = board.current;
-    if (!el || revealed.current) return;
     showing.current = flat.map((c) => c.ch);
+    if (!el || revealed.current) return;
     if (reduce) {
       revealed.current = true;
       return;
@@ -392,24 +412,27 @@ export function SplitFlap({
       <p className="sr-only" aria-live={live ? 'polite' : undefined}>
         {label}
       </p>
-      <div className="vv-flapboard-face" aria-hidden="true" key={shape}>
-        {cells.map((row, r) => (
-          <div className="vv-flap-row" key={r}>
-            {row.map((cell, c) => {
-              const index = r * cols + c;
-              return (
-                <FlapCell
-                  key={c}
-                  index={index}
-                  initial={cell.ch}
-                  tone={cell.tone}
-                  digit={DIGITS.includes(cell.ch)}
-                  register={register}
-                />
-              );
-            })}
-          </div>
-        ))}
+      <div className="vv-flapboard-frame">
+        {header ? <div className="vv-flapboard-head">{header}</div> : null}
+        <div className="vv-flapboard-face" aria-hidden="true" key={shape}>
+          {cells.map((row, r) => (
+            <div className="vv-flap-row" key={r}>
+              {row.map((cell, c) => {
+                const index = r * cols + c;
+                return (
+                  <FlapCell
+                    key={c}
+                    index={index}
+                    initial={cell.ch}
+                    tone={cell.tone}
+                    digit={DIGITS.includes(cell.ch)}
+                    register={register}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

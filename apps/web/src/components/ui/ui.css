@@ -68,21 +68,34 @@
   .vv-flapboard[data-size='lg'] {
     --flap-max: 46px;
   }
-  .vv-flapboard-face {
+  /* The board's frame: the flaps, and anything printed on the frame above them. */
+  .vv-flapboard-frame {
     /* cols cells, 0.1 gaps and 0.5 padding each side, never wider than the container */
     --cell: min(var(--flap-max), calc(100cqi / (var(--cols) * 1.1 + 0.9)));
     display: inline-flex;
     flex-direction: column;
-    gap: calc(var(--cell) * 0.2);
+    max-width: 100%;
     padding: calc(var(--cell) * 0.5);
     border-radius: calc(var(--cell) * 0.36);
     background: var(--color-coal);
     box-shadow: var(--shadow-paper);
   }
   @media (prefers-color-scheme: dark) {
-    .vv-flapboard-face {
+    .vv-flapboard-frame {
       box-shadow: inset 0 0 0 1px var(--color-line);
     }
+  }
+  .vv-flapboard-face {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--cell) * 0.2);
+  }
+  /* Painted on the frame, sized to the flaps; it never widens the board. */
+  .vv-flapboard-head {
+    width: 0;
+    min-width: 100%;
+    margin-bottom: calc(var(--cell) * 0.42);
+    color: var(--color-paper);
   }
   .vv-flap-row {
     display: flex;
