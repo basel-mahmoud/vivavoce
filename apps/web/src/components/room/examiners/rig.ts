@@ -671,6 +671,7 @@ function curveLength(s0: THREE.Vector3, a: THREE.Vector3, e: THREE.Vector3, b: T
 }
 
 const RINGS: THREE.Vector3[][] = [0, 1].map(() => Array.from({ length: ARM.rings * 3 }, () => new THREE.Vector3()));
+const ARM_SIDES = ['L', 'R'] as const;
 
 function solveArm(s0: THREE.Vector3, a: THREE.Vector3, e: THREE.Vector3, b: THREE.Vector3, length: number, out: THREE.Vector3[]) {
   // handles h so that the conduit keeps its rest length (it bows when the hand comes closer and
@@ -728,7 +729,9 @@ export function bendArms(rig: ArmRig): void {
   const L = armLayout(geo);
   mesh.updateWorldMatrix(true, false);
   _inv.copy(mesh.matrixWorld).invert();
-  (['L', 'R'] as const).forEach((s, si) => {
+  // a plain loop over a module constant: this runs every frame while anything moves
+  for (let si = 0; si < ARM_SIDES.length; si++) {
+    const s = ARM_SIDES[si] as Side;
     const sock = rig.socket[s];
     const wrist = rig.wrist[s];
     sock.updateWorldMatrix(true, false);
@@ -740,7 +743,7 @@ export function bendArms(rig: ArmRig): void {
     _cuff.set(0, -ARM.cuffDepth, 0).applyMatrix4(_m);
     _dirB.set(0, 1, 0).transformDirection(_m);
     solveArm(_sock, _dirA, _cuff, _dirB, rig.length, RINGS[si] as THREE.Vector3[]);
-  });
+  }
   const pos = L.position.array as Float32Array;
   const nrm = L.normal.array as Float32Array;
   const sv = _side;

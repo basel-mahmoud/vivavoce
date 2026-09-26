@@ -574,13 +574,17 @@ const _v = new THREE.Vector3();
 const _n = new THREE.Vector3();
 const _hit = new THREE.Vector3();
 const _rim = new THREE.Vector3();
+const _cam = new THREE.Vector3();
+const _c = new THREE.Vector3();
+const _r = new THREE.Vector3();
 
 /**
  * Where a lens (world centre and radius) lands on a visor, as seen from the camera: cast rays from
  * the camera through the lens centre and one rim point onto the visor plane. `visor` is the
  * Visor_<Axis> node (origin at the visor centre, +z out of the glass, +x to the examiner's left
  * = screen right); halfWidth/halfHeight come from rig.ts VISORS. Returns null when the lens is
- * not over the visor.
+ * not over the visor. Allocation-free when `out` is passed (it is filled and returned), so it can
+ * run every frame.
  */
 export function lensOnFace(
   camera: THREE.Camera,
@@ -590,27 +594,33 @@ export function lensOnFace(
   halfWidth: number,
   halfHeight: number,
   magnification = 1.6,
+  out?: FaceLens,
 ): FaceLens | null {
   visor.updateWorldMatrix(true, false);
   _n.set(0, 0, 1).transformDirection(visor.matrixWorld);
   _plane.setFromNormalAndCoplanarPoint(_n, _v.setFromMatrixPosition(visor.matrixWorld));
   const toLocal = _m.copy(visor.matrixWorld).invert();
-  const cam = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
-  const project = (target: THREE.Vector3, out: THREE.Vector3) => {
+  const cam = _cam.setFromMatrixPosition(camera.matrixWorld);
+  const project = (target: THREE.Vector3, into: THREE.Vector3) => {
     _ray.set(cam, _v.copy(target).sub(cam).normalize());
     if (!_ray.intersectPlane(_plane, _hit)) return null;
-    return out.copy(_hit).applyMatrix4(toLocal);
+    return into.copy(_hit).applyMatrix4(toLocal);
   };
-  const c = project(lensCentre, new THREE.Vector3());
+  const c = project(lensCentre, _c);
   if (!c) return null;
   // a rim point perpendicular to the view ray, so the radius survives any lens tilt
   const side = _rim.copy(lensCentre).sub(cam).cross(camera.up).normalize().multiplyScalar(lensRadius).add(lensCentre);
-  const r = project(side, new THREE.Vector3());
+  const r = project(side, _r);
   if (!r) return null;
   const U = 2 * halfHeight;
   const x = (c.x + halfWidth) / U;
   const y = (halfHeight - c.y) / U;
   const radius = Math.hypot(r.x - c.x, r.y - c.y) / U;
   if (x < -radius || y < -radius || x > (2 * halfWidth) / U + radius || y > 1 + radius) return null;
-  return { x, y, radius, magnification };
+  if (!out) return { x, y, radius, magnification };
+  out.x = x;
+  out.y = y;
+  out.radius = radius;
+  out.magnification = magnification;
+  return out;
 }

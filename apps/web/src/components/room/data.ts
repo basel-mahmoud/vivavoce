@@ -1,6 +1,6 @@
 /**
  * The panel: one examiner per scoring axis. Order matches the rubric in
- * PRODUCT.md and the demo-eval response keys.
+ * PRODUCT.md, the demo-eval response keys and the cast in examiners.glb.
  */
 export const AXES = [
   {
@@ -37,26 +37,14 @@ export const AXES = [
 
 export type AxisKey = (typeof AXES)[number]['key'];
 
-/**
- * Each examiner's clay, in AXES order: ink, butter, paper, stone, cobalt.
- * `night` is the lifted value used in the lights-off scheme; `on` is the text
- * colour that reads on the clay. Vermilion is never a resting clay: it is
- * reserved for whoever is speaking.
- */
-export const CLAYS = [
-  { day: '#2B2723', night: '#8C8378', on: '#FBFAF8' },
-  { day: '#FFC838', night: '#FFC838', on: '#161412' },
-  { day: '#EEEAE2', night: '#EEEAE2', on: '#161412' },
-  { day: '#C9C4BB', night: '#C9C4BB', on: '#161412' },
-  { day: '#3347FF', night: '#7280FF', on: '#FBFAF8' },
-] as const;
-
 export interface ExampleRound {
   question: string;
   answer: string;
   /** Scores in AXES order. Illustrative, labelled as an example on screen. */
   scores: readonly [number, number, number, number, number];
   followUp: string;
+  /** Which examiner (AXES index) asks the question. The weakest asks the follow-up. */
+  asker: number;
 }
 
 /** Scripted example rounds for the hero. Every surface labels these as examples. */
@@ -66,18 +54,21 @@ export const ROUNDS: readonly ExampleRound[] = [
     answer: 'Um, there are lots of reasons, like nerves, and also they sort of know it but…',
     scores: [71, 66, 48, 62, 54],
     followUp: 'You buried your claim. What is the one-line answer?',
+    asker: 1,
   },
   {
     question: 'Tell me about a decision you defended under pressure.',
     answer: 'Two weeks before the demo I cut our biggest feature. Here is why, and what it saved.',
     scores: [84, 81, 86, 57, 77],
     followUp: 'Good story, too long. Give it to me in thirty seconds.',
+    asker: 0,
   },
   {
     question: 'Explain what an ECG shows, to someone outside medicine.',
     answer: 'It records the heart’s electrical activity, so I guess you can maybe see the rhythm?',
     scores: [88, 83, 74, 79, 52],
     followUp: 'You hedged twice. Say it again like you mean it.',
+    asker: 2,
   },
 ];
 
@@ -89,14 +80,25 @@ export function weakestIndex(scores: readonly number[]): number {
   return lo;
 }
 
-/** Phases of one scripted round, in ms from the round's start. */
+/**
+ * Phases of one scripted round, in seconds from the round's start. The room
+ * opens on the first round's follow-up (the marked panel, the weakest examiner
+ * asking), so the story starts at its most telling moment.
+ */
 export const ROUND_TIMELINE = {
   ask: 0,
-  listen: 2600,
-  mark: 6000,
-  follow: 7600,
-  rest: 11800,
-  next: 12800,
+  listen: 3.1,
+  mark: 6.6,
+  follow: 8.8,
+  rest: 13.4,
+  next: 14.6,
 } as const;
 
 export type RoundPhase = keyof typeof ROUND_TIMELINE;
+
+/** The face an examiner wears once its mark is up. */
+export function verdictFace(score: number): 'pleased' | 'attentive' | 'sceptical' {
+  if (score >= 70) return 'pleased';
+  if (score < 56) return 'sceptical';
+  return 'attentive';
+}
