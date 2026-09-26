@@ -13,8 +13,8 @@ import type { FocusLight } from './set/Studio';
 import { BENCH, FLOOR } from './set/layout';
 import { devRoundStart, devTimeScale } from './dev';
 
-/** What the room's words are doing: the hero's scripted round, or the outro's follow-up. */
-export type RoundMode = 'round' | 'outro';
+/** What the room's words are doing: the hero's scripted round, the outro's follow-up, or listening. */
+export type RoundMode = 'round' | 'outro' | 'cue';
 
 export interface RoundState {
   /** Monotonic round counter (use index % ROUNDS.length for the script). */
@@ -33,6 +33,16 @@ export interface RoomOverlays {
   fade: HTMLCanvasElement | null;
 }
 
+/** "Answer a question" is under a mouse or keyboard focus: the panel turns to listen. */
+export interface RoomCue {
+  listen: boolean;
+  /** The key's centre in normalised device coordinates (x right, y up): where the eyes go. */
+  x: number;
+  y: number;
+  /** Asks the canvas for a frame (it renders on demand under reduced motion). */
+  wake: (() => void) | null;
+}
+
 /** Depth of field: where it focuses and how much of it the current shot wants (0..1). */
 export interface DofState {
   focus: THREE.Vector3;
@@ -47,8 +57,10 @@ const TYPE_CPS = 44;
 const ANSWER_CPS = 40;
 /** The marked panel's paddles rise one after another, this far apart (seconds). */
 const OUTRO_STAGGER = 0.06;
+/** How long a moved pointer keeps the listeners' eyes on it (seconds). */
+const NOTICE = 1.8;
 const PHASES = Object.entries(ROUND_TIMELINE) as readonly [RoundPhase, number][];
-const MODES: readonly RoundMode[] = ['round', 'outro'];
+const MODES: readonly RoundMode[] = ['round', 'outro', 'cue'];
 const FIRST = ROUNDS[0]!;
 const WEAKEST = weakestIndex(FIRST.scores);
 
@@ -134,6 +146,7 @@ export function Director({
   maskRef,
   edgeRef,
   overlaysRef,
+  cueRef,
   onRound,
 }: {
   progress: MotionValue<number>;
@@ -149,10 +162,12 @@ export function Director({
   maskRef: React.RefObject<THREE.Vector4>;
   edgeRef: React.RefObject<THREE.Vector4>;
   overlaysRef: React.RefObject<RoomOverlays>;
+  cueRef: React.RefObject<RoomCue>;
   onRound: (r: RoundState) => void;
 }) {
   const size = useThree((s) => s.size);
   const gl = useThree((s) => s.gl);
+  const invalidate = useThree((s) => s.invalidate);
   const shots = useMemo(
     () => makeShots(size.width / Math.max(1, size.height), insets, size.width),
     [size.width, size.height, insets],
@@ -161,8 +176,17 @@ export function Director({
     shotsRef.current = shots;
   }, [shots, shotsRef]);
 
+  // the listen cue asks for a frame, so it also works while the canvas renders on demand
+  useEffect(() => {
+    const cue = cueRef.current;
+    cue.wake = invalidate;
+    return () => {
+      cue.wake = null;
+    };
+  }, [cueRef, invalidate]);
+
   const cam = useRef({ pos: new THREE.Vector3(), look: new THREE.Vector3(), sx: 0, sy: 0, fov: 22, first: true });
-  const pointer = useRef({ x: 0, y: 0, fine: false });
+  const pointer = useRef({ x: 0, y: 0, fine: false, movedAt: -10, clock: 0 });
   const round = useRef(startRound());
   // a review start (dev only) shows its phase from the first frame, not the intro's
   const reviewing = useRef(devRoundStart() !== null);
@@ -207,8 +231,13 @@ export function Director({
     pointer.current.fine = fine && !reduce;
     if (!pointer.current.fine) return;
     const onMove = (e: PointerEvent) => {
-      pointer.current.x = (e.clientX / window.innerWidth) * 2 - 1;
-      pointer.current.y = (e.clientY / window.innerHeight) * 2 - 1;
+      const p = pointer.current;
+      const x = (e.clientX / window.innerWidth) * 2 - 1;
+      const y = (e.clientY / window.innerHeight) * 2 - 1;
+      // a real move (not a scroll-driven re-fire) draws the panel's eyes for a moment
+      if (Math.abs(x - p.x) + Math.abs(y - p.y) > 0.004) p.movedAt = p.clock;
+      p.x = x;
+      p.y = y;
     };
     window.addEventListener('pointermove', onMove, { passive: true });
     return () => window.removeEventListener('pointermove', onMove);
@@ -217,6 +246,7 @@ export function Director({
   useFrame((state, rawDt) => {
     const dt = Math.min(rawDt, 0.1) * timeScale.current;
     clock.current += dt;
+    pointer.current.clock = clock.current;
     const camera = state.camera as THREE.PerspectiveCamera;
     const ch = channelsRef.current;
     const p = progress.get();
@@ -332,10 +362,13 @@ export function Director({
     const handoff = p >= HANDOFF;
     const inHero = heroW > 0.5;
     const atOutro = beat < 0 && !handoff && outroW > 0.5;
+    const cue = cueRef.current;
+    // the panel listens while someone reaches for "Answer a question" (hero and outro keys)
+    const listening = Boolean(cue?.listen) && (inHero || atOutro);
 
-    /* ── The scripted round (hero only) ───────────────────────────────── */
+    /* ── The scripted round (hero only; it waits while the panel listens) ─ */
     const r = round.current;
-    if (playing && inHero && !reduce) {
+    if (playing && inHero && !reduce && !listening) {
       r.t += dt;
       if (r.t >= ROUND_TIMELINE.next) {
         r.t -= ROUND_TIMELINE.next;
@@ -346,7 +379,7 @@ export function Director({
     const phaseK = scripted ? phaseAt(r.t) : 3;
     const phase = PHASES[phaseK]![0];
     const index = scripted ? r.index : 0;
-    const modeK = atOutro ? 1 : 0;
+    const modeK = listening ? 2 : atOutro ? 1 : 0;
     const key = (index * 8 + phaseK) * 4 + modeK;
     if (key !== r.reported) {
       r.reported = key;
@@ -361,7 +394,10 @@ export function Director({
     const tp = r.t - ROUND_TIMELINE[phase];
     const liveRound = scripted;
 
+    // the pointer, for the listeners' eyes (fine pointers, hero only; never under reduced motion)
     const pt = pointer.current;
+    ch.pointer.set(pt.x, -pt.y);
+    const noticing = pt.fine && inHero && clock.current - pt.movedAt < NOTICE;
 
     /* ── Channels ─────────────────────────────────────────────────────── */
     const coinsHero = shots.compact ? HERO_COINS_COMPACT : HERO_COINS;
@@ -431,6 +467,8 @@ export function Director({
           e.face = 'neutral';
           e.look = pt.fine ? 'pointer' : 'camera';
         }
+        // the panel notices you: while the pointer moves, the listeners' eyes (then heads) follow it
+        if (noticing && i !== speaker) e.look = 'pointer';
       }
       if (phase === 'listen') {
         ch.waveLive = true;
@@ -515,6 +553,23 @@ export function Director({
       focusStrength = 0.5;
     }
 
+    // Someone reaches for the key: every visor turns to the listening wave and the panel leans in
+    // (a face change only under reduced motion). The marks stay where they are.
+    if (listening) {
+      speaker = -1;
+      // the eyes go to the key (the heads follow a little); a still room keeps them on you
+      if (pt.fine) ch.pointer.set(cue.x, cue.y);
+      for (let i = 0; i < ch.examiners.length; i++) {
+        const e = ch.examiners[i]!;
+        e.face = 'listening';
+        e.speaking = 0;
+        e.gesture = 'rest';
+        e.look = pt.fine ? 'pointer' : 'camera';
+        e.focus = reduce ? e.focus : Math.max(e.focus, 0.4);
+      }
+      focusIndex = 2;
+      focusStrength = 0.75;
+    }
     ch.speech = speaker >= 0 ? speech.current : 0;
 
     /* ── Focus light and the lamp pool follow whoever has the floor ──── */
@@ -544,8 +599,8 @@ export function Director({
       }
     }
     if (o && cs) {
-      const showTag = (inHero || atOutro) && speaker >= 0;
-      const showAnswer = inHero && liveRound && (phase === 'listen' || phase === 'mark');
+      const showTag = ((inHero || atOutro) && speaker >= 0) || listening;
+      const showAnswer = inHero && liveRound && !listening && (phase === 'listen' || phase === 'mark');
       // Notes above the panel sit clear of its top edge (the highest crown or raised mark), so they
       // never cover a face or a mark; on compact layouts they stay below the captions.
       // (below the exam sheet's edge, which lies 0.7rem under the note, on compact layouts)
@@ -569,18 +624,28 @@ export function Director({
           const tw = b.tagW;
           const th = b.tagH;
           const ty = Math.max(top - th - 18, minTop);
-          // the examiner's note, its red-pen leader dropping to the speaker's crown
-          cs.visorWorld(speaker, _w);
-          const vis = VISORS[EXAMINERS[speaker]!];
-          _v.copy(_w).setY(_w.y + vis.halfHeight * 2.4).project(camera);
-          const ax = (_v.x + 1) * 0.5 * w;
-          const ay = (1 - _v.y) * 0.5 * h;
-          const minX = shots.compact ? 12 : w * 0.47;
-          const tx = Math.min(Math.max(ax - tw / 2, minX), w - tw - 16);
-          place(o.tag, placed.current.tag, tx, ty);
-          const ly = ty + th;
-          place(o.leader, placed.current.leader, ax, ly, Math.max(0, ay - ly - 6));
-          show(o.leader, true);
+          if (speaker >= 0) {
+            // the examiner's note, its red-pen leader dropping to the speaker's crown
+            cs.visorWorld(speaker, _w);
+            const vis = VISORS[EXAMINERS[speaker]!];
+            _v.copy(_w).setY(_w.y + vis.halfHeight * 2.4).project(camera);
+            const ax = (_v.x + 1) * 0.5 * w;
+            const ay = (1 - _v.y) * 0.5 * h;
+            const minX = shots.compact ? 12 : w * 0.47;
+            const tx = Math.min(Math.max(ax - tw / 2, minX), w - tw - 16);
+            place(o.tag, placed.current.tag, tx, ty);
+            const ly = ty + th;
+            place(o.leader, placed.current.leader, ax, ly, Math.max(0, ay - ly - 6));
+            show(o.leader, true);
+          } else {
+            // the whole panel listening: the note centred over it, no leader
+            cs.visorWorld(2, _w);
+            _v.copy(_w).project(camera);
+            const ax = (_v.x + 1) * 0.5 * w;
+            const minX = shots.compact ? 12 : w * 0.47;
+            place(o.tag, placed.current.tag, Math.min(Math.max(ax - tw / 2, minX), w - tw - 16), ty);
+            show(o.leader, false);
+          }
           show(o.tag, true);
         } else {
           show(o.tag, false);

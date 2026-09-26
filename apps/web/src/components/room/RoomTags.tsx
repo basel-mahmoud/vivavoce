@@ -6,19 +6,23 @@ import { TypeLine } from './TypeLine';
 import type { RoomOverlays, RoundState } from './Director';
 import styles from './room.module.css';
 
+const LISTENING = 'Go on. We are listening.';
+
 /**
  * The room's words, as notes pinned above the panel (never over a face or a raised mark): the
- * examiner's question or follow-up with a red-pen leader down to the speaker, and the candidate's
- * answer in blue ink in the same slot. The Director positions them every frame; React only changes
+ * examiner's question or follow-up with a red-pen leader down to the speaker, the candidate's
+ * answer in blue ink in the same slot, and, while someone reaches for "Answer a question", the
+ * whole panel saying it is listening. The Director positions them every frame; React only changes
  * their words when the phase does.
  */
 export function RoomTags({ round, reduce, overlaysRef }: { round: RoundState; reduce: boolean; overlaysRef: React.RefObject<RoomOverlays> }) {
   const outro = round.mode === 'outro';
+  const cue = round.mode === 'cue';
   const script = ROUNDS[outro ? 0 : round.index % ROUNDS.length]!;
   const asking = !outro && round.phase === 'ask';
   const following = outro || round.phase === 'follow';
-  const speaker = asking ? script.asker : following ? weakestIndex(script.scores) : -1;
-  const words = asking ? script.question : following ? script.followUp : '';
+  const speaker = cue ? -1 : asking ? script.asker : following ? weakestIndex(script.scores) : -1;
+  const words = cue ? LISTENING : asking ? script.question : following ? script.followUp : '';
   const answering = round.mode === 'round' && (round.phase === 'listen' || round.phase === 'mark');
 
   return (
@@ -35,11 +39,10 @@ export function RoomTags({ round, reduce, overlaysRef }: { round: RoundState; re
         }}
         className="absolute left-0 top-0 w-[min(17rem,calc(100vw-2rem))] rounded-[0.9rem] border border-line bg-card px-3.5 pb-2.5 pt-2 opacity-0 shadow-paper transition-opacity duration-200"
       >
-        {speaker >= 0 && (
+        {(speaker >= 0 || cue) && (
           <>
             <p className="text-[0.72rem] font-bold text-verm-text">
-              {AXES[speaker]!.label}
-              {following ? ', follow-up' : ', asking'}
+              {cue ? 'The panel, listening' : `${AXES[speaker]!.label}${following ? ', follow-up' : ', asking'}`}
             </p>
             <p className="mt-0.5 min-h-[2.5em] text-[0.94rem] font-bold leading-snug text-ink">
               <TypeLine key={`${round.mode}-${round.index}-${round.phase}`} text={words} instant={reduce} cps={44} caret={false} />

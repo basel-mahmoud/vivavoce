@@ -11,12 +11,12 @@ import type { Cast } from './panel/cast';
 import { Studio, type FocusLight } from './set/Studio';
 import { CANVAS, Cyclorama } from './set/Cyclorama';
 import { Lamp, Mic, Riser } from './set/Props';
-import { Director, type DofState, type RoomOverlays, type RoundState } from './Director';
+import { Director, type DofState, type RoomCue, type RoomOverlays, type RoundState } from './Director';
 import type { Insets, ShotSet } from './camera';
 import { stillAt } from './story';
 
 export type { Insets } from './camera';
-export type { RoomOverlays, RoundState } from './Director';
+export type { RoomCue, RoomOverlays, RoundState } from './Director';
 
 /** The post chain (N8AO, SMAA, depth of field) is its own chunk, fetched only on desktop tiers. */
 const Post = lazy(() => import('./Post'));
@@ -55,6 +55,7 @@ export interface SceneProps {
   dark: boolean;
   insets: Insets;
   overlaysRef: React.RefObject<RoomOverlays>;
+  cueRef: React.RefObject<RoomCue>;
   onReady: () => void;
   onRound: (r: RoundState) => void;
 }
@@ -142,6 +143,7 @@ function Room({
   insets,
   playing,
   overlaysRef,
+  cueRef,
   tier,
   dofRef,
   onRound,
@@ -183,6 +185,7 @@ function Room({
         maskRef={maskRef}
         edgeRef={edgeRef}
         overlaysRef={overlaysRef}
+        cueRef={cueRef}
         onRound={onRound}
       />
       <Studio dark={dark} shadows={shadows} focusRef={focusRef} />
@@ -222,7 +225,7 @@ function Reveal({ ready, onReady }: { ready: boolean; onReady: () => void }) {
 }
 
 /** The viva room. Client-only; loaded lazily by RoomStory. */
-export default function Scene({ progress, active, playing, reduce, dark, insets, overlaysRef, onReady, onRound }: SceneProps) {
+export default function Scene({ progress, active, playing, reduce, dark, insets, overlaysRef, cueRef, onReady, onRound }: SceneProps) {
   const [startTier] = useState<Tier>(guessTier);
   const [tier, setTier] = useState<Tier>(startTier);
   const [locked] = useState(forcedTier);
@@ -275,6 +278,7 @@ export default function Scene({ progress, active, playing, reduce, dark, insets,
           insets={insets}
           playing={playing}
           overlaysRef={overlaysRef}
+          cueRef={cueRef}
           tier={tier}
           dofRef={dofRef}
           onRound={onRound}

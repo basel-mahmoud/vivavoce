@@ -11,7 +11,7 @@ import { ScriptSlip } from './ScriptSlip';
 import { Ruler } from './Ruler';
 import { RoomTags } from './RoomTags';
 import { RoomPoster } from './RoomPoster';
-import type { Insets, RoomOverlays, RoundState } from './Scene';
+import type { Insets, RoomCue, RoomOverlays, RoundState } from './Scene';
 import styles from './room.module.css';
 
 const Scene = dynamic(() => import('./Scene'), { ssr: false });
@@ -114,6 +114,7 @@ export function RoomStory() {
   const captions = useRef<HTMLDivElement>(null);
   const [insets, setInsets] = useState<Insets>({ hero: 0.42, beat: 0.36, outro: 0.36, floor: 1 });
   const overlaysRef = useRef<RoomOverlays>({ tag: null, leader: null, answer: null, guide: null, fade: null });
+  const cueRef = useRef<RoomCue>({ listen: false, x: 0, y: 0, wake: null });
 
   const { scrollYProgress } = useScroll({ target: section, offset: ['start start', 'end end'] });
 
@@ -126,6 +127,11 @@ export function RoomStory() {
     setReached((prev) => (prev === n ? prev : n));
     const o = v >= OUTRO - 0.07;
     setOutro((prev) => (prev === o ? prev : o));
+    // the keys that cue the panel to listen live in the hero and the outro only
+    if (!hero && !o && cueRef.current.listen) {
+      cueRef.current.listen = false;
+      cueRef.current.wake?.();
+    }
   });
 
   useEffect(() => {
@@ -188,6 +194,18 @@ export function RoomStory() {
   const onRound = useCallback((r: RoundState) => {
     setRound((prev) => (prev.index === r.index && prev.phase === r.phase && prev.mode === r.mode ? prev : r));
   }, []);
+  // someone is about to answer: the panel turns to listen (the Director reads the cue each frame)
+  const onListen = useCallback((on: boolean, key?: HTMLElement) => {
+    const cue = cueRef.current;
+    if (key) {
+      const r = key.getBoundingClientRect();
+      cue.x = ((r.left + r.width / 2) / window.innerWidth) * 2 - 1;
+      cue.y = 1 - ((r.top + r.height / 2) / window.innerHeight) * 2;
+    }
+    if (cue.listen === on) return;
+    cue.listen = on;
+    cue.wake?.();
+  }, []);
 
   const jump = useCallback(
     (p: number) => {
@@ -227,6 +245,7 @@ export function RoomStory() {
               dark={dark}
               insets={insets}
               overlaysRef={overlaysRef}
+              cueRef={cueRef}
               onReady={onReady}
               onRound={onRound}
             />
@@ -245,7 +264,7 @@ export function RoomStory() {
         <Sheet progress={scrollYProgress} depth={outro ? insets.outro : insets.beat} />
         <div ref={captions} className={styles.captions}>
           <div data-cap="hero" className={styles.heroCap}>
-            <HeroCopy progress={scrollYProgress} onFocusBack={toHero} />
+            <HeroCopy progress={scrollYProgress} onFocusBack={toHero} onListen={onListen} />
           </div>
           <div className={styles.script}>
             <div className={styles.notes}>
@@ -255,7 +274,7 @@ export function RoomStory() {
                 </div>
               ))}
               <div data-cap="outro">
-                <OutroCaption progress={scrollYProgress} onFocusBack={toOutro} />
+                <OutroCaption progress={scrollYProgress} onFocusBack={toOutro} onListen={onListen} />
               </div>
             </div>
             <div data-cap="slip" data-outro={outro ? 'true' : undefined} className={styles.slipSlot}>

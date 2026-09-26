@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
 import { motion, useTransform, type MotionValue } from 'motion/react';
 import { ArrowRight, Mic } from 'lucide-react';
 import { RedPen } from '@/components/ui/RedPen';
@@ -20,10 +20,39 @@ function Rise({ i, children }: { i: number; children: ReactNode }) {
 }
 
 /**
+ * Handlers that tell the panel someone is about to answer: a mouse or pen resting on the key, or
+ * keyboard focus on it. Touch never triggers it (a tap is already the answer).
+ */
+type Listen = (on: boolean, key?: HTMLElement) => void;
+
+function listenCue(onListen: Listen) {
+  const pointer = (on: boolean) => (e: ReactPointerEvent<HTMLElement>) => {
+    if (e.pointerType !== 'touch') onListen(on, e.currentTarget);
+  };
+  return {
+    onPointerEnter: pointer(true),
+    onPointerLeave: pointer(false),
+    onFocus: (e: React.FocusEvent<HTMLElement>) => {
+      if (e.currentTarget.matches(':focus-visible')) onListen(true, e.currentTarget);
+    },
+    onBlur: () => onListen(false),
+  };
+}
+
+/**
  * The first viewport's copy: the promise in two lines, "before" circled in red pen, one support
  * line and the two keys. It fades as the scroll leaves the hero; focusing a key brings it back.
+ * Resting on "Answer a question" turns the panel to listen.
  */
-export function HeroCopy({ progress, onFocusBack }: { progress: MotionValue<number>; onFocusBack: () => void }) {
+export function HeroCopy({
+  progress,
+  onFocusBack,
+  onListen,
+}: {
+  progress: MotionValue<number>;
+  onFocusBack: () => void;
+  onListen: Listen;
+}) {
   const opacity = useTransform(progress, (v) => ramp(v, [HERO_END - 0.035, HERO_END + 0.01], [1, 0]));
   const y = useTransform(progress, (v) => ramp(v, [0, HERO_END + 0.01], [0, -36]));
   const visibility = useTransform(opacity, (o) => (o > 0.02 ? 'visible' : 'hidden'));
@@ -57,6 +86,7 @@ export function HeroCopy({ progress, onFocusBack }: { progress: MotionValue<numb
         <a
           href="#live"
           className="btn btn-primary btn-lg max-sm:h-12 max-sm:px-4 max-sm:text-[0.94rem] max-[389px]:px-3! max-[389px]:text-[0.88rem]!"
+          {...listenCue(onListen)}
         >
           <Mic size={18} aria-hidden />
           Answer a question
@@ -128,7 +158,15 @@ export function MarginNote({ index, progress, active }: { index: number; progres
 }
 
 /** The marked panel, then the hand-off to the live engine below. */
-export function OutroCaption({ progress, onFocusBack }: { progress: MotionValue<number>; onFocusBack: () => void }) {
+export function OutroCaption({
+  progress,
+  onFocusBack,
+  onListen,
+}: {
+  progress: MotionValue<number>;
+  onFocusBack: () => void;
+  onListen: Listen;
+}) {
   const opacity = useTransform(progress, (v) => ramp(v, [OUTRO - 0.06, OUTRO - 0.02], [0, 1]));
   const y = useTransform(progress, (v) => ramp(v, [OUTRO - 0.06, OUTRO - 0.02], [24, 0]));
   const visibility = useTransform(opacity, (o) => (o > 0.02 ? 'visible' : 'hidden'));
@@ -146,7 +184,7 @@ export function OutroCaption({ progress, onFocusBack }: { progress: MotionValue<
         Every answer ends with your weakest axis named, a stronger answer to steal from, and a
         follow-up aimed straight at it.
       </p>
-      <a href="#live" className="btn btn-primary btn-lg mt-5 sm:mt-7">
+      <a href="#live" className="btn btn-primary btn-lg mt-5 sm:mt-7" {...listenCue(onListen)}>
         Answer a question <ArrowRight size={17} aria-hidden />
       </a>
     </motion.div>

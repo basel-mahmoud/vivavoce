@@ -414,17 +414,23 @@ export class ExaminerRuntime {
     const gaze = clamp(Math.atan2(_look.x, _look.z), -0.95, 0.95);
     const pitch = -Math.atan2(_look.y, Math.hypot(_look.x, _look.z));
     let yaw = gaze;
-    if (typeof lk === 'number') {
+    let headPitch = pitch;
+    if (typeof lk === 'number' || lk === 'pointer') {
       // turning to another examiner is limited by how far away it sits: a neighbour glances,
-      // mostly with its eyes, so no face ever swings out of the camera's view
+      // mostly with its eyes, so no face ever swings out of the camera's view. Following the
+      // visitor's pointer, the eyes lead and the head turns at most about 6 degrees after them.
       _camR.setFromMatrixPosition(camera.matrixWorld).applyMatrix4(this.rootInv).sub(this.visorRoot);
       const toCamera = Math.atan2(_camR.x, _camR.z);
-      const reach = Math.min(0.5, 0.13 * Math.abs(lk - i));
+      const reach = lk === 'pointer' ? 0.105 : Math.min(0.5, 0.13 * Math.abs(lk - i));
       yaw = toCamera + clamp(gaze - toCamera, -reach, reach);
+      if (lk === 'pointer') {
+        const camPitch = -Math.atan2(_camR.y, Math.hypot(_camR.x, _camR.z));
+        headPitch = camPitch + clamp(pitch - camPitch, -0.08, 0.08);
+      }
     }
     const bodyYawT = clamp(yaw * 0.42, -0.2, 0.2);
     const headYawT = clamp(yaw - bodyYawT, -this.headLimit * 1.2, this.headLimit * 1.2);
-    const headPitchT = clamp(pitch * 0.55, -HEAD_LIMITS.pitch, HEAD_LIMITS.pitch);
+    const headPitchT = clamp(headPitch * 0.55, -HEAD_LIMITS.pitch, HEAD_LIMITS.pitch);
     this.focus = still ? ch.focus : damp(this.focus, ch.focus, 5, dt);
     const lean = 0.015 + this.focus * 0.075 + this.speaking * 0.025;
     if (still) {
