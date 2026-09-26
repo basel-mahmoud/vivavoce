@@ -68,3 +68,41 @@ export function linearToSrgb8([r, g, b]: RGB): RGB {
 export function preToneMapped(hex: string): RGB {
   return inverseNeutral(hexToLinear(hex));
 }
+
+/**
+ * Neutral's inverse in closed form: undo the shoulder (the peak and its desaturation), then the
+ * toe's offset. Exact for every colour whose darkest and brightest channels are not both in the
+ * curve's extremes at once, which covers the set's paper, wall and shadow tones. The set shader
+ * runs the GLSL twin below per fragment, so a gradient painted in target colours lands on those
+ * colours after tone mapping, at every tier.
+ */
+export function inverseNeutralClosed([r, g, b]: RGB): RGB {
+  const d = 1 - START_COMPRESSION;
+  let c: [number, number, number] = [r, g, b];
+  const np = Math.max(r, g, b);
+  if (np > START_COMPRESSION) {
+    const peak = (d * d) / (1 - np) - d + START_COMPRESSION;
+    const k = 1 - 1 / (DESATURATION * (peak - np) + 1);
+    c = c.map((v) => ((v - k * np) / (1 - k)) * (peak / np)) as [number, number, number];
+  }
+  const m = Math.min(c[0], c[1], c[2]);
+  const off = m < 0.04 ? Math.sqrt(Math.max(m, 0) / 6.25) - m : 0.04;
+  return [c[0] + off, c[1] + off, c[2] + off];
+}
+
+/** GLSL twin of inverseNeutralClosed (linear in, linear out). */
+export const INVERSE_NEUTRAL_GLSL = /* glsl */ `
+vec3 vvInverseNeutral(vec3 t) {
+  const float S = ${START_COMPRESSION.toFixed(4)};
+  const float D = 1.0 - S;
+  vec3 c = t;
+  float np = max(t.r, max(t.g, t.b));
+  if (np > S) {
+    float peak = D * D / max(1.0 - np, 1e-4) - D + S;
+    float k = 1.0 - 1.0 / (${DESATURATION.toFixed(2)} * (peak - np) + 1.0);
+    c = (t - k * np) / (1.0 - k) * (peak / np);
+  }
+  float m = min(c.r, min(c.g, c.b));
+  return c + (m < 0.04 ? sqrt(max(m, 0.0) / 6.25) - m : 0.04);
+}
+`;
