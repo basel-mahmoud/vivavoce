@@ -67,10 +67,10 @@ export default function FaqPage() {
               directly.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link href="/#live" className="btn btn-ink h-11 px-5 text-sm">
+              <Link href="/#live" className="btn btn-primary h-11 px-5 text-sm">
                 Try the engine
               </Link>
-              <Link href="/contact" className="btn btn-line h-11 px-5 text-sm">
+              <Link href="/contact" className="btn btn-secondary h-11 px-5 text-sm">
                 Contact us
               </Link>
             </div>
@@ -81,7 +81,7 @@ export default function FaqPage() {
                 <details className="group">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-7 text-[clamp(1.25rem,2vw,1.6rem)] font-black leading-snug transition-colors duration-150 hover:text-verm-text [&::-webkit-details-marker]:hidden">
                     {q}
-                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-card-2 text-ink transition-[transform,background-color,color] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-open:rotate-45 group-open:bg-verm group-open:text-coal">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-card-2 text-ink transition-[transform,background-color,color] duration-300 ease-out group-open:rotate-45 group-open:bg-verm group-open:text-coal">
                       <Plus size={20} strokeWidth={2.75} aria-hidden />
                     </span>
                   </summary>

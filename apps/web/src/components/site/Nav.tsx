@@ -102,13 +102,13 @@ export function Nav() {
               </Link>
             );
           })}
-          <Link href="/waitlist" className="btn btn-verm ml-3 h-10 px-5 text-sm">
+          <Link href="/waitlist" className="btn btn-primary ml-3 h-10 px-5 text-sm">
             Get early access
           </Link>
         </nav>
 
         <div className="flex items-center gap-1 md:hidden">
-          <Link href="/waitlist" className="btn btn-verm h-9 px-3.5 text-[0.82rem] max-[359px]:hidden">
+          <Link href="/waitlist" className="btn btn-primary h-9 px-3.5 text-[0.82rem] max-[359px]:hidden">
             Get early access
           </Link>
           <button
@@ -159,7 +159,7 @@ export function Nav() {
               <Link
                 href="/waitlist"
                 onClick={() => setOpen(false)}
-                className="btn btn-verm mt-2 h-13 w-full text-base"
+                className="btn btn-primary mt-2 h-13 w-full text-base"
               >
                 Get early access
               </Link>

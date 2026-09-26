@@ -88,7 +88,7 @@ export default async function DashboardPage() {
             <SignInButton mode="modal">
               <button
                 type="button"
-                className="btn btn-verm h-12 px-7"
+                className="btn btn-primary h-12 px-7"
               >
                 Sign in to see your marks
               </button>
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
                 </p>
                 <a
                   href="/download/apk"
-                  className="btn btn-ink mt-5 h-11 px-6 text-sm"
+                  className="btn btn-primary mt-5 h-11 px-6 text-sm"
                 >
                   Download the Android beta
                 </a>

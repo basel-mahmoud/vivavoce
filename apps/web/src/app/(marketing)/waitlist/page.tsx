@@ -37,7 +37,7 @@ export default function WaitlistPage() {
                 </li>
               ))}
             </ul>
-            <a href="/download/apk" className="btn btn-ink mt-10 h-12 self-start px-6">
+            <a href="/download/apk" className="btn btn-secondary mt-10 h-12 self-start px-6">
               <Smartphone size={17} aria-hidden />
               Download the Android beta
             </a>

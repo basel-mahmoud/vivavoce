@@ -375,92 +375,174 @@
   }
 
   /* ── Buttons ──────────────────────────────────────────────────────────── */
-
+  /*
+   * Every button is a key: a flat face with a lip along its bottom edge. The
+   * lip compresses on press while the key scales to .97, so the press lands
+   * on pointer-down. Hover only exists on fine pointers.
+   *   .btn-primary    blue ink: the candidate's action (one per view)
+   *   .btn-secondary  a hairline key in the current text colour, any ground
+   *   .btn-paper      a paper key for coal, cobalt and vermilion fields
+   *   .btn-ghost      no face until hovered
+   *   .link-quiet / .link-inline (below): text links drawn in blue ink
+   * Sizes: .btn-sm (40px), default (48px), .btn-lg (56px).
+   */
   .btn {
+    --btn-lip: 3px;
+    --btn-lip-color: transparent;
+    --btn-edge: transparent;
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     height: 3rem;
-    padding-inline: 1.5rem;
-    border-radius: 9999px;
-    font-weight: 700;
+    padding-inline: 1.375rem;
+    padding-bottom: calc(var(--btn-lip) * 0.5);
+    border-radius: var(--radius-key);
     font-size: 0.975rem;
+    font-weight: 700;
+    line-height: 1;
     white-space: nowrap;
+    text-decoration: none;
     cursor: pointer;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow:
+      inset 0 0 0 1.5px var(--btn-edge),
+      inset 0 calc(var(--btn-lip) * -1) 0 0 var(--btn-lip-color);
     transition:
-      transform 160ms var(--ease-out),
-      background-color 150ms ease,
-      color 150ms ease,
-      border-color 150ms ease,
-      opacity 150ms ease;
+      transform var(--dur-press) var(--ease-out),
+      box-shadow var(--dur-press) var(--ease-out),
+      background-color var(--dur-hover) ease,
+      color var(--dur-hover) ease,
+      opacity var(--dur-hover) ease;
   }
-  .btn:active {
-    transform: scale(0.97);
+  .btn:active:not(:disabled, [aria-disabled='true'], [aria-busy='true']) {
+    --btn-lip: 1px;
+    transform: translateY(1px) scale(0.97);
   }
   .btn:disabled,
   .btn[aria-disabled='true'] {
-    cursor: default;
-    opacity: 0.5;
-    transform: none;
+    cursor: not-allowed;
+    opacity: 0.45;
   }
-  .btn-verm {
-    background: var(--color-verm);
-    color: var(--color-coal);
+  .btn[aria-busy='true'] {
+    cursor: progress;
   }
-  .btn-ink {
-    background: var(--color-ink);
-    color: var(--color-canvas);
+  .btn-sm {
+    --btn-lip: 2px;
+    height: 2.5rem;
+    padding-inline: 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
   }
-  .btn-paper {
-    background: var(--color-paper);
-    color: var(--color-coal);
+  .btn-lg {
+    --btn-lip: 4px;
+    height: 3.5rem;
+    padding-inline: 1.75rem;
+    border-radius: 1rem;
+    font-size: 1.0625rem;
   }
-  .btn-line {
-    border: 1.5px solid var(--color-line);
-    color: var(--color-ink);
+  .btn-icon {
+    padding-inline: 0;
+    aspect-ratio: 1;
   }
-  .btn-line-dark {
-    border: 1.5px solid rgb(251 250 248 / 0.28);
+
+  .btn-primary {
+    --btn-lip-color: var(--color-cobalt-deep);
+    background-color: var(--color-cobalt);
     color: var(--color-paper);
   }
+  .btn-secondary {
+    --btn-edge: color-mix(in oklab, currentColor 26%, transparent);
+    --btn-lip-color: color-mix(in oklab, currentColor 26%, transparent);
+    background-color: transparent;
+    color: inherit;
+  }
+  .btn-paper {
+    --btn-lip-color: color-mix(in oklab, var(--color-paper) 76%, var(--color-coal-2));
+    background-color: var(--color-paper);
+    color: var(--color-coal);
+  }
+  .btn-ghost {
+    --btn-lip: 0px;
+    background-color: transparent;
+    color: inherit;
+  }
+
   @media (hover: hover) and (pointer: fine) {
-    .btn-verm:hover:not(:disabled) {
-      background: #ff6a45;
+    .btn-primary:hover:not(:disabled, [aria-disabled='true']) {
+      background-color: color-mix(in oklab, var(--color-cobalt) 88%, var(--color-coal));
     }
-    .btn-ink:hover:not(:disabled) {
-      background: color-mix(in oklab, var(--color-ink) 86%, var(--color-canvas));
+    .btn-secondary:hover:not(:disabled, [aria-disabled='true']) {
+      --btn-edge: color-mix(in oklab, currentColor 55%, transparent);
+      --btn-lip-color: color-mix(in oklab, currentColor 55%, transparent);
+      background-color: color-mix(in oklab, currentColor 5%, transparent);
     }
-    .btn-paper:hover:not(:disabled) {
-      background: var(--color-butter);
+    /* Hovering a paper key runs the highlighter over it. */
+    .btn-paper:hover:not(:disabled, [aria-disabled='true']) {
+      --btn-lip-color: color-mix(in oklab, var(--color-butter) 80%, var(--color-coal));
+      background-color: var(--color-butter);
     }
-    .btn-line:hover:not(:disabled) {
-      border-color: var(--color-ink);
-    }
-    .btn-line-dark:hover:not(:disabled) {
-      border-color: var(--color-paper);
+    .btn-ghost:hover:not(:disabled, [aria-disabled='true']) {
+      background-color: color-mix(in oklab, currentColor 8%, transparent);
     }
   }
 
-  /* Legacy pressables. */
+  /* Anything else that presses: the logo, icon toggles. */
   .pressable {
-    transition: transform 160ms var(--ease-out);
+    transition: transform var(--dur-press) var(--ease-out);
   }
   .pressable:active {
     transform: scale(0.97);
   }
 
-  /* An inline link that underlines itself on hover. */
-  .link-draw {
-    text-decoration-line: underline;
-    text-decoration-color: transparent;
-    transition: text-decoration-color 150ms ease;
+  /* Text links. The stroke is drawn in blue ink on hover, like the candidate
+   * underlining their own answer; on brand fields it is the field's text colour.
+   *   .link-quiet   standalone links (nav lists, footers, "Read the FAQ"):
+   *                 nothing at rest, the stroke draws in on hover or press.
+   *   .link-inline  links inside running text: a faint rule at rest, so the
+   *                 link never depends on colour alone, then the stroke. */
+  .link-quiet,
+  .link-inline {
+    --link-rest: transparent;
+    --link-ink: var(--color-ink-blue);
+    padding-bottom: 0.08em;
+    background-image:
+      linear-gradient(var(--link-ink), var(--link-ink)),
+      linear-gradient(var(--link-rest), var(--link-rest));
+    background-position:
+      0 100%,
+      0 100%;
+    background-repeat: no-repeat;
+    background-size:
+      0% 2px,
+      100% 1.5px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    text-decoration: none;
+    transition: background-size 320ms var(--ease-out);
+  }
+  .link-inline {
+    --link-rest: color-mix(in oklab, currentColor 32%, transparent);
   }
   @media (hover: hover) and (pointer: fine) {
-    .link-draw:hover {
-      text-decoration-color: var(--color-verm);
+    .link-quiet:hover,
+    .link-inline:hover,
+    :is(a, button):hover > .link-quiet {
+      background-size:
+        100% 2px,
+        100% 1.5px;
     }
+  }
+  .link-quiet:active,
+  .link-inline:active {
+    background-size:
+      100% 2px,
+      100% 1.5px;
+  }
+  :is(.tile-ink, .tile-verm, .tile-cobalt, .tile-butter) :is(.link-quiet, .link-inline) {
+    --link-ink: currentColor;
   }
 
   /* ── Signature motion ─────────────────────────────────────────────────── */
@@ -700,10 +782,15 @@
     opacity: 1;
     transform: rotate(-2deg);
   }
-}
-
-.tile-verm .link-draw:hover {
-  text-decoration-color: var(--color-coal);
+  /* The press stays (the lip still compresses); the key just stops moving. */
+  .btn:active:not(:disabled, [aria-disabled='true'], [aria-busy='true']),
+  .pressable:active {
+    transform: none;
+  }
+  .link-quiet,
+  .link-inline {
+    transition: none;
+  }
 }
 
 /* FAQ disclosure: animate to auto height where the browser supports it. */

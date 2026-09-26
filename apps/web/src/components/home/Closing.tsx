@@ -20,7 +20,7 @@ export function Privacy() {
           </h2>
           <Link
             href="/privacy"
-            className="link-draw mt-6 inline-flex items-center gap-1.5 text-lg font-bold"
+            className="link-quiet mt-6 inline-flex items-center gap-1.5 text-lg font-bold"
           >
             Read the privacy policy <ArrowUpRight size={18} aria-hidden className="text-verm" />
           </Link>
@@ -58,10 +58,10 @@ export function Close() {
             <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-3 text-[0.95rem] font-bold">
               <a href="/download/apk" className="group inline-flex items-center gap-1.5 text-coal">
                 <Smartphone size={16} aria-hidden />
-                <span className="link-draw">Download the Android beta</span>
+                <span className="link-quiet">Download the Android beta</span>
               </a>
               <Link href="/faq" className="group inline-flex items-center gap-1.5 text-coal">
-                <span className="link-draw">Questions first? Read the FAQ</span>
+                <span className="link-quiet">Questions first? Read the FAQ</span>
                 <ArrowRight
                   size={15}
                   aria-hidden

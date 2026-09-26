@@ -24,10 +24,10 @@ export default function NotFound() {
           That page did not show up for the exam.
         </h1>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/" className="btn btn-ink">
+          <Link href="/" className="btn btn-primary">
             Back home
           </Link>
-          <Link href="/waitlist" className="btn btn-line">
+          <Link href="/waitlist" className="btn btn-secondary">
             Get early access
           </Link>
         </div>
