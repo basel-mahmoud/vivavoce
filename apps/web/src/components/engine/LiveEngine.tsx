@@ -189,6 +189,21 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
   }, []);
   const pressEnd = useCallback(() => dispatch({ type: 'release', heldMs: performance.now() - pressedAt.current }), []);
 
+  /* ── Typing instead: the answer box takes the focus the key had ─────── */
+  const focusAnswer = useCallback(() => {
+    window.requestAnimationFrame(() => document.getElementById(`${id}-answer`)?.focus());
+  }, [id]);
+  const typeInstead = useCallback(() => {
+    dispatch({ type: 'mode', mode: 'text' });
+    focusAnswer();
+  }, [focusAnswer]);
+  const refused = state.mode === 'text' && (state.notice === 'denied' || state.notice === 'no-mic' || state.notice === 'unsupported');
+  useEffect(() => {
+    // the microphone was refused mid-press: carry a keyboard user straight on to typing (a phone
+    // keeps its keyboard down until they choose to type)
+    if (refused && fine) focusAnswer();
+  }, [refused, fine, focusAnswer]);
+
   useEffect(() => {
     if (!voice) return;
     let holding = false;
@@ -487,14 +502,14 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
                   <span className={styles.short}>Mark again</span>
                 </button>
               ) : !requesting && !conferring ? (
-                <button type="button" onClick={() => dispatch({ type: 'mode', mode: 'text' })} className={cn('btn btn-ghost btn-sm gap-1.5 text-ink-mut', styles.side)}>
+                <button type="button" onClick={typeInstead} className={cn('btn btn-ghost btn-sm gap-1.5 text-ink-mut', styles.side)}>
                   <Keyboard size={16} aria-hidden />
                   <span className={styles.long}>Type instead</span>
                   <span className={styles.short}>Type</span>
                 </button>
               ) : null}
             </div>
-            <p className={styles.hint} data-quiet={marked ? '' : undefined}>
+            <p className={styles.hint} data-quiet={marked || error ? '' : undefined}>
               {listening ? (
                 state.latched ? (
                   fine ? (
@@ -553,7 +568,7 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
               </button>
             ) : null}
           </div>
-          <p className={styles.hint} data-quiet={marked ? '' : undefined}>
+          <p className={styles.hint} data-quiet={marked || error ? '' : undefined}>
             {marked
               ? 'Rework your words and mark them again, or start a clean sheet.'
               : hydrated && !speechSupported

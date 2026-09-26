@@ -679,6 +679,11 @@
   .hint[data-quiet] {
     display: none;
   }
+  /* the notice rides in the thumb bar: keep it compact */
+  .notice {
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
   .liveTag {
     position: absolute;
     z-index: 3;
