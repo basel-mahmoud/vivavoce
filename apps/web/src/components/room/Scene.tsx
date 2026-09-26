@@ -10,7 +10,7 @@ import { createChannels, type PanelChannels } from './panel/channels';
 import type { Cast } from './panel/cast';
 import { Studio, type FocusLight } from './set/Studio';
 import { CANVAS, Cyclorama } from './set/Cyclorama';
-import { ContactBlot, Lamp, Mic } from './set/Props';
+import { Lamp, Mic, Riser } from './set/Props';
 import { Director, type DofState, type RoomOverlays, type RoundState } from './Director';
 import type { Insets, ShotSet } from './camera';
 import { stillAt } from './story';
@@ -157,6 +157,7 @@ function Room({
   const shotsRef = useRef<ShotSet | null>(null);
   const micWeightRef = useRef(0);
   const maskRef = useRef(new THREE.Vector4(-2, -1, -2, -1));
+  const edgeRef = useRef(new THREE.Vector4(0.04, 0.04, 0.06, 0.06));
   const shadows = tier >= 2;
   const onCast = useCallback(
     (c: Cast) => {
@@ -180,12 +181,13 @@ function Room({
         micWeightRef={micWeightRef}
         dofRef={dofRef}
         maskRef={maskRef}
+        edgeRef={edgeRef}
         overlaysRef={overlaysRef}
         onRound={onRound}
       />
       <Studio dark={dark} shadows={shadows} focusRef={focusRef} />
-      <Cyclorama dark={dark} shadows={shadows} focusRef={focusRef} maskRef={maskRef} />
-      {!shadows && <ContactBlot dark={dark} />}
+      <Cyclorama dark={dark} shadows={shadows} focusRef={focusRef} maskRef={maskRef} edgeRef={edgeRef} />
+      <Riser dark={dark} shadows={shadows} />
       <Lamp dark={dark} />
       <Mic shotsRef={shotsRef} weightRef={micWeightRef} />
       <Panel channelsRef={channelsRef} dark={dark} shadows={shadows} onReady={onCast} />

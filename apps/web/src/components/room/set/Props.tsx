@@ -2,18 +2,10 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { FLOOR } from './Cyclorama';
 import type { ShotSet } from '../camera';
+import { BENCH, FLOOR, FOOTPRINTS, LAMP, RISER } from './layout';
 
 /* ── The lamp: the night before the exam, a task lamp over the panel ── */
-
-/** Where the lamp stands (floor, behind the panel's right end) and where it points. */
-const LAMP = {
-  foot: new THREE.Vector3(2.62, FLOOR, -1.8),
-  height: 2.6,
-  head: new THREE.Vector3(1.74, 2.86, -0.42),
-  aim: new THREE.Vector3(0.45, 0.3, -0.9),
-};
 
 function shadeProfile(inner: boolean) {
   // an enamel dome: neck, shoulder, a wide flared rim; the inner skin sits just inside
@@ -81,11 +73,12 @@ export function Lamp({ dark }: { dark: boolean }) {
         color: '#f1ece3',
         roughness: 0.7,
         side: THREE.BackSide,
-        emissive: dark ? '#ffb070' : '#000000',
-        emissiveIntensity: dark ? 0.9 : 0,
+        // lit from inside at night: a desaturated champagne, so the faces stay the brightest glow
+        emissive: dark ? '#f2d7b6' : '#000000',
+        emissiveIntensity: dark ? 0.5 : 0,
       }),
       brass: new THREE.MeshStandardMaterial({ color: '#c8a978', roughness: 0.3, metalness: 1 }),
-      bulb: new THREE.MeshBasicMaterial({ color: dark ? '#fff1da' : '#d9d6cf', toneMapped: !dark }),
+      bulb: new THREE.MeshBasicMaterial({ color: dark ? '#f6e6cf' : '#d9d6cf' }),
     }),
     [dark],
   );
@@ -119,8 +112,8 @@ export function Lamp({ dark }: { dark: boolean }) {
         <spotLight
           position={parts.bulbAt.toArray()}
           target={target}
-          color="#ffcf9a"
-          intensity={9}
+          color="#f4dcbd"
+          intensity={7}
           distance={0}
           angle={0.78}
           penumbra={0.95}
@@ -181,42 +174,89 @@ export function Mic({ shotsRef, weightRef }: { shotsRef: React.RefObject<ShotSet
   );
 }
 
-/* ── Contact shadows for the phone tier (no shadow map) ────────────── */
+/* ── The riser: the low stage the panel sits on ─────────────────────── */
 
-/** One soft blot under the bench and the panel: the contact a shadow map would give. */
-export function ContactBlot({ dark }: { dark: boolean }) {
-  const texture = useMemo(() => {
-    const c = document.createElement('canvas');
-    c.width = 256;
-    c.height = 64;
-    const g = c.getContext('2d');
-    if (g) {
-      const grad = g.createRadialGradient(128, 32, 4, 128, 32, 128);
-      grad.addColorStop(0, 'rgba(0,0,0,0.9)');
-      grad.addColorStop(0.45, 'rgba(0,0,0,0.45)');
-      grad.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = grad;
-      g.fillRect(0, 0, 256, 64);
-    }
-    const t = new THREE.CanvasTexture(c);
-    return t;
+/** The riser's outline in the floor plane: the ring behind the bench, cut square at both ends. */
+function riserShape() {
+  const cz = BENCH.centreZ;
+  const inset = RISER.bevel;
+  const r0 = RISER.inner + inset;
+  const r1 = RISER.outer - inset;
+  const hx = RISER.halfX - inset;
+  const a0 = Math.asin(hx / r0);
+  const a1 = Math.asin(hx / r1);
+  const shape = new THREE.Shape();
+  // shape x is world x, shape y is world z (the geometry is laid flat below)
+  const at = (r: number, a: number) => [r * Math.sin(a), cz - r * Math.cos(a)] as const;
+  const n = 40;
+  shape.moveTo(...at(r0, -a0));
+  for (let i = 1; i <= n; i++) shape.lineTo(...at(r0, -a0 + (2 * a0 * i) / n));
+  shape.lineTo(...at(r1, a1));
+  for (let i = 1; i <= n; i++) shape.lineTo(...at(r1, a1 - (2 * a1 * i) / n));
+  shape.closePath();
+  return shape;
+}
+
+const RISER_PARS = /* glsl */ `
+varying vec3 vW;
+float vvFootprint(vec2 p, vec4 f) {
+  vec2 q = abs(p - f.xy) - f.zw + 0.18;
+  return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.18;
+}
+`;
+
+/**
+ * The low stage the panel sits on, tucked under the bench and cut square past both ends, so the
+ * two outer examiners rest on it instead of hanging off the bench into the air. Its top carries a
+ * soft contact shadow under each examiner (baked, so every tier has it); the floor around it gets
+ * its own from the cyclorama.
+ */
+export function Riser({ dark, shadows }: { dark: boolean; shadows: boolean }) {
+  const geometry = useMemo(() => {
+    const depth = RISER.top - FLOOR - 2 * RISER.bevel;
+    const g = new THREE.ExtrudeGeometry(riserShape(), {
+      depth,
+      bevelEnabled: true,
+      bevelThickness: RISER.bevel,
+      bevelSize: RISER.bevel,
+      bevelSegments: 2,
+      curveSegments: 1,
+    });
+    // lay it flat: shape y becomes world z, the extrusion runs down from the top
+    g.rotateX(Math.PI / 2);
+    g.translate(0, RISER.top - RISER.bevel, 0);
+    return g;
   }, []);
-  const material = useMemo(
-    () =>
-      new THREE.MeshBasicMaterial({
-        color: dark ? '#000000' : '#1b2233',
-        opacity: dark ? 0.5 : 0.26,
-        alphaMap: texture,
-        transparent: true,
-        depthWrite: false,
-      }),
-    [texture, dark],
-  );
-  useEffect(() => () => texture.dispose(), [texture]);
+  const material = useMemo(() => {
+    // night: blue-black like the paper, so the warm lamp lifts it to a neutral dark, never to wood
+    const m = new THREE.MeshStandardMaterial({ color: dark ? '#0b0e19' : '#a3abb8', roughness: dark ? 0.94 : 0.82, envMapIntensity: dark ? 0.6 : 1 });
+    const feet = FOOTPRINTS.map((p) => new THREE.Vector4(p[0], p[1], p[2], p[3]));
+    m.onBeforeCompile = (sh) => {
+      sh.uniforms.uFeet = { value: feet };
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vW;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvW = (modelMatrix * vec4(position, 1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', `#include <common>\nuniform vec4 uFeet[5];\n${RISER_PARS}`)
+        .replace(
+          '#include <color_fragment>',
+          `#include <color_fragment>
+          {
+            float top = smoothstep(${(RISER.top - 0.01).toFixed(3)}, ${(RISER.top - 0.002).toFixed(3)}, vW.y);
+            float c = 0.0;
+            for (int i = 0; i < 5; i++) {
+              float d = vvFootprint(vW.xz, uFeet[i]);
+              float s = 1.0 - smoothstep(0.0, 0.2, d);
+              c = max(c, 0.6 * exp(-max(d, 0.0) / 0.025) + 0.4 * s * s);
+            }
+            diffuseColor.rgb *= 1.0 - ${dark ? '0.75' : '0.55'} * c * top;
+          }`,
+        );
+    };
+    m.customProgramCacheKey = () => `vv-riser-${dark ? 'd' : 'l'}`;
+    return m;
+  }, [dark]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
-  return (
-    <mesh material={material} rotation={[-Math.PI / 2, 0, 0]} position={[0, FLOOR + 0.002, -0.35]} renderOrder={-1}>
-      <planeGeometry args={[6.2, 2.1]} />
-    </mesh>
-  );
+  return <mesh geometry={geometry} material={material} receiveShadow={shadows} />;
 }

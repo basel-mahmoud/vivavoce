@@ -88,6 +88,7 @@ export function Director({
   micWeightRef,
   dofRef,
   maskRef,
+  edgeRef,
   overlaysRef,
   onRound,
 }: {
@@ -102,6 +103,7 @@ export function Director({
   micWeightRef: React.RefObject<number>;
   dofRef: React.RefObject<DofState>;
   maskRef: React.RefObject<THREE.Vector4>;
+  edgeRef: React.RefObject<THREE.Vector4>;
   overlaysRef: React.RefObject<RoomOverlays>;
   onRound: (r: RoundState) => void;
 }) {
@@ -241,11 +243,15 @@ export function Director({
       d.focus.lerpVectors(A.focus, B.focus, t);
     }
 
-    // where the captions sit, so the wall behind them stays plain page
+    // where the captions sit, so the set behind them fades back to plain page
     if (shots.compact) {
       const inset = p < 0.15 ? insets.hero : p > 0.85 ? insets.outro : insets.beat;
-      maskRef.current.set(-2, -1, inset - 0.02, inset + 0.12);
-    } else maskRef.current.set(0.3, 0.56, -2, -1);
+      maskRef.current.set(-2, -1, inset - 0.01, inset + 0.07);
+      edgeRef.current.set(0.03, 0.03, 0.04, 0.05);
+    } else {
+      maskRef.current.set(0.4, 0.5, -2, -1);
+      edgeRef.current.set(0.03, 0.05, 0.07, 0.07);
+    }
 
     if (!ch) return;
 
