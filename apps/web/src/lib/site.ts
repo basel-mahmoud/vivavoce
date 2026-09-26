@@ -18,7 +18,7 @@ export const site = {
       { label: 'Features', href: '/features' },
       { label: 'How it works', href: '/how-it-works' },
       { label: 'Use cases', href: '/use-cases' },
-      { label: 'Early access', href: '/waitlist' },
+      { label: 'Get early access', href: '/waitlist' },
     ],
     Company: [
       { label: 'Contact', href: '/contact' },
