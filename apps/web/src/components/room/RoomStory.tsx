@@ -89,7 +89,7 @@ export function RoomStory() {
   const [round, setRound] = useState<RoundState>({ index: 0, phase: 'follow' });
   const captions = useRef<HTMLDivElement>(null);
   const [insets, setInsets] = useState<Insets>({ hero: 0.42, beat: 0.36, outro: 0.36 });
-  const overlaysRef = useRef<RoomOverlays>({ tag: null, leader: null, answer: null, label: null, fade: null });
+  const overlaysRef = useRef<RoomOverlays>({ tag: null, leader: null, answer: null, fade: null });
 
   const { scrollYProgress } = useScroll({ target: section, offset: ['start start', 'end end'] });
 

@@ -23,7 +23,6 @@ export interface RoomOverlays {
   tag: HTMLElement | null;
   leader: HTMLElement | null;
   answer: HTMLElement | null;
-  label: HTMLElement | null;
   fade: HTMLCanvasElement | null;
 }
 
@@ -460,24 +459,12 @@ export function Director({
           const ax = (_v.x + 1) * 0.5 * w;
           const ay = (1 - _v.y) * 0.5 * h;
           const tx = Math.min(Math.max(ax - answerBox.current.w / 2, shots.compact ? 12 : w * 0.46), w - answerBox.current.w - 16);
-          const ty = Math.min(ay + 10, h - answerBox.current.h - 24);
+          // under the bench, clear of the example-round caption along the bottom
+          const ty = Math.min(ay + 10, h - answerBox.current.h - (shots.compact ? 48 : 68));
           o.answer.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0)`;
           o.answer.style.opacity = '1';
         } else {
           o.answer.style.opacity = '0';
-        }
-      }
-      if (o.label) {
-        const showLabel = inHero || outroW > 0.5;
-        if (showLabel) {
-          const coin = ch.examiners[0]!.coin;
-          _v.set(Math.min(coin.x, SEATS.correctness.position[0]) - 0.1, Math.max(coin.y + 0.55, 2.05), -0.5).project(camera);
-          const lx = Math.max((_v.x + 1) * 0.5 * w, shots.compact ? 16 : w * 0.47);
-          const ly = (1 - _v.y) * 0.5 * h;
-          o.label.style.transform = `translate3d(${lx.toFixed(1)}px, ${ly.toFixed(1)}px, 0)`;
-          o.label.style.opacity = shots.compact && inHero ? '0' : '1';
-        } else {
-          o.label.style.opacity = '0';
         }
       }
     }

@@ -56,16 +56,27 @@
 
 .ruler {
   position: absolute;
-  inset-inline: 1rem;
+  inset-inline: 0.75rem;
   bottom: 0.75rem;
   z-index: 20;
+  /* a paper ruler laid over the room: on compact layouts every shot runs to the bottom edge,
+     so the keys carry their own backing */
+  padding: 0.55rem 0.25rem 0;
+  border: 1px solid var(--vv-line);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--vv-card) 94%, transparent);
+  box-shadow: var(--shadow-paper);
 }
 
+/* The figure caption under the panel: "Example round", and that scores are guidance. */
 .note {
   position: absolute;
-  left: 1rem;
-  bottom: 0.9rem;
+  left: 0.6rem;
+  bottom: 0.75rem;
   z-index: 10;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--vv-canvas) 86%, transparent);
 }
 
 /* The axis name beside each ruler key: read out everywhere, shown on wide layouts. */
@@ -110,10 +121,20 @@
     right: auto;
     width: min(33rem, calc(44% - clamp(2rem, 4.4vw, 4rem) - 1rem));
     bottom: 1.75rem;
+    /* over the scrim here: the page itself is the backing */
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
   }
+  /* centred under the panel's frame (the camera's region runs from 47.5% to 99%) */
   .note {
-    left: clamp(2rem, 4.4vw, 4rem);
-    bottom: 1.9rem;
+    left: 47.5%;
+    right: 1%;
+    bottom: 1.5rem;
+    width: fit-content;
+    margin-inline: auto;
   }
   .rulerName {
     position: static;

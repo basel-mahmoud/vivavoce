@@ -59,14 +59,6 @@ export function RoomTags({ round, reduce, overlaysRef }: { round: RoundState; re
           </>
         )}
       </div>
-      <p
-        ref={(el) => {
-          overlaysRef.current.label = el;
-        }}
-        className="absolute left-0 top-0 whitespace-nowrap text-[0.78rem] font-bold text-ink-mut opacity-0 transition-opacity duration-300"
-      >
-        Example round
-      </p>
     </div>
   );
 }
