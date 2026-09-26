@@ -21,7 +21,7 @@ export default function HowItWorksPage() {
           Answer a question
         </a>
       </PageHero>
-      <Loop />
+      <Loop showHeading={false} />
       <div className="pb-24 sm:pb-32">
         <LiveEngine />
       </div>

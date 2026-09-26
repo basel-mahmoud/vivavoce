@@ -267,4 +267,255 @@
       animation: none;
     }
   }
+
+  /* ── Loop: the signal wire ──────────────────────────────────────────── */
+
+  .vv-signal {
+    --line-y: 5.5rem;
+    position: relative;
+  }
+  .vv-signal-wire {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .vv-signal-rest,
+  .vv-signal-blue,
+  .vv-signal-red,
+  .vv-signal-arrow {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .vv-signal-rest {
+    stroke: var(--color-line);
+    stroke-width: 2;
+  }
+  .vv-signal-blue {
+    stroke: var(--color-ink-blue);
+    stroke-width: 3.5;
+  }
+  .vv-signal-red {
+    stroke: var(--color-verm-text);
+    stroke-width: 3.5;
+  }
+  .vv-signal-arrow {
+    stroke: var(--color-line);
+    stroke-width: 2.5;
+    transition: stroke 200ms ease;
+  }
+  .vv-signal-arrow[data-on] {
+    stroke: var(--color-verm-text);
+  }
+  .vv-signal-stops {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    row-gap: 2.75rem;
+  }
+
+  .vv-stop {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    grid-template-areas:
+      'rail visual'
+      'rail caption';
+    column-gap: 1rem;
+    align-items: start;
+  }
+  .vv-stop-rail {
+    grid-area: rail;
+    justify-self: center;
+    width: 14px;
+    height: 14px;
+    margin-top: 0.35rem;
+    border: 2px solid var(--color-line);
+    border-radius: 50%;
+    background: var(--color-canvas);
+    transition:
+      border-color 200ms ease,
+      background-color 200ms ease;
+  }
+  .vv-stop[data-awake] .vv-stop-rail {
+    border-color: var(--color-ink-blue);
+    background: var(--color-ink-blue);
+  }
+  .vv-stop:nth-child(n + 4)[data-awake] .vv-stop-rail {
+    border-color: var(--color-verm-text);
+    background: var(--color-verm-text);
+  }
+  .vv-stop-visual {
+    grid-area: visual;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .vv-stop-caption {
+    grid-area: caption;
+    margin-top: 0.9rem;
+  }
+  .vv-split-v {
+    position: absolute;
+    left: 0;
+    bottom: -1.25rem;
+    width: 1px;
+    height: 1px;
+  }
+
+  /* The mic: an empty key until the signal leaves it, then blue ink. */
+  .vv-mic {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 4rem;
+    height: 4rem;
+    border: 2px solid var(--color-line);
+    border-radius: 50%;
+    background: var(--color-card);
+    color: var(--color-ink-faint);
+    transition:
+      background-color 220ms ease,
+      border-color 220ms ease,
+      color 220ms ease;
+  }
+  .vv-stop[data-awake] .vv-mic {
+    border-color: var(--color-cobalt);
+    background: var(--color-cobalt);
+    color: var(--color-paper);
+  }
+  /* The transcript slip: faint until the signal writes it in blue ink. */
+  .vv-transcript {
+    max-width: 19rem;
+    padding: 0.75rem 1rem 0.8rem;
+    border: 1px solid var(--color-line);
+    border-radius: 0.9rem;
+    background: var(--color-card);
+    box-shadow: var(--shadow-paper);
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .vv-word {
+    color: var(--color-ink-faint);
+    opacity: 0.42;
+    transition:
+      color 220ms ease,
+      opacity 220ms ease;
+  }
+  .vv-stop[data-awake] .vv-word {
+    color: var(--color-ink-blue);
+    opacity: 1;
+    transition-delay: calc(var(--i) * 70ms);
+  }
+
+  /* The panel, sitting on the wire, marks under each. */
+  .vv-panel {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .vv-panel-seat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 3.4rem;
+  }
+  .vv-panel-head .vv-portrait {
+    width: 3.4rem !important;
+  }
+  .vv-panel-mark {
+    margin-top: 0.55rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    opacity: 0.25;
+    transition: opacity 240ms ease;
+  }
+  .vv-panel-mark[data-on] {
+    opacity: 1;
+    transition-delay: calc(var(--i) * 60ms);
+  }
+  .vv-panel-mark[data-weak][data-on] {
+    color: var(--color-verm-text);
+  }
+
+  /* The verdict and the next question: faint until reached. */
+  .vv-verdict,
+  .vv-next {
+    transition: opacity 260ms ease;
+  }
+  .vv-stop:not([data-awake]) .vv-verdict,
+  .vv-stop:not([data-awake]) .vv-next {
+    opacity: 0.4;
+  }
+  .vv-verdict {
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.5rem;
+    background: var(--color-canvas);
+    color: var(--color-verm-text);
+  }
+  .vv-next {
+    max-width: 17rem;
+    padding: 0.75rem 0.95rem 0.85rem;
+    border: 1px solid var(--color-line);
+    border-top: 2px solid var(--color-margin);
+    border-radius: 0.75rem;
+    background: var(--color-card);
+    box-shadow: var(--shadow-paper);
+  }
+
+  @media (min-width: 1024px) {
+    .vv-signal-stops {
+      grid-template-columns: 0.85fr 1.35fr 2.5fr 1.1fr 1.35fr;
+      column-gap: 2rem;
+    }
+    .vv-stop {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: calc(var(--line-y) * 2) auto;
+      grid-template-areas:
+        'visual'
+        'caption';
+    }
+    .vv-stop-rail,
+    .vv-split-v {
+      display: none;
+    }
+    .vv-stop-visual {
+      height: calc(var(--line-y) * 2);
+    }
+    .vv-stop-caption {
+      margin-top: 1.4rem;
+    }
+    /* The heads sit on the wire; their marks hang just under it. */
+    .vv-stop-panel .vv-stop-visual {
+      align-items: flex-start;
+    }
+    .vv-panel {
+      height: 100%;
+      gap: 0.55rem;
+    }
+    .vv-panel-seat {
+      width: 4.5rem;
+      padding-top: calc(var(--line-y) - 4.5rem);
+    }
+    .vv-panel-head .vv-portrait {
+      width: 4.5rem !important;
+    }
+    .vv-panel-mark {
+      margin-top: 0.7rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-word,
+    .vv-panel-mark,
+    .vv-mic,
+    .vv-stop-rail,
+    .vv-verdict,
+    .vv-next {
+      transition: none;
+    }
+  }
 }
