@@ -1,452 +1,580 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { ArrowRight, Mic, RefreshCcw, Square } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
+import { ArrowRight, Keyboard, Mic, RotateCcw } from 'lucide-react';
 import { AXES } from '@/components/room/data';
+import { TypeLine } from '@/components/room/TypeLine';
+import { Keycap } from '@/components/ui/Keycap';
+import { Loader } from '@/components/ui/Loader';
+import { portraitSrc, type ExaminerState } from '@/components/ui/Portrait';
+import { SplitFlap } from '@/components/ui/SplitFlap';
 import { cn } from '@/lib/cn';
+import { requestMarks } from './api';
+import { AnswerSheet, QuestionPaper } from './AnswerSheet';
+import { ASK_HOLD, ASKER, beatsAt, CONFER_MIN, speakDuration } from './choreo';
+import { followUpFor, initialState, isAnswer, judge, reduce as step } from './engine';
+import { markTranscript } from './pen';
+import { PortraitBench, type Say } from './PortraitBench';
+import { MAX_SECONDS, QUESTIONS } from './questions';
+import { createCue, stageNow, stageScale, type StageCue, type StageOverlays } from './stage';
+import { useDark, useFinePointer, useOnline, usePageVisible, useReduce, useWebGL } from './useEnv';
+import { useMarkClock } from './useMarkClock';
 import { useMicMeter } from './useMicMeter';
+import { useSpeech, useSpeechSupported } from './useSpeech';
+import { VoiceDisc } from './VoiceDisc';
+import { BOARD_COLUMNS, NOTICE, boardFor, lastWords, noticeText, whenAgain } from './words';
+import styles from './engine.module.css';
 
-/** Minimal typing for the Web Speech API (not in lib.dom for all targets). */
-interface SpeechRecognitionLike {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult: ((e: SpeechRecognitionEventLike) => void) | null;
-  onend: (() => void) | null;
-  onerror: ((e: { error?: string }) => void) | null;
-  start(): void;
-  stop(): void;
-}
-interface SpeechRecognitionEventLike {
-  resultIndex: number;
-  results: ArrayLike<{ 0: { transcript: string }; isFinal: boolean }>;
-}
-
-function getRecognition(): SpeechRecognitionLike | null {
-  if (typeof window === 'undefined') return null;
-  const w = window as unknown as {
-    SpeechRecognition?: new () => SpeechRecognitionLike;
-    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
-  };
-  const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-  return Ctor ? new Ctor() : null;
-}
-
-/** Must match DEMO_QUESTIONS in the demo-eval route, index for index. */
-const QUESTIONS = [
-  'Why do candidates who know the material still fail the viva?',
-  'Explain, to a smart friend outside your field, what you are studying and why it matters.',
-  'Tell me about a decision you defended under pressure. Walk me through your reasoning.',
-];
-
-interface DemoResult {
-  source: 'model' | 'heuristic';
-  scores: Record<string, number>;
-  overall: number;
-  weakestAxis: string;
-  summary: string;
-  improvements: string[];
-}
-
-type Phase = 'idle' | 'listening' | 'scoring' | 'marked';
+const EngineStage = dynamic(() => import('./EngineStage'), { ssr: false });
 
 const noop = () => () => {};
+const useHydrated = () => useSyncExternalStore(noop, () => true, () => false);
 
-/* ── A 2D score paddle: face-down until marked, then flipped up by hand ──── */
+const BENCH_STATES: readonly ExaminerState[] = ['neutral', 'listening', 'marking', 'pleased', 'sceptical', 'speaking'];
 
-function Paddle({
-  label,
-  score,
-  up,
-  hot,
-  waiting,
-  index,
-  note,
-}: {
-  label: string;
-  score: number | null;
-  up: boolean;
-  hot: boolean;
-  waiting: boolean;
-  index: number;
-  /** Shown under the label when this axis was left unmarked. */
-  note?: string;
-}) {
+/** Once marked: start over on a clean sheet, or join. */
+function AfterMarking({ onReset }: { onReset: () => void }) {
   return (
-    <div className="flex min-w-0 items-center gap-4 sm:flex-col sm:gap-0">
-      <div className="w-12 shrink-0 [perspective:600px] sm:w-full sm:max-w-[6rem]">
-        <div
-          className={cn(
-            'relative aspect-square w-full [transform-style:preserve-3d]',
-            'transition-transform duration-[650ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none',
-          )}
-          style={{
-            transform: up
-              ? `rotateY(0deg) scale(${hot ? 1.12 : 1})`
-              : 'rotateY(180deg)',
-            transitionDelay: up ? `${index * 80}ms` : '0ms',
-          }}
-        >
-          {/* front: the mark */}
-          <div
-            className={cn(
-              'marks absolute inset-0 grid place-items-center rounded-full text-base font-bold [backface-visibility:hidden] sm:text-[clamp(1.1rem,2.6vw,1.7rem)]',
-              hot ? 'bg-verm text-coal' : 'bg-paper text-coal',
-            )}
-          >
-            {score ?? ''}
-          </div>
-          {/* back: blank paddle, waiting */}
-          <div
-            className={cn(
-              'absolute inset-0 rounded-full border-2 border-dashed border-paper/25 bg-coal-2 [backface-visibility:hidden] [transform:rotateY(180deg)]',
-              waiting && 'motion-safe:animate-pulse',
-            )}
-            style={waiting ? { animationDelay: `${index * 120}ms` } : undefined}
-          />
-        </div>
-      </div>
-      <span className="mt-1 hidden h-6 w-[3px] rounded-full bg-paper/25 sm:block" aria-hidden />
-      <span
-        className={cn(
-          'text-[0.95rem] font-bold leading-tight sm:mt-2 sm:w-full sm:text-center sm:text-xs',
-          hot ? 'text-verm' : 'text-paper-mut',
-        )}
-      >
-        {label}
-        {note && <span className="block text-[0.7rem] font-semibold text-paper-mut">{note}</span>}
-      </span>
-    </div>
+    <span className={cn('flex flex-wrap items-center gap-2', styles.afterMarking)}>
+      <button type="button" onClick={onReset} className="btn btn-ghost btn-sm gap-1.5">
+        <RotateCcw size={15} aria-hidden /> Try again
+      </button>
+      {/* on phones the nav's own "Get early access" is always one tap away */}
+      <Link href="/waitlist" className={cn('btn btn-secondary btn-sm gap-1.5', styles.long)}>
+        Get early access <ArrowRight size={15} aria-hidden />
+      </Link>
+    </span>
   );
 }
 
+/* ── The section ──────────────────────────────────────────────────────── */
+
 /**
- * The real marking engine, playable in-page: speak (Web Speech API) or type,
- * get five marks from the same evaluator the app uses. Nothing is stored.
+ * "Your turn": the signature moment. The visitor answers a real question out loud (or types it),
+ * and the same five examiners who marked the example round mark them for real: the glass faces
+ * show their voice while they answer, the voice collapses into the mark disc, the panel confers,
+ * paddles rise to the real marks, the weakest examiner leans in with a follow-up, the red pen
+ * marks the transcript, the board posts what to fix first and the overall mark is stamped.
+ * Same marking engine as the app; no account, and nothing is stored.
  */
 export function LiveEngine({ id = 'live' }: { id?: string }) {
-  const [qIndex, setQIndex] = useState(0);
-  const [phase, setPhase] = useState<Phase>('idle');
-  const [answer, setAnswer] = useState('');
-  const [result, setResult] = useState<DemoResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [metered, setMetered] = useState(false);
-  const recRef = useRef<SpeechRecognitionLike | null>(null);
-  const finalRef = useRef('');
-  const { canvas: meterCanvas, ring: meterRing, start: startMeter, stop: stopMeter } = useMicMeter();
+  const reduce = useReduce();
+  const dark = useDark();
+  const webgl = useWebGL();
+  const fine = useFinePointer();
+  const pageVisible = usePageVisible();
+  const online = useOnline();
+  const hydrated = useHydrated();
+  const speechSupported = useSpeechSupported();
+  const [state, dispatch] = useReducer(step, undefined, () => initialState('voice'));
 
-  const speechSupported = useSyncExternalStore(
-    noop,
-    () => {
-      const w = window as unknown as Record<string, unknown>;
-      return Boolean(w.SpeechRecognition ?? w.webkitSpeechRecognition);
+  // Speaking needs speech-to-text; without it (or once the microphone is refused) the sheet takes typing.
+  const voice = state.mode === 'voice' && (!hydrated || speechSupported);
+  const { phase, result } = state;
+
+  const section = useRef<HTMLElement>(null);
+  const [near, setNear] = useState(false);
+  const [inView, setInView] = useState(false);
+  const spaceArmed = useRef(false);
+  // the panel asks the question aloud when the section arrives, and again for each new question
+  const [ask, setAsk] = useState<{ q: number; n: number } | null>(null);
+  const questionRef = useRef(0);
+  useEffect(() => {
+    questionRef.current = state.question;
+  }, [state.question]);
+  useEffect(() => {
+    const el = section.current;
+    if (!el) return;
+    let asked = false;
+    const ioNear = new IntersectionObserver(([e]) => e?.isIntersecting && setNear(true), { rootMargin: '100% 0px' });
+    const ioView = new IntersectionObserver(([e]) => setInView(Boolean(e?.isIntersecting)), { rootMargin: '80px 0px' });
+    // Space answers (and the panel asks its question) once the section holds the screen: a third
+    // of it in view, or half the viewport filled by it when it is taller than a short screen
+    const ioKeys = new IntersectionObserver(
+      ([e]) => {
+        if (!e) return;
+        const cover = e.intersectionRect.height / Math.max(1, e.rootBounds?.height ?? window.innerHeight);
+        spaceArmed.current = e.intersectionRatio >= 0.3 || cover >= 0.5;
+        if (spaceArmed.current && !asked) {
+          asked = true;
+          setAsk({ q: questionRef.current, n: 1 });
+        }
+      },
+      { threshold: [0, 0.1, 0.2, 0.3, 0.45, 0.6, 0.8, 1] },
+    );
+    ioNear.observe(el);
+    ioView.observe(el);
+    ioKeys.observe(el);
+    return () => {
+      ioNear.disconnect();
+      ioView.disconnect();
+      ioKeys.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!ask) return;
+    const t = window.setTimeout(() => setAsk(null), ((speakDuration(QUESTIONS[ask.q]!) + ASK_HOLD) * 1000) / stageScale());
+    return () => window.clearTimeout(t);
+  }, [ask]);
+  const next = useCallback(() => {
+    dispatch({ type: 'next' });
+    setAsk((a) => ({ q: (questionRef.current + 1) % QUESTIONS.length, n: (a?.n ?? 1) + 1 }));
+  }, []);
+
+  /* ── The microphone and speech ─────────────────────────────────────── */
+  const { meter, start: micStart, startVoice, pulse, stop: micStop, subscribe } = useMicMeter();
+  const { start: speechStart, stop: speechStop } = useSpeech({
+    onText: (final, interim) => {
+      pulse(1);
+      dispatch({ type: 'heard', final, interim });
     },
-    () => false,
-  );
+    onStart: () => dispatch({ type: 'granted' }),
+    onFailure: (reason) => dispatch(reason === 'no-speech' ? { type: 'silence' } : { type: 'refused', reason }),
+  });
 
-  const stopListening = useCallback(() => {
-    recRef.current?.stop();
-    recRef.current = null;
-    stopMeter();
-    setMetered(false);
-    setPhase((p) => (p === 'listening' ? 'idle' : p));
-  }, [stopMeter]);
-
-  const startListening = useCallback(() => {
-    const rec = getRecognition();
-    if (!rec) return;
-    setError(null);
-    setResult(null);
-    finalRef.current = answer ? `${answer.trim()} ` : '';
-    rec.lang = 'en-US';
-    rec.continuous = true;
-    rec.interimResults = true;
-    rec.onresult = (e) => {
-      let interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const r = e.results[i]!;
-        if (r.isFinal) finalRef.current += `${r[0].transcript} `;
-        else interim += r[0].transcript;
-      }
-      setAnswer((finalRef.current + interim).trimStart().slice(0, 700));
-    };
-    rec.onend = () => {
-      stopMeter();
-      setMetered(false);
-      setPhase((p) => (p === 'listening' ? 'idle' : p));
-    };
-    rec.onerror = (e) => {
-      stopMeter();
-      setMetered(false);
-      setPhase('idle');
-      const reason = e?.error;
-      if (reason === 'not-allowed' || reason === 'service-not-allowed') {
-        setError('Microphone access is blocked. Allow it in your browser, or type your answer instead.');
-      } else if (reason === 'no-speech') {
-        setError('We did not hear anything. Try again, or type your answer.');
-      } else if (reason === 'audio-capture') {
-        setError('No microphone found. Type your answer instead.');
+  useEffect(() => {
+    if (phase !== 'requesting') return;
+    let cancelled = false;
+    void (async () => {
+      if (fine) {
+        // desktop: open the microphone first (the permission prompt, and the live meter)
+        const r = await micStart();
+        if (cancelled) return;
+        if (r !== 'granted') {
+          dispatch({ type: 'refused', reason: r === 'denied' ? 'denied' : 'no-mic' });
+          return;
+        }
+        if (!speechStart()) dispatch({ type: 'refused', reason: 'unsupported' });
+        else dispatch({ type: 'granted' });
       } else {
-        setError('Speech input is not available here. Type your answer and mark it.');
+        // phones: recognition owns the microphone; the meter follows what it hears
+        startVoice();
+        if (!speechStart()) dispatch({ type: 'refused', reason: 'unsupported' });
       }
+    })();
+    return () => {
+      cancelled = true;
     };
-    try {
-      rec.start();
-      recRef.current = rec;
-      setPhase('listening');
-      // The live meter is a bonus on precise pointers (desktop), where sharing
-      // the mic with speech recognition is reliable.
-      if (window.matchMedia('(pointer: fine)').matches) {
-        void startMeter().then(setMetered);
-      }
-    } catch {
-      setPhase('idle');
-      setError('Could not start the microphone. Type your answer instead.');
-    }
-  }, [answer, startMeter, stopMeter]);
+  }, [phase, fine, micStart, startVoice, speechStart]);
 
-  useEffect(() => () => recRef.current?.stop(), []);
+  useEffect(() => {
+    if (phase === 'requesting' || phase === 'listening') return;
+    speechStop();
+    micStop();
+  }, [phase, micStop, speechStop]);
 
-  async function mark() {
-    if (answer.trim().length < 12) {
-      setError('Give it at least a sentence. Short answers are half the problem.');
-      return;
-    }
-    stopListening();
-    setPhase('scoring');
-    setError(null);
-    try {
-      const res = await fetch('/api/v1/demo-eval', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ questionId: qIndex, answer: answer.slice(0, 700) }),
-      });
-      const json = await res.json();
-      if (res.status === 429) {
-        setPhase('idle');
-        setError('That is the demo limit for now. The full app has no such patience problem.');
+  // the answer's clock; an answer stops itself after MAX_SECONDS (and at MAX_CHARS, in the reducer)
+  const [tick, setTick] = useState({ take: -1, s: 0 });
+  const take = state.request;
+  useEffect(() => {
+    if (phase !== 'listening') return;
+    const started = performance.now();
+    const id = window.setInterval(() => {
+      const s = Math.floor((performance.now() - started) / 1000);
+      setTick({ take, s });
+      if (s >= MAX_SECONDS) dispatch({ type: 'stop' });
+    }, 250);
+    return () => window.clearInterval(id);
+  }, [phase, take]);
+  const seconds = tick.take === take ? tick.s : 0;
+
+  /* ── Hold to answer: the key, and Space anywhere in the section ─────── */
+  const pressedAt = useRef(0);
+  const pressStart = useCallback(() => {
+    pressedAt.current = performance.now();
+    dispatch({ type: 'press' });
+  }, []);
+  const pressEnd = useCallback(() => dispatch({ type: 'release', heldMs: performance.now() - pressedAt.current }), []);
+
+  useEffect(() => {
+    if (!voice) return;
+    let holding = false;
+    const busy = (t: EventTarget | null) =>
+      t instanceof HTMLElement && Boolean(t.closest('input, textarea, select, button, a, summary, [contenteditable="true"], [role="button"]'));
+    const down = (e: KeyboardEvent) => {
+      if (e.code === 'Escape') {
+        dispatch({ type: 'cancel' });
         return;
       }
-      if (!res.ok || !json.ok) throw new Error('bad response');
-      setResult(json.data as DemoResult);
-      setPhase('marked');
-    } catch {
-      setPhase('idle');
-      setError('Marking failed on our end. Try once more.');
+      if (e.code !== 'Space' || e.repeat || !spaceArmed.current || busy(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+      e.preventDefault();
+      holding = true;
+      pressStart();
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || !holding) return;
+      e.preventDefault();
+      holding = false;
+      pressEnd();
+    };
+    const blur = () => {
+      if (!holding) return;
+      holding = false;
+      pressEnd();
+    };
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    window.addEventListener('blur', blur);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+      window.removeEventListener('blur', blur);
+    };
+  }, [voice, pressStart, pressEnd]);
+
+  /* ── Marking ───────────────────────────────────────────────────────── */
+  useEffect(() => {
+    if (phase !== 'conferring' || !state.answered) return;
+    const ctrl = new AbortController();
+    const request = state.request;
+    const started = performance.now();
+    const minimum = ((reduce ? 0.45 : CONFER_MIN) * 1000) / stageScale();
+    void requestMarks({ questionId: state.question, answer: state.answered }, { signal: ctrl.signal })
+      .then(async (out) => {
+        const wait = minimum - (performance.now() - started);
+        if (wait > 0) await new Promise((r) => window.setTimeout(r, wait));
+        if (ctrl.signal.aborted) return;
+        if (out.ok) dispatch({ type: 'resolved', request, result: judge(out.data) });
+        else dispatch({ type: 'failed', request, notice: out.reason, retryAfter: out.retryAfter });
+      })
+      .catch(() => undefined);
+    return () => ctrl.abort();
+  }, [phase, state.request, state.answered, state.question, reduce]);
+
+  const pen = useMemo(() => markTranscript(state.answered ?? ''), [state.answered]);
+  const followUp = result ? followUpFor(result.weakest, pen) : '';
+  const clock = useMarkClock(phase === 'marked' ? state.request : null, reduce, followUp);
+  const b = beatsAt(clock);
+
+  /* ── The 3D stage ──────────────────────────────────────────────────── */
+  const use3D = webgl === true && !reduce;
+  const [stageReady, setStageReady] = useState(false);
+  const onStageReady = useCallback(() => setStageReady(true), []);
+  const cue = useRef<StageCue>(createCue());
+  const overlays = useRef<StageOverlays>({ tag: null, leader: null });
+  useEffect(() => {
+    const c = cue.current;
+    const now = stageNow();
+    if (c.phase !== phase) {
+      c.phase = phase;
+      c.since = now;
+      if (phase === 'marked') c.markedAt = now;
     }
-  }
+    c.marks = result?.marks ?? [null, null, null, null, null];
+    c.weakest = result?.weakest ?? -1;
+    c.followUp = followUp;
+  }, [phase, result, followUp]);
+  const asking = ask !== null && phase === 'idle' && ask.q === state.question;
+  useEffect(() => {
+    const c = cue.current;
+    if (!asking || !ask) {
+      c.askWho = -1;
+      return;
+    }
+    c.askWho = ASKER[ask.q] ?? 0;
+    c.askText = QUESTIONS[ask.q]!;
+    c.askAt = stageNow();
+  }, [asking, ask]);
+  const showing3D = use3D && stageReady;
 
-  function reset(nextQuestion: boolean) {
-    stopListening();
-    setAnswer('');
-    setResult(null);
-    setError(null);
-    setPhase('idle');
-    if (nextQuestion) setQIndex((i) => (i + 1) % QUESTIONS.length);
-  }
+  // where the portrait bench is the panel (no WebGL, reduced motion), fetch every expression it will
+  // wear before it needs them, so a face never blanks while the next one loads
+  const benchLive = webgl === false || reduce;
+  useEffect(() => {
+    if (!benchLive || !near) return;
+    for (const a of AXES) for (const st of BENCH_STATES) new window.Image().src = portraitSrc(a.key, st);
+  }, [benchLive, near]);
 
+  /* ── Words for screen readers ──────────────────────────────────────── */
+  const announce =
+    phase === 'requesting'
+      ? 'Allow the microphone to answer out loud.'
+      : phase === 'listening'
+        ? 'Listening.'
+        : phase === 'conferring'
+          ? 'The panel is conferring.'
+          : phase === 'marked' && result
+            ? `Marked. ${AXES.map((a, i) => `${a.label} ${result.marks[i] ?? 'not marked'}`).join(', ')}. Overall ${result.overall} out of 100. Fix first: ${AXES[result.weakest]!.label}. The ${AXES[result.weakest]!.label} examiner asks: ${followUp}`
+            : '';
+
+  // who is speaking, for the note above the panel: the follow-up once marked, or the question
+  const say: Say | null =
+    phase === 'marked' && result && b.spoken
+      ? { who: result.weakest, label: `${AXES[result.weakest]!.label}, follow-up`, text: followUp, key: `f${state.request}`, talking: b.speaking(followUp) }
+      : asking && ask
+        ? { who: ASKER[ask.q] ?? 0, label: `${AXES[ASKER[ask.q] ?? 0]!.label}, asking`, text: QUESTIONS[ask.q]!, key: `a${ask.n}`, talking: true }
+        : null;
+
+  const board = boardFor(state, clock);
+  // phones: the words being heard, pinned above the panel (the sheet with the whole answer is below)
+  const heard = lastWords(`${state.text} ${state.interim}`, 96);
   const listening = phase === 'listening';
+  const requesting = phase === 'requesting';
+  const conferring = phase === 'conferring';
   const marked = phase === 'marked' && result !== null;
-  // The offline fallback cannot judge correctness (it has no reference answer),
-  // so that paddle stays down and "fix first" comes only from what it measured.
-  const fallback = marked && result.source === 'heuristic';
-  const judged: readonly (typeof AXES)[number][] = fallback
-    ? AXES.filter((a) => a.key !== 'correctness')
-    : AXES;
-  const isJudged = (key: string) => judged.some((a) => a.key === key);
-  const weakestKey = !marked
-    ? undefined
-    : fallback
-      ? judged.reduce((lo, a) => ((result.scores[a.key] ?? 0) < (result.scores[lo.key] ?? 0) ? a : lo)).key
-      : result.weakestAxis;
-  const weakest = AXES.find((a) => a.key === weakestKey);
-  const overall = !marked
-    ? 0
-    : fallback
-      ? Math.round(judged.reduce((sum, a) => sum + (result.scores[a.key] ?? 0), 0) / judged.length)
-      : result.overall;
+  const error = noticeText(state.notice, state.retryAfter) || (!online && !marked ? NOTICE.offline : '');
+
+  const legend = requesting
+    ? 'Allow the microphone'
+    : listening
+      ? state.latched
+        ? 'Tap to finish'
+        : 'Let go to mark'
+      : marked || conferring
+        ? 'Hold to answer again'
+        : 'Hold to answer';
+  // the sticky key on a phone has room for two words beside "Try again"
+  const again = !requesting && !listening && (marked || conferring);
+  // a spoken answer that failed to be marked (our side, or the connection) can be handed in again
+  const retry = phase === 'idle' && (state.notice === 'server' || state.notice === 'offline') && isAnswer(state.text);
 
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="mx-auto w-full max-w-[1360px] scroll-mt-20 px-3 py-3 sm:px-5">
-      <div className="tile tile-ink rounded-field p-5 sm:p-8 lg:p-12">
-        <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-14">
-          {/* The candidate's side */}
-          <div className="flex min-w-0 flex-col">
-            <div className="flex items-start justify-between gap-4">
-              <h2 id={`${id}-title`} className="display text-[clamp(2.4rem,5vw,4rem)] text-paper">
-                Your turn.
-              </h2>
-              <button
-                type="button"
-                onClick={() => reset(true)}
-                disabled={phase === 'scoring'}
-                className="btn btn-secondary mt-1 h-10 shrink-0 px-4 text-sm"
-              >
-                <RefreshCcw size={14} aria-hidden /> New question
-              </button>
+    <section
+      ref={section}
+      id={id}
+      aria-labelledby={`${id}-title`}
+      className={styles.section}
+      data-phase={phase}
+      data-stage={showing3D ? '3d' : 'portraits'}
+    >
+      <header className={styles.head}>
+        <h2 id={`${id}-title`} className={cn(styles.title, 'display')}>
+          Your turn.
+        </h2>
+        <p className={styles.lede}>
+          Answer out loud and the same five examiners mark you. No account needed, nothing stored.
+        </p>
+      </header>
+
+      <div className={styles.questionArea}>
+        <QuestionPaper id={id} state={state} onNext={next} />
+      </div>
+
+      <div className={styles.stageArea}>
+        <div className={styles.stageSticky}>
+          <div className={styles.canvasBox}>
+            <PortraitBench
+              phase={phase}
+              clock={clock}
+              marks={result?.marks ?? null}
+              weakest={result?.weakest ?? -1}
+              say={say}
+              reduce={reduce}
+              hidden={showing3D}
+            />
+            {use3D && near ? (
+              <div className={styles.canvas} data-ready={stageReady ? '' : undefined}>
+                <EngineStage
+                  cueRef={cue}
+                  meterRef={meter}
+                  overlaysRef={overlays}
+                  dark={dark}
+                  active={inView && pageVisible}
+                  fine={fine}
+                  onReady={onStageReady}
+                />
+              </div>
+            ) : null}
+            <div aria-hidden className={styles.liveTag} data-show={(listening || requesting) && heard ? '' : undefined}>
+              <p className="text-[0.72rem] font-bold text-ink-blue">You, answering</p>
+              <p className="mt-0.5 text-[0.92rem] font-semibold leading-snug text-ink-blue">{heard}</p>
             </div>
-            <p className="mt-3 max-w-md font-medium leading-relaxed text-paper-mut">
-              Speak or type. Same marking engine as the app, no account needed,
-              nothing stored.
-            </p>
-
-            <p className="mt-8 text-[clamp(1.35rem,2.4vw,1.85rem)] font-black leading-tight text-paper" aria-live="polite">
-              {QUESTIONS[qIndex]}
-            </p>
-
-            <div
-              className={cn(
-                'relative mt-6 flex min-h-44 flex-1 flex-col rounded-2xl border bg-[rgb(251_250_248/0.04)] transition-colors duration-200',
-                listening ? 'border-verm' : 'border-line-dark focus-within:border-paper/50',
-              )}
-            >
-              <canvas
-                ref={meterCanvas}
-                aria-hidden
-                className={cn(
-                  'pointer-events-none mx-4 mt-3 h-10 transition-opacity duration-200',
-                  listening && metered ? 'opacity-100' : 'h-0 opacity-0',
-                )}
+            <div aria-hidden className={styles.overlay} data-on={showing3D ? '' : undefined}>
+              <span
+                ref={(el) => {
+                  overlays.current.leader = el;
+                }}
+                className={styles.leader}
               />
-              <label htmlFor={`${id}-answer`} className="sr-only">
-                Your answer
-              </label>
-              <textarea
-                id={`${id}-answer`}
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                rows={4}
-                maxLength={700}
-                disabled={phase === 'scoring'}
-                placeholder={
-                  listening
-                    ? 'Listening. Speak as if the examiner is across the table.'
-                    : speechSupported
-                      ? 'Tap the mic and answer out loud, or type here.'
-                      : 'Type your answer in three or four sentences.'
-                }
-                className="w-full flex-1 resize-none bg-transparent px-4 py-3.5 text-base leading-relaxed text-paper placeholder:text-paper-mut/70 focus:outline-none disabled:opacity-60"
-              />
-              <span className="marks pointer-events-none absolute bottom-3 right-4 text-xs text-paper-mut/80">
-                {answer.length}/700
-              </span>
-            </div>
-
-            {error && (
-              <p role="alert" className="mt-3 text-sm font-bold text-[#FF9D82]">
-                {error}
-              </p>
-            )}
-
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              {speechSupported && (
-                <button
-                  type="button"
-                  onClick={listening ? stopListening : startListening}
-                  disabled={phase === 'scoring'}
-                  aria-pressed={listening}
-                  className={cn('btn h-13 gap-2.5 pl-2 pr-6', listening ? 'btn-paper' : 'btn-primary')}
-                >
-                  <span className="relative grid h-9 w-9 place-items-center rounded-full bg-coal text-paper">
-                    <span
-                      ref={meterRing}
-                      aria-hidden
-                      className={cn(
-                        'absolute inset-0 rounded-full border-2 border-verm',
-                        listening ? 'opacity-100' : 'opacity-0',
-                        listening && !metered && 'motion-safe:animate-ping',
-                      )}
-                    />
-                    {listening ? <Square size={13} fill="currentColor" aria-hidden /> : <Mic size={16} aria-hidden />}
-                  </span>
-                  {listening ? 'Stop' : 'Speak'}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={mark}
-                disabled={phase === 'scoring'}
-                className="btn btn-paper h-13 px-6"
+              <div
+                ref={(el) => {
+                  overlays.current.tag = el;
+                }}
+                className={styles.tag}
               >
-                {phase === 'scoring' ? 'Marking…' : 'Mark my answer'}
-                {phase !== 'scoring' && <ArrowRight size={16} aria-hidden />}
-              </button>
+                <p className="text-[0.72rem] font-bold text-verm-text">{say?.label ?? '\u00a0'}</p>
+                <p className="mt-0.5 min-h-[2.5em] text-[0.94rem] font-bold leading-snug text-ink">
+                  {say ? <TypeLine key={say.key} text={say.text} instant={reduce} cps={44} caret={false} /> : null}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* The panel's side */}
-          <div className="flex min-w-0 flex-col rounded-[1.5rem] bg-coal-2 p-5 sm:p-8">
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-5 sm:gap-3" aria-hidden={!marked}>
-              {AXES.map((a, i) => (
-                <Paddle
-                  key={a.key}
-                  index={i}
-                  label={a.label}
-                  score={marked ? (result.scores[a.key] ?? 0) : null}
-                  up={marked && isJudged(a.key)}
-                  hot={marked && a.key === weakestKey}
-                  waiting={phase === 'scoring'}
-                  note={marked && !isJudged(a.key) ? 'Needs the AI coach' : undefined}
-                />
-              ))}
+          <div className={styles.rail}>
+            <VoiceDisc
+              phase={phase}
+              subscribe={subscribe}
+              reduce={reduce}
+              overall={result?.overall ?? null}
+              stamped={marked && b.stamp}
+              caption={
+                listening
+                  ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+                  : conferring || (marked && !b.stamp)
+                    ? 'Conferring'
+                    : marked
+                      ? ''
+                      : 'Your voice'
+              }
+            />
+            <div className={styles.verdict}>
+              <SplitFlap rows={board.rows} label={board.label} play="inview" size="md" columns={BOARD_COLUMNS} lines={2} flips={4} className={styles.board} />
+              <p className={styles.fix} data-show={marked && b.board ? '' : undefined}>
+                {marked ? (result.improvement ?? result.summary) : ''}
+              </p>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div className="mt-10 flex flex-1 flex-col justify-end" aria-live="polite">
-              {marked ? (
-                <>
-                  <div className="flex items-start gap-4">
-                    <div className="stamp shrink-0 rounded-2xl bg-verm px-4 py-2.5 text-coal">
-                      <span className="marks block text-4xl font-bold leading-none">{overall}</span>
-                      <span className="marks text-[0.7rem] font-bold">/100 overall</span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-paper">
-                        Fix first: <span className="text-verm">{weakest?.label ?? result.weakestAxis}</span>
-                      </p>
-                      <p className="mt-1.5 text-[0.95rem] leading-snug text-paper-mut">{result.summary}</p>
-                    </div>
-                  </div>
-                  {result.improvements[0] && (
-                    <p className="mt-5 border-t border-line-dark pt-5 text-[0.95rem] font-semibold leading-relaxed text-paper">
-                      {result.improvements[0]}
-                    </p>
+      <div className={styles.sheetArea}>
+        <AnswerSheet
+          id={id}
+          state={state}
+          pen={pen}
+          clock={clock}
+          reduce={reduce}
+          speechReady={voice}
+          onType={(text) => dispatch({ type: 'type', text })}
+          onSubmit={() => dispatch({ type: 'submit' })}
+          onNext={next}
+        />
+      </div>
+
+      <div className={styles.controls}>
+        {voice ? (
+          <>
+            <div className={styles.keyRow}>
+              <Keycap
+                size="lg"
+                wide
+                tone="cobalt"
+                pressed={listening || requesting}
+                // the take's time budget: the cap fills as the answer nears the limit
+                progress={listening ? Math.min(1, seconds / MAX_SECONDS) : undefined}
+                onPressStart={pressStart}
+                onPressEnd={pressEnd}
+                label={fine ? `${legend}. Or hold the Space bar.` : legend}
+                className={styles.key}
+              >
+                <span className="inline-flex items-center gap-2.5">
+                  {requesting ? <Loader kind="listening" size="sm" glyphOnly /> : <Mic size={19} aria-hidden />}
+                  {again ? (
+                    <>
+                      <span className={styles.long}>{legend}</span>
+                      <span className={styles.short}>Answer again</span>
+                    </>
+                  ) : (
+                    legend
                   )}
-                  <div className="mt-auto flex flex-wrap gap-3 pt-6">
-                    <button type="button" onClick={() => reset(false)} className="btn btn-secondary h-11 px-5 text-sm">
-                      Answer again
-                    </button>
-                    <Link href="/waitlist" className="btn btn-primary h-11 px-5 text-sm">
-                      Get early access <ArrowRight size={15} aria-hidden />
-                    </Link>
-                  </div>
-                </>
-              ) : phase === 'scoring' ? (
+                </span>
+              </Keycap>
+              {listening ? (
+                <button type="button" onClick={() => dispatch({ type: 'stop' })} className={cn('btn btn-secondary', styles.side)}>
+                  <span className={styles.long}>Stop and mark</span>
+                  <span className={styles.short}>Stop</span>
+                </button>
+              ) : marked ? (
+                <AfterMarking onReset={() => dispatch({ type: 'reset' })} />
+              ) : retry ? (
+                // the answer survived a failed marking: hand the same words in again
+                <button type="button" onClick={() => dispatch({ type: 'submit' })} className={cn('btn btn-secondary gap-1.5', styles.side)}>
+                  <RotateCcw size={15} aria-hidden />
+                  <span className={styles.long}>Mark it again</span>
+                  <span className={styles.short}>Mark again</span>
+                </button>
+              ) : !requesting ? (
+                <button type="button" onClick={() => dispatch({ type: 'mode', mode: 'text' })} className={cn('btn btn-ghost btn-sm gap-1.5 text-ink-mut', styles.side)}>
+                  <Keyboard size={16} aria-hidden />
+                  <span className={styles.long}>Type instead</span>
+                  <span className={styles.short}>Type</span>
+                </button>
+              ) : null}
+            </div>
+            <p className={styles.hint} data-quiet={marked ? '' : undefined}>
+              {listening ? (
+                state.latched ? (
+                  fine ? (
+                    <>
+                      The mic stays open. Press <Keycap size="sm" wide>Space</Keycap> or the key when you are done.
+                    </>
+                  ) : (
+                    'The mic stays open. Tap the key again when you are done.'
+                  )
+                ) : (
+                  'Let go when you are done, and the panel marks it.'
+                )
+              ) : requesting ? (
+                'Your browser asks for the microphone once. Nothing you say is stored.'
+              ) : fine ? (
                 <>
-                  <p className="text-xl font-black text-paper">The panel is conferring.</p>
-                  <p className="mt-2 leading-relaxed text-paper-mut">
-                    Five examiners, one answer. This usually takes a few seconds.
-                  </p>
+                  Or hold <Keycap size="sm" wide>Space</Keycap>. A quick tap keeps the mic open.
+                </>
+              ) : (
+                'Press and hold, or tap once to start and again to finish.'
+              )}
+            </p>
+          </>
+        ) : (
+          <>
+          <div className={styles.keyRow}>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'submit' })}
+              disabled={conferring}
+              aria-busy={conferring || undefined}
+              className="btn btn-primary btn-lg"
+            >
+              {conferring ? (
+                <>
+                  <Loader kind="marking" size="sm" glyphOnly /> Marking
                 </>
               ) : (
                 <>
-                  <p className="text-xl font-black text-paper">The panel is waiting.</p>
-                  <p className="mt-2 leading-relaxed text-paper-mut">
-                    Answer in three or four sentences, then press Mark. You get five
-                    marks, the one to fix first, and what to change.
-                  </p>
+                  Mark my answer <ArrowRight size={17} aria-hidden />
                 </>
               )}
-              <p className="mt-6 text-xs font-semibold text-paper-mut/80">
-                Scores are guidance, not grades.
-                {marked &&
-                  (result.source === 'model'
-                    ? ' Marked by the AI coach.'
-                    : ' A quick check while the AI coach is busy: correctness needs the coach, so it is left unmarked.')}
-              </p>
-            </div>
+            </button>
+            {marked ? <AfterMarking onReset={() => dispatch({ type: 'reset' })} /> : null}
+            {!marked && hydrated && speechSupported && state.notice !== 'denied' && state.notice !== 'no-mic' ? (
+              <button type="button" onClick={() => dispatch({ type: 'mode', mode: 'voice' })} className="btn btn-ghost btn-sm gap-1.5 text-ink-mut" disabled={conferring}>
+                <Mic size={16} aria-hidden /> Answer out loud instead
+              </button>
+            ) : null}
           </div>
-        </div>
+          <p className={styles.hint} data-quiet={marked ? '' : undefined}>
+            {hydrated && !speechSupported
+              ? 'This browser cannot turn speech into text, so type your answer. The panel marks it the same way.'
+              : fine
+                ? (
+                  <>
+                    Or press <Keycap size="sm">Ctrl</Keycap> <Keycap size="sm">Enter</Keycap> in the answer.
+                  </>
+                )
+                : 'Three or four sentences is plenty.'}
+          </p>
+          </>
+        )}
+
+        <p role="alert" className={styles.notice} style={{ '--show': error ? 1 : 0 } as CSSProperties}>
+          {state.notice === 'rate-limited' ? (
+            <>
+              {NOTICE['rate-limited']} {whenAgain(state.retryAfter)}{' '}
+              <Link href="/waitlist" className="link-inline">
+                get early access
+              </Link>{' '}
+              to the full app.
+            </>
+          ) : (
+            error
+          )}
+        </p>
+        <p className="sr-only" aria-live="polite">
+          {announce}
+        </p>
       </div>
     </section>
   );
