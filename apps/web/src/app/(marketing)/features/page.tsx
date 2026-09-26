@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { PageHero } from '@/components/site/PageHero';
+import { RedPen } from '@/components/ui/RedPen';
 import { AxesIndex } from '@/components/home/AxesIndex';
 import { Interrupts } from '@/components/home/Interrupts';
 import { Modes } from '@/components/home/Modes';
@@ -16,8 +17,17 @@ export default function FeaturesPage() {
   return (
     <>
       <PageHero
-        title="Everything between knowing it and *saying* it well."
+        title={
+          <>
+            Everything between knowing it and{' '}
+            <RedPen mark="underline" play="mount" delay={450}>
+              saying it well
+            </RedPen>
+            .
+          </>
+        }
         intro="The gap between knowledge and delivery is real, trainable, and worth closing before the room is watching. That gap is the whole product."
+        flush
       />
       <AxesIndex />
       <Interrupts />

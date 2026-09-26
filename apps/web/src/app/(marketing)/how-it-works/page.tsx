@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { PageHero } from '@/components/site/PageHero';
+import { ArrowDown } from 'lucide-react';
+import { Muted, PageHero } from '@/components/site/PageHero';
 import { Loop } from '@/components/home/Loop';
 import { LiveEngine } from '@/components/engine/LiveEngine';
 import { Close } from '@/components/home/Closing';
@@ -14,14 +15,20 @@ export default function HowItWorksPage() {
   return (
     <>
       <PageHero
-        title="Speak. Get *marked.* Come back sharper."
+        title={
+          <>
+            Speak. Get marked. <Muted>Come back sharper.</Muted>
+          </>
+        }
         intro="No setup and no scheduling another person. The whole loop takes about a minute, and you can run it below right now."
+        flush
       >
-        <a href="#live" className="btn btn-primary h-13 px-6 text-base">
+        <a href="#live" className="btn btn-primary btn-lg">
           Answer a question
+          <ArrowDown size={17} aria-hidden />
         </a>
       </PageHero>
-      <Loop showHeading={false} />
+      <Loop showHeading={false} className="pt-14 sm:pt-20" />
       <div className="pb-24 sm:pb-32">
         <LiveEngine />
       </div>

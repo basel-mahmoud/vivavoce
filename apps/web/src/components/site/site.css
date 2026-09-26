@@ -582,6 +582,59 @@
     color: var(--color-paper);
     font-weight: 700;
   }
+
+  /* ── Page hero (inner pages) ────────────────────────────────────────── */
+
+  .vv-hero {
+    padding-top: clamp(7.25rem, 10.5vw, 10rem);
+    padding-bottom: clamp(2.75rem, 5vw, 4.5rem);
+  }
+  /* Followed by a section that brings its own top padding. */
+  .vv-hero[data-flush] {
+    padding-bottom: clamp(0.5rem, 1.5vw, 1rem);
+  }
+  .vv-hero-title {
+    max-width: 13.5em;
+    font-size: clamp(2.4rem, 5.9vw, 5.25rem);
+    line-height: 1;
+  }
+  .vv-hero-intro {
+    max-width: 38rem;
+    margin-top: 1.5rem;
+    color: var(--color-ink-mut);
+    font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+    font-weight: 500;
+    line-height: 1.6;
+  }
+  .vv-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  /* The examiner's tick after a heading. */
+  .vv-hero-tick {
+    display: inline-block;
+    width: 0.68em;
+    height: 0.56em;
+    margin-left: 0.14em;
+    vertical-align: -0.02em;
+  }
+
+  /* The red-pen tick (PenTick). */
+  .vv-tick {
+    overflow: visible;
+  }
+  .vv-tick path {
+    fill: none;
+    stroke: var(--color-verm-text);
+    stroke-width: 5.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .vv-tick[data-pending] {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
