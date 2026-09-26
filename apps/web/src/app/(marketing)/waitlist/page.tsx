@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { Smartphone } from 'lucide-react';
-import { PageHero } from '@/components/site/PageHero';
+import Link from 'next/link';
+import { ArrowRight, Smartphone } from 'lucide-react';
 import { WaitlistForm } from '@/components/site/WaitlistForm';
+import { RedPen } from '@/components/ui/RedPen';
 
 export const metadata: Metadata = {
-  title: 'Early access',
-  description:
-    'Join the VivaVoce early-access list. Students with upcoming exams first.',
+  title: 'Get early access',
+  description: 'Join the VivaVoce early-access list. Students with upcoming exams first.',
 };
 
 const perks = [
@@ -17,33 +17,46 @@ const perks = [
 
 export default function WaitlistPage() {
   return (
-    <>
-      <PageHero
-        title="Get in before the exam *does.*"
-        intro="VivaVoce is in private beta. Leave your email and we will bring you in as spots open."
-      />
-      <section aria-label="Join the early-access list" className="mx-auto w-full max-w-[1360px] px-3 pb-24 sm:px-5 sm:pb-32">
-        <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr]">
-          <div className="tile tile-verm flex flex-col justify-between gap-10 rounded-field p-7 sm:p-12">
-            <p className="display text-[clamp(1.8rem,3.4vw,2.8rem)]">One email. No spam. A spot when it opens.</p>
-            <WaitlistForm tone="verm" />
-          </div>
-          <div className="tile flex flex-col rounded-field p-7 sm:p-12">
-            <ul className="space-y-7">
-              {perks.map(([lead, body]) => (
-                <li key={lead}>
-                  <p className="text-xl font-black leading-snug">{lead}</p>
-                  <p className="mt-1.5 leading-relaxed text-ink-mut">{body}</p>
-                </li>
-              ))}
-            </ul>
-            <a href="/download/apk" className="btn btn-secondary mt-10 h-12 self-start px-6">
-              <Smartphone size={17} aria-hidden />
-              Download the Android beta
+    <section aria-labelledby="wl-title" className="vv-wl mx-auto w-full max-w-[1360px] px-4 pb-24 sm:px-5 sm:pb-32">
+      <div className="vv-wl-grid">
+        <div className="vv-wl-copy">
+          <h1 id="wl-title" className="vv-hero-title display">
+            Get in before the exam{' '}
+            <RedPen mark="circle" play="mount" delay={450}>
+              does
+            </RedPen>
+            .
+          </h1>
+          <p className="vv-hero-intro">
+            VivaVoce is in private beta. Write your email on the slip and we will bring you in as spots open.
+          </p>
+        </div>
+
+        <div className="vv-wl-slip">
+          <WaitlistForm />
+        </div>
+
+        <div className="vv-wl-more">
+          <ul className="vv-perks">
+            {perks.map(([lead, body]) => (
+              <li key={lead}>
+                <p className="text-lg font-black leading-snug">{lead}</p>
+                <p className="mt-1 leading-relaxed text-ink-mut">{body}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-2 text-[0.95rem] font-bold">
+            <a href="/download/apk" className="group inline-flex min-h-11 items-center gap-1.5">
+              <Smartphone size={16} aria-hidden className="text-ink-blue" />
+              <span className="link-quiet">Download the Android beta</span>
             </a>
+            <Link href="/faq" className="group inline-flex min-h-11 items-center gap-1.5">
+              <span className="link-quiet">Questions first? Read the FAQ</span>
+              <ArrowRight size={15} aria-hidden className="text-ink-blue" />
+            </Link>
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

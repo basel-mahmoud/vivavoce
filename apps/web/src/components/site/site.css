@@ -1024,6 +1024,121 @@
   [data-main] .vv-inbox-mail {
     font-size: clamp(1.2rem, 1.8vw, 1.45rem);
   }
+
+  /* ── Waitlist: the admission slip ───────────────────────────────────── */
+
+  .vv-wl {
+    padding-top: clamp(7.25rem, 10.5vw, 10rem);
+  }
+  .vv-wl-grid {
+    display: grid;
+    grid-template-areas: 'copy' 'slip' 'more';
+    gap: 2.5rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-wl-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas:
+        'copy slip'
+        'more slip';
+      grid-template-rows: auto 1fr;
+      column-gap: 5rem;
+      row-gap: 3rem;
+      align-items: start;
+    }
+  }
+  .vv-wl-copy {
+    grid-area: copy;
+  }
+  .vv-wl-slip {
+    grid-area: slip;
+  }
+  .vv-wl-more {
+    grid-area: more;
+  }
+  @media (min-width: 1024px) {
+    .vv-wl-slip {
+      padding-top: 0.75rem;
+    }
+  }
+  .vv-slip-wl .vv-ticket {
+    max-width: 38rem;
+  }
+  /* Paper stays paper at night: the slip keeps its daytime pen and focus ink. */
+  .vv-wl-body {
+    --vv-verm-text: color-mix(in oklab, var(--color-verm) 72%, var(--color-coal));
+    --color-verm-text: var(--vv-verm-text);
+    --color-line: color-mix(in oklab, var(--color-coal) 18%, var(--color-paper));
+    --vv-focus: var(--color-cobalt);
+    position: relative;
+    padding: 1.6rem 1.6rem 1.5rem;
+  }
+  .vv-wl-input {
+    width: 100%;
+    height: 3.1rem;
+    margin-top: 0.45rem;
+    padding: 0 0.1rem;
+    border: 0;
+    border-bottom: 2px solid color-mix(in oklab, var(--color-coal) 30%, var(--color-paper));
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-cobalt-deep);
+    caret-color: var(--color-cobalt);
+    font-size: 1.2rem;
+    font-weight: 700;
+    transition: border-color var(--dur-hover) ease;
+  }
+  .vv-wl-input::placeholder {
+    color: color-mix(in oklab, var(--color-coal) 45%, var(--color-paper));
+    font-weight: 600;
+  }
+  .vv-wl-input:focus {
+    outline: none;
+    border-bottom-color: var(--color-cobalt);
+  }
+  .vv-wl-input:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid var(--color-cobalt);
+    outline-offset: 4px;
+  }
+  .vv-wl-input[aria-invalid='true'] {
+    border-bottom-color: var(--color-verm-text);
+  }
+  .vv-wl-input:disabled {
+    opacity: 0.6;
+  }
+  .vv-wl-note {
+    min-height: 1.4rem;
+    margin-top: 0.6rem;
+    color: color-mix(in oklab, var(--color-coal) 66%, var(--color-paper));
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .vv-wl-submit.btn {
+    width: 100%;
+    margin-top: 1.1rem;
+  }
+  .vv-wl-done {
+    position: relative;
+    min-height: 11rem;
+    padding-right: 5.5rem;
+    outline: none;
+  }
+  .vv-wl-tick {
+    position: absolute;
+    top: -0.35rem;
+    right: 0;
+    width: 5rem;
+    height: auto;
+  }
+  .vv-perks > li {
+    padding-block: 1.1rem;
+    border-top: 1px solid var(--color-line);
+  }
+  .vv-perks > li:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
