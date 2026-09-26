@@ -1008,4 +1008,172 @@
       animation: none;
     }
   }
+
+  /* ── Features: the rubric index ─────────────────────────────────────── */
+
+  .vv-axis-list {
+    border-bottom: 1px solid var(--color-line);
+  }
+  .vv-axis {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'face mark'
+      'name name'
+      'sample sample';
+    gap: 0.9rem 1.25rem;
+    align-items: start;
+    padding-block: 1.75rem 2rem;
+    border-top: 1px solid var(--color-line);
+  }
+  .vv-axis-face {
+    grid-area: face;
+  }
+  .vv-axis-face .vv-portrait {
+    width: 4.5rem !important;
+  }
+  .vv-axis-name {
+    grid-area: name;
+  }
+  .vv-axis-mark {
+    grid-area: mark;
+    align-self: end;
+  }
+  /* The axis printed on the back of the paddle, set to fit. */
+  .vv-axis-mark .vv-paddle-axis {
+    max-width: 84%;
+    letter-spacing: 0.02em;
+    text-overflow: clip;
+  }
+  .vv-axis-sample {
+    grid-area: sample;
+    display: block;
+    width: 100%;
+    padding: 1rem 1.15rem 1.1rem;
+    border: 1px solid var(--color-line);
+    border-radius: 0.9rem;
+    background: var(--color-card);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color var(--dur-hover) ease,
+      box-shadow var(--dur-hover) ease;
+  }
+  .vv-axis[data-marked] .vv-axis-sample {
+    border-color: color-mix(in oklab, var(--color-verm-text) 35%, var(--color-line));
+  }
+  .vv-axis-answer {
+    display: block;
+    color: var(--color-ink-blue);
+    font-size: 1.08rem;
+    font-weight: 600;
+    line-height: 1.7;
+  }
+  .vv-axis-note {
+    display: block;
+    margin-top: 0.55rem;
+    color: var(--color-verm-text);
+    font-size: 0.95rem;
+    font-weight: 800;
+    opacity: 0;
+    translate: 0 4px;
+    transition:
+      opacity 220ms ease,
+      translate 320ms var(--ease-out);
+  }
+  .vv-axis[data-marked] .vv-axis-note {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: 380ms;
+  }
+  @media (min-width: 1024px) {
+    .vv-axis {
+      grid-template-columns: 6rem minmax(0, 0.95fr) minmax(0, 1.25fr) 5.5rem;
+      grid-template-areas: 'face name sample mark';
+      column-gap: 2.25rem;
+      align-items: center;
+      padding-block: 2rem;
+    }
+    .vv-axis-face .vv-portrait {
+      width: 6rem !important;
+    }
+    .vv-axis-mark {
+      justify-self: end;
+      padding-top: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-axis-note {
+      transition: none;
+      translate: none;
+    }
+  }
+
+  /* ── Features: interruptions ────────────────────────────────────────── */
+
+  .vv-int-stage {
+    position: relative;
+    min-height: 25rem;
+  }
+  .vv-int-answer {
+    position: relative;
+    max-width: 31rem;
+    padding: 1.2rem 1.4rem 1.35rem;
+    border-radius: 0.6rem;
+    background: var(--color-paper);
+    box-shadow: 0 1px 1px rgb(var(--vv-shadow) / 0.2), 0 14px 26px -16px rgb(var(--vv-shadow) / 0.55);
+    rotate: -1deg;
+  }
+  .vv-hedge {
+    display: inline-block;
+  }
+  .vv-int-stage[data-wobble] .vv-hedge {
+    animation: vv-hedge 400ms steps(1, end) infinite;
+  }
+  @keyframes vv-hedge {
+    0% {
+      filter: url(#vv-hedge-0);
+    }
+    20% {
+      filter: url(#vv-hedge-1);
+    }
+    40% {
+      filter: url(#vv-hedge-2);
+    }
+    60% {
+      filter: url(#vv-hedge-3);
+    }
+    80% {
+      filter: url(#vv-hedge-4);
+    }
+  }
+  .vv-int-pile {
+    position: relative;
+    height: 15rem;
+    margin-top: -1rem;
+    margin-left: 8%;
+  }
+  .vv-int-card {
+    position: absolute;
+    width: min(17.5rem, 78%);
+    padding: 0.85rem 1.1rem 1.1rem;
+    border-top: 3px solid var(--color-verm);
+    border-radius: 0.75rem;
+    background: var(--color-paper);
+    color: var(--color-coal);
+    box-shadow: 0 2px 4px rgb(var(--vv-shadow) / 0.18), 0 22px 38px -18px rgb(var(--vv-shadow) / 0.6);
+  }
+  .vv-int-caption {
+    margin-top: 0.75rem;
+    color: var(--color-paper-mut);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-hedge {
+      animation: none !important;
+    }
+  }
 }

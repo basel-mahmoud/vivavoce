@@ -1,76 +1,98 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useReducedMotion } from 'motion/react';
-import { useOnScreen } from '@/components/ui/hooks';
+import { useId, useRef } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Portrait, type ExaminerAxis } from '@/components/ui/Portrait';
+import { SPRING } from '@/lib/motion';
 import { cn } from '@/lib/cn';
+import { useBeat, usePageVisible, useReducedMarkup, useSeen } from './useHome';
 
-const SCRIPT = [
-  ['You', 'Um, so, there are many reasons, like nerves, and also…'],
-  ['VivaVoce', 'Stop. You buried your claim. Lead with it, then defend it.'],
-  ['You', 'Candidates fail because structure collapses under pressure. Three reasons. First…'],
-  ['VivaVoce', 'That is an opening an examiner can follow. Again, faster.'],
-] as const;
+const FOLLOW_UPS: readonly { axis: ExaminerAxis; name: string; ask: string; x: string; y: string; r: number }[] = [
+  { axis: 'correctness', name: 'Correctness', ask: 'Why?', x: '0%', y: '0rem', r: -3 },
+  { axis: 'conciseness', name: 'Conciseness', ask: 'Say it in one line.', x: '11%', y: '4.1rem', r: 2.2 },
+  { axis: 'clarity', name: 'Clarity', ask: 'Give me an example.', x: '22%', y: '8.2rem', r: -1.4 },
+];
 
-/** The coaching exchange, typing itself out while it is on screen. */
-export function Interrupts() {
-  const reduce = useReducedMotion();
-  const [ref, onScreen] = useOnScreen<HTMLDivElement>('-15% 0px');
-  const [shown, setShown] = useState(0);
-  const [chars, setChars] = useState(0);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+// The answer, the three cards landing one by one, then a long look.
+const STEPS = [1500, 1300, 1300, 3400] as const;
 
-  useEffect(() => {
-    if (reduce || !onScreen) return;
-    const clear = () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-    if (shown >= SCRIPT.length) {
-      timer.current = setTimeout(() => {
-        setShown(0);
-        setChars(0);
-      }, 5200);
-      return clear;
-    }
-    const line = SCRIPT[shown]![1];
-    timer.current =
-      chars < line.length
-        ? setTimeout(() => setChars((c) => c + 2), 26)
-        : setTimeout(() => {
-            setShown((s) => s + 1);
-            setChars(0);
-          }, 700);
-    return clear;
-  }, [shown, chars, reduce, onScreen]);
+/** Wobbly words: the hedges shake, like a voice that is not sure. */
+function Hedge({ children }: { children: string }) {
+  return <span className="vv-hedge">{children}</span>;
+}
 
-  const all = reduce || !onScreen;
-  const visible = all ? SCRIPT.length : Math.min(shown + 1, SCRIPT.length);
+/**
+ * Examiners do not wait for a ramble to end. While it is on screen the
+ * examiners' follow-ups land on a hedged answer one after another, and the
+ * hedges in it wobble. Off screen everything stops; reduced motion shows
+ * the three cards already down and the words still.
+ */
+export function Interrupts({ className }: { className?: string }) {
+  const uid = useId();
+  const reduce = useReducedMarkup();
+  const visible = usePageVisible();
+  const stage = useRef<HTMLDivElement>(null);
+  const onScreen = useSeen(stage, '0px 0px -15% 0px');
+  const running = onScreen && visible && !reduce;
+  const { beat, round } = useBeat(running, STEPS, { rest: 700 });
+  const down = running ? beat : FOLLOW_UPS.length;
 
   return (
-    <section aria-labelledby="interrupts-title" className="mx-auto w-full max-w-[1360px] px-3 pb-24 sm:px-5 sm:pb-32">
-      <div ref={ref} className="tile tile-ink grid gap-12 rounded-field p-7 sm:p-12 lg:grid-cols-[1fr_1.3fr] lg:p-16">
-        <div>
-          <h2 id="interrupts-title" className="display text-[clamp(2.3rem,4.6vw,4rem)] text-paper">
-            It interrupts, like the room will.
+    <section
+      aria-labelledby={`${uid}-title`}
+      className={cn('vv-interrupts mx-auto w-full max-w-[1360px] px-3 py-10 sm:px-5 sm:py-16', className)}
+    >
+      <div className="tile tile-ink grid gap-12 rounded-field px-5 py-10 sm:p-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16 lg:p-16">
+        <div className="lg:pt-4">
+          <h2 id={`${uid}-title`} className="display text-[clamp(2.3rem,4.6vw,4rem)] text-paper">
+            It interrupts, <span className="text-paper-mut">like the room will.</span>
           </h2>
-          <p className="mt-5 max-w-md text-lg font-medium leading-relaxed text-paper-mut">
-            Examiners do not wait politely for a ramble to end. Neither does
-            VivaVoce: it stops you where the answer goes soft and tells you why.
+          <p className="mt-6 max-w-md text-lg font-medium leading-relaxed text-paper-mut">
+            Examiners do not wait politely for a ramble to end. Neither does VivaVoce: it stops you where the
+            answer goes soft and asks the question that exposes it.
           </p>
         </div>
-        <div className="flex min-h-[18rem] flex-col justify-center gap-5" aria-label="Example coaching exchange">
-          {SCRIPT.slice(0, visible).map(([who, text], i) => {
-            const typing = !all && i === shown;
-            const coach = who === 'VivaVoce';
-            return (
-              <p key={i} className={cn('text-lg leading-snug sm:text-xl', coach ? 'pl-6 sm:pl-10' : '')}>
-                <span className={cn('mr-3 text-sm font-bold', coach ? 'text-verm' : 'text-paper-mut')}>{who}</span>
-                <span className={cn(coach ? 'font-black text-paper' : 'font-medium text-paper-mut', typing && 'caret')}>
-                  {typing ? text.slice(0, chars) : text}
-                </span>
-              </p>
-            );
-          })}
+
+        <div ref={stage} className="vv-int-stage" data-wobble={running ? '' : undefined}>
+          <svg className="absolute h-0 w-0" aria-hidden="true" focusable="false">
+            <defs>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <filter key={i} id={`vv-hedge-${i}`}>
+                  <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed={i + 3} result="n" />
+                  <feDisplacementMap in="SourceGraphic" in2="n" scale={i % 2 ? 3.2 : 2.6} />
+                </filter>
+              ))}
+            </defs>
+          </svg>
+          <div className="vv-int-answer">
+            <p className="text-[0.75rem] font-bold text-cobalt-deep">You, answering</p>
+            <p className="mt-2 text-[1.15rem] font-semibold leading-relaxed text-cobalt-deep sm:text-[1.3rem]">
+              <Hedge>I think</Hedge> the main reason is <Hedge>sort of</Hedge> the pressure, and{' '}
+              <Hedge>maybe</Hedge> how far it has to pump, and also the valves are
+            </p>
+          </div>
+          <ol className="vv-int-pile" aria-label="Example follow-ups">
+            <AnimatePresence initial={false}>
+              {FOLLOW_UPS.slice(0, down).map((f, i) => (
+                <motion.li
+                  key={`${round}-${f.axis}`}
+                  className="vv-int-card"
+                  style={{ left: f.x, top: f.y, zIndex: i + 1 }}
+                  initial={{ opacity: 0, y: -34, rotate: f.r + 9, scale: 1.08 }}
+                  animate={{ opacity: 1, y: 0, rotate: f.r, scale: 1 }}
+                  exit={{ opacity: 0, x: 48, transition: { duration: 0.26, delay: (FOLLOW_UPS.length - i) * 0.05 } }}
+                  transition={{ ...SPRING.physical, opacity: { duration: 0.14 } }}
+                >
+                  <span className="flex items-center gap-2">
+                    <Portrait axis={f.axis} state="speaking" size={30} decorative />
+                    <span className="text-[0.72rem] font-bold text-verm-text">{f.name} asks</span>
+                  </span>
+                  <span className="mt-2 block text-[1.45rem] font-black leading-tight sm:text-[1.65rem]">{f.ask}</span>
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </ol>
+          <p className="vv-int-caption">Example follow-ups.</p>
         </div>
       </div>
     </section>
