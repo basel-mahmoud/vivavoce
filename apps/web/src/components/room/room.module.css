@@ -1,0 +1,125 @@
+/*
+ * The room's DOM layout. Two arrangements, switched by media queries (never by
+ * script), so the server and the client always render the same markup:
+ *   compact (phones, portrait tablets): captions on top, the room below;
+ *   wide (landscape, 768px and up): captions in a left column, the room right.
+ * The 3D camera uses the same test (aspect below 1.05 or narrower than 768px).
+ * Colours come from Tailwind classes in the markup; this file is layout only,
+ * except the scrims, which paint the page colour itself.
+ */
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* Full-bleed layers: poster, canvas, the reduced-motion crossfade. */
+.layer {
+  position: absolute;
+  inset: 0;
+}
+
+.poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 100%;
+  transition: opacity 700ms var(--ease-out);
+}
+
+/* A guaranteed backing for text over the room: the page colour itself. */
+.scrim {
+  position: absolute;
+  pointer-events: none;
+  inset-inline: 0;
+  top: 0;
+  height: var(--scrim-h, 46%);
+  background: linear-gradient(to bottom, var(--vv-canvas) 0%, var(--vv-canvas) 72%, transparent 100%);
+}
+
+.captions {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  padding: 5rem 1rem 0;
+}
+.captions > * {
+  grid-area: 1 / 1;
+  align-self: start;
+}
+
+.ruler {
+  position: absolute;
+  inset-inline: 1rem;
+  bottom: 0.75rem;
+  z-index: 20;
+}
+
+.note {
+  position: absolute;
+  left: 1rem;
+  bottom: 0.9rem;
+  z-index: 10;
+}
+
+/* The axis name beside each ruler key: read out everywhere, shown on wide layouts. */
+.rulerName {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .captions {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) and (min-aspect-ratio: 21/20) {
+  .poster {
+    object-position: 100% 50%;
+  }
+  .scrim {
+    inset-block: 0;
+    right: auto;
+    width: 50%;
+    height: auto;
+    background: linear-gradient(to right, var(--vv-canvas) 0%, var(--vv-canvas) 86%, transparent 100%);
+  }
+  .captions {
+    inset-block: 0;
+    right: auto;
+    width: 44%;
+    padding: 0 0 0 clamp(2rem, 4.4vw, 4rem);
+    align-content: center;
+  }
+  .captions > * {
+    align-self: center;
+  }
+  .ruler {
+    left: clamp(2rem, 4.4vw, 4rem);
+    right: auto;
+    width: min(33rem, calc(44% - clamp(2rem, 4.4vw, 4rem) - 1rem));
+    bottom: 1.75rem;
+  }
+  .note {
+    left: clamp(2rem, 4.4vw, 4rem);
+    bottom: 1.9rem;
+  }
+  .rulerName {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+}

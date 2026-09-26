@@ -3,15 +3,17 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Types a line out character by character, with the vermilion caret while it
- * runs. Owns its own timer so the parent (and the 3D scene) never re-renders
- * per keystroke. `instant` renders the whole line with no caret.
+ * Types a line out character by character. Owns its own timer so the parent
+ * (and the 3D scene) never re-renders per keystroke. `instant` renders the
+ * whole line at once. The blue-ink caret is the candidate's; pass
+ * `caret={false}` for an examiner's words.
  */
 export function TypeLine({
   text,
   cps = 38,
   delay = 0,
   instant = false,
+  caret = true,
   className,
 }: {
   text: string;
@@ -19,6 +21,7 @@ export function TypeLine({
   cps?: number;
   delay?: number;
   instant?: boolean;
+  caret?: boolean;
   className?: string;
 }) {
   const [count, setCount] = useState(instant ? text.length : 0);
@@ -44,12 +47,13 @@ export function TypeLine({
     };
   }, [text, cps, delay, instant]);
 
-  const done = count >= text.length;
+  const shown = instant ? text.length : count;
+  const done = shown >= text.length;
   return (
     <span className={className}>
       <span className="sr-only">{text}</span>
-      <span aria-hidden className={done ? undefined : 'caret'}>
-        {text.slice(0, count)}
+      <span aria-hidden className={done || !caret ? undefined : 'caret'}>
+        {text.slice(0, shown)}
       </span>
     </span>
   );
