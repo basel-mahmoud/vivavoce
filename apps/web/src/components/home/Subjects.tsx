@@ -69,7 +69,7 @@ export function Subjects({ className }: { className?: string }) {
                 type="button"
                 onClick={() => setPaused((p) => !p)}
                 aria-pressed={paused}
-                className="btn btn-secondary btn-sm gap-2"
+                className="btn btn-secondary btn-sm gap-2 pointer-coarse:h-11"
               >
                 {paused ? <Play size={14} aria-hidden /> : <Pause size={14} aria-hidden />}
                 {paused ? 'Play the board' : 'Pause the board'}

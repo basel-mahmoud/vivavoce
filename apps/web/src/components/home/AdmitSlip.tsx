@@ -167,7 +167,7 @@ export function AdmitSlip() {
                 )}
               </div>
               {torn && status === 'error' ? (
-                <button type="button" className="btn btn-primary btn-sm mt-3" onClick={() => void send()}>
+                <button type="button" className="btn btn-primary btn-sm mt-3 pointer-coarse:h-11" onClick={() => void send()}>
                   Get early access
                   <ArrowRight size={15} aria-hidden />
                 </button>
