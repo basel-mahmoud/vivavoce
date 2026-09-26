@@ -3,26 +3,31 @@ import { Logo } from '@/components/site/Logo';
 
 export default function NotFound() {
   return (
-    <main className="grid min-h-[100dvh] place-items-center bg-canvas px-6 text-ink">
-      <div className="tile w-full max-w-xl p-8 sm:p-12">
-        <Link href="/" className="inline-block">
+    <main className="grid min-h-[100dvh] place-items-center bg-canvas px-5 text-ink">
+      <div className="w-full max-w-2xl">
+        <Link href="/" aria-label="VivaVoce home" className="inline-block">
           <Logo />
         </Link>
-        <p className="display mt-8 text-[clamp(4rem,12vw,7rem)] leading-none text-verm">404</p>
-        <h1 className="mt-3 text-2xl font-black">
+        <p className="marks mt-12 flex items-end gap-3" aria-hidden>
+          {[4, 0, 4].map((n, i) => (
+            <span
+              key={i}
+              className={`grid h-24 w-24 place-items-center rounded-full text-5xl font-bold sm:h-32 sm:w-32 sm:text-6xl ${
+                i === 1 ? '-translate-y-3 bg-verm text-coal' : 'bg-ink text-canvas'
+              }`}
+            >
+              {n}
+            </span>
+          ))}
+        </p>
+        <h1 className="display mt-10 text-[clamp(2.2rem,5vw,3.6rem)]">
           That page did not show up for the exam.
         </h1>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href="/"
-            className="pressable inline-flex h-12 items-center rounded-full bg-ink px-6 font-bold text-paper"
-          >
+          <Link href="/" className="btn btn-primary">
             Back home
           </Link>
-          <Link
-            href="/waitlist"
-            className="pressable inline-flex h-12 items-center rounded-full border-2 border-ink px-6 font-bold transition-colors duration-150 hover:bg-ink hover:text-paper"
-          >
+          <Link href="/waitlist" className="btn btn-secondary">
             Get early access
           </Link>
         </div>

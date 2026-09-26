@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { PageHero } from '@/components/site/PageHero';
-import { WaitlistSection } from '@/components/marketing/sections';
+import { Rooms } from '@/components/home/Rooms';
+import { Close } from '@/components/home/Closing';
 import { Reveal } from '@/components/ui/Reveal';
 
 export const metadata: Metadata = {
@@ -8,25 +9,6 @@ export const metadata: Metadata = {
   description:
     'Oral exams and vivas, interviews, presentations, and language practice. VivaVoce works anywhere the answer is spoken.',
 };
-
-const cases = [
-  [
-    'Students facing a viva',
-    'Medicine, law, engineering: anywhere the exam is spoken. Rehearse the follow-ups, not just the facts, and walk in having already answered the hard question three times.',
-  ],
-  [
-    'Job seekers',
-    'The behavioural and system-design questions you will actually get. Practice until your stories land in thirty seconds with a beginning, a middle, and a result.',
-  ],
-  [
-    'Presenters and speakers',
-    'Cut the filler, find the structure, land the point. The room should hear confidence, not preparation.',
-  ],
-  [
-    'Language learners',
-    'A sparring partner that never tires and never judges. Speak, get corrected on clarity and pace, repeat.',
-  ],
-] as const;
 
 const stories = [
   [
@@ -47,54 +29,34 @@ export default function UseCasesPage() {
   return (
     <>
       <PageHero
-        title="Anywhere the answer is spoken."
+        title="Anywhere the answer is *spoken.*"
         intro="Different rooms, one problem: you know the material, but saying it well is its own skill."
       />
 
-      {/* Who it's for: tiles, aligned to the board grid */}
-      <section className="mx-auto w-full max-w-[1360px] px-4 pb-3 sm:px-6">
-        <div className="grid gap-3 md:grid-cols-2">
-          {cases.map(([title, body], i) => (
-            <Reveal key={title} delay={Math.min(i * 0.05, 0.15)}>
-              <div className="tile tile-lift h-full p-7">
-                <h2 className="text-xl font-black">{title}</h2>
-                <p className="mt-2.5 max-w-xl text-[0.95rem] leading-relaxed text-ink-mut">
-                  {body}
-                </p>
-              </div>
-            </Reveal>
-          ))}
+      <Rooms showHeading={false} />
+
+      <section aria-labelledby="week-title" className="mx-auto w-full max-w-[1360px] px-3 pb-24 sm:px-5 sm:pb-32">
+        <div className="tile tile-ink rounded-field p-7 sm:p-12 lg:p-16">
+          <h2 id="week-title" className="display max-w-2xl text-[clamp(2.1rem,4.2vw,3.6rem)] text-paper">
+            How a week of sparring goes.
+          </h2>
+          <div className="mt-12 grid gap-x-12 gap-y-12 md:grid-cols-3">
+            {stories.map(([who, body], i) => (
+              <Reveal key={who} delay={i * 0.06}>
+                <figure>
+                  <figcaption className="text-xl font-black leading-tight text-verm">{who}</figcaption>
+                  <blockquote className="mt-4 leading-relaxed text-paper-mut">{body}</blockquote>
+                </figure>
+              </Reveal>
+            ))}
+          </div>
+          <p className="mt-12 border-t border-line-dark pt-5 text-sm font-semibold text-paper-mut">
+            Illustrative scenarios, to be replaced with real stories at launch.
+          </p>
         </div>
       </section>
 
-      {/* How a week goes: one ink tile, stories side by side, names on top */}
-      <section className="mx-auto w-full max-w-[1360px] px-4 py-3 sm:px-6">
-        <Reveal>
-          <div className="tile tile-ink p-7 sm:p-10">
-            <h2 className="display max-w-2xl text-[clamp(1.7rem,3.2vw,2.5rem)]">
-              How a week of sparring goes.
-            </h2>
-            <div className="mt-10 grid gap-x-10 gap-y-10 md:grid-cols-3">
-              {stories.map(([who, body]) => (
-                <figure key={who}>
-                  <figcaption className="text-base font-black text-verm">{who}</figcaption>
-                  <blockquote className="mt-3 text-[0.95rem] leading-relaxed text-paper-mut">
-                    {body}
-                  </blockquote>
-                </figure>
-              ))}
-            </div>
-            <p className="mt-10 border-t border-line-dark pt-5 text-xs font-semibold text-paper-mut/70">
-              Illustrative scenarios, marked for replacement with real customer
-              stories at launch.
-            </p>
-          </div>
-        </Reveal>
-      </section>
-
-      <div className="pt-3">
-        <WaitlistSection />
-      </div>
+      <Close />
     </>
   );
 }

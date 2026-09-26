@@ -58,16 +58,19 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#FF4D26',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F3F5F8' },
+    { media: '(prefers-color-scheme: dark)', color: '#0C0E14' },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const shell = (
-    <html lang="en">
-      <body className={`${archivo.variable} ${jetbrains.variable} antialiased`}>
+    <html lang="en" className={`${archivo.variable} ${jetbrains.variable}`}>
+      <body className="antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:font-bold focus:text-paper"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-cobalt focus:px-4 focus:py-2 focus:font-bold focus:text-paper"
         >
           Skip to content
         </a>

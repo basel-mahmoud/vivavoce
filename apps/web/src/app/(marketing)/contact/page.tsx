@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
+import { ArrowUpRight } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
-import { Reveal } from '@/components/ui/Reveal';
 import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -18,28 +18,33 @@ export default function ContactPage() {
   return (
     <>
       <PageHero
-        title="We read everything."
+        title="We read *everything.*"
         intro="A small team that cares about getting this right. Pick the right inbox and you will hear back quickly."
       />
-      <section className="bg-canvas text-ink">
-        <div className="mx-auto w-full max-w-[1360px] px-4 pt-4 pb-20 sm:px-6">
-          <div className="flex max-w-2xl flex-col">
-            {channels.map(([title, body, email], i) => (
-              <Reveal key={title} delay={Math.min(i * 0.05, 0.15)}>
-                <div className="border-t border-line py-8 last:border-b">
-                  <h2 className="text-2xl font-black">{title}</h2>
-                  <p className="mt-2 leading-relaxed text-ink-mut">{body}</p>
-                  <a
-                    href={`mailto:${email}`}
-                    className="mt-3 inline-block font-bold text-verm underline decoration-2 underline-offset-4 hover:text-ink"
-                  >
-                    {email}
-                  </a>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
+      <section aria-label="Inboxes" className="mx-auto w-full max-w-[1360px] px-4 pb-24 sm:px-5 sm:pb-32">
+        <ul>
+          {channels.map(([title, body, email]) => (
+            <li key={title} className="border-t border-line">
+              <a
+                href={`mailto:${email}`}
+                className="group grid gap-3 py-9 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_auto] md:items-center md:gap-10"
+              >
+                <span className="display text-[clamp(2rem,4vw,3.4rem)] transition-colors duration-200 group-hover:text-verm-text">
+                  {title}
+                </span>
+                <span className="max-w-md text-lg leading-relaxed text-ink-mut">{body}</span>
+                <span className="inline-flex items-center gap-2 text-lg font-bold">
+                  {email}
+                  <ArrowUpRight
+                    size={20}
+                    aria-hidden
+                    className="text-verm transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  />
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
       </section>
     </>
   );

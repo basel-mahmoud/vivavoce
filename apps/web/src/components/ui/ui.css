@@ -1,0 +1,778 @@
+/*
+ * Styles for the shared primitives in components/ui. Imported by
+ * app/globals.css, so they can use the theme tokens. Tokens only: every
+ * colour here is a --color-* token or a mix of them.
+ */
+
+@layer components {
+  /* ── RedPen ─────────────────────────────────────────────────────────── */
+
+  .vv-redpen {
+    --rp-color: var(--color-verm-text);
+  }
+  .vv-redpen[data-tone='bright'] {
+    --rp-color: var(--color-verm);
+  }
+  .vv-redpen[data-tone='blue'] {
+    --rp-color: var(--color-ink-blue);
+  }
+  .vv-redpen[data-tone='highlighter'] {
+    --rp-color: var(--color-butter);
+  }
+  /* rough-notation strokes with currentColor; the svg sits beside the words. */
+  .vv-redpen > svg.rough-annotation {
+    color: var(--rp-color);
+  }
+  /* Butter never flips, so highlighted words take a brand ink that reads on
+   * it in both schemes: coal, or cobalt-deep for the candidate's blue ink
+   * (set --rp-on-highlight on an ancestor). */
+  .vv-redpen[data-mark='highlight'] > .vv-redpen-words {
+    transition: color var(--rp-ms, 600ms) linear;
+  }
+  .vv-redpen[data-mark='highlight'][data-drawn] > .vv-redpen-words {
+    color: var(--rp-on-highlight, var(--color-coal));
+  }
+
+  /* ── Marks ──────────────────────────────────────────────────────────── */
+
+  .vv-marks {
+    font-weight: 700;
+    --number-flow-mask-height: 0.2em;
+  }
+
+  /* ── SplitFlap ──────────────────────────────────────────────────────── */
+
+  .vv-flapboard {
+    --flap-max: 34px;
+    container-type: inline-size;
+  }
+  .vv-flapboard[data-size='sm'] {
+    --flap-max: 22px;
+  }
+  .vv-flapboard[data-size='lg'] {
+    --flap-max: 46px;
+  }
+  .vv-flapboard-face {
+    /* cols cells, 0.1 gaps and 0.5 padding each side, never wider than the container */
+    --cell: min(var(--flap-max), calc(100cqi / (var(--cols) * 1.1 + 0.9)));
+    display: inline-flex;
+    flex-direction: column;
+    gap: calc(var(--cell) * 0.2);
+    padding: calc(var(--cell) * 0.5);
+    border-radius: calc(var(--cell) * 0.36);
+    background: var(--color-coal);
+    box-shadow: var(--shadow-paper);
+  }
+  @media (prefers-color-scheme: dark) {
+    .vv-flapboard-face {
+      box-shadow: inset 0 0 0 1px var(--color-line);
+    }
+  }
+  .vv-flap-row {
+    display: flex;
+    gap: calc(var(--cell) * 0.1);
+  }
+  .vv-flap {
+    --flap-bg: var(--color-coal-2);
+    --flap-ink: var(--color-paper);
+    position: relative;
+    display: block;
+    flex: none;
+    width: var(--cell);
+    height: calc(var(--cell) * 1.34);
+    border-radius: calc(var(--cell) * 0.12);
+    perspective: calc(var(--cell) * 7);
+    color: var(--flap-ink);
+    font-family: var(--font-sans);
+    font-size: calc(var(--cell) * 0.86);
+    font-weight: 800;
+    /* Condensed caps, like a sign-painted drum. */
+    font-stretch: 82%;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+  .vv-flap[data-digit] {
+    font-family: var(--font-mono);
+    font-size: calc(var(--cell) * 0.84);
+    font-weight: 700;
+  }
+  .vv-flap[data-tone='verm'] {
+    --flap-bg: var(--color-verm);
+    --flap-ink: var(--color-coal);
+  }
+  .vv-flap[data-tone='butter'] {
+    --flap-bg: var(--color-butter);
+    --flap-ink: var(--color-coal);
+  }
+  .vv-flap[data-tone='cobalt'] {
+    --flap-bg: var(--color-cobalt);
+    --flap-ink: var(--color-paper);
+  }
+  .vv-flap[data-tone='paper'] {
+    --flap-bg: var(--color-paper);
+    --flap-ink: var(--color-coal);
+    --hinge-mix: 70%;
+  }
+  .vv-flap[data-tone='butter'] {
+    --hinge-mix: 62%;
+  }
+  .vv-flap-half,
+  .vv-flap-leaf {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 50%;
+    overflow: hidden;
+    background: var(--flap-bg);
+  }
+  .vv-flap-top,
+  .vv-flap-leaf-top {
+    top: 0;
+    border-radius: calc(var(--cell) * 0.12) calc(var(--cell) * 0.12) 0 0;
+  }
+  .vv-flap-bottom,
+  .vv-flap-leaf-bottom {
+    bottom: 0;
+    border-radius: 0 0 calc(var(--cell) * 0.12) calc(var(--cell) * 0.12);
+    /* The lower flap sits a shade under the upper one, like a real board. */
+    background: color-mix(in oklab, var(--flap-bg) 95%, var(--color-coal));
+  }
+  .vv-flap-leaf {
+    z-index: 2;
+    visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .vv-flap-leaf-top {
+    transform-origin: 50% 100%;
+  }
+  .vv-flap-leaf-bottom {
+    transform-origin: 50% 0;
+  }
+  .vv-flap-glyph {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200%;
+    padding-top: 0.06em;
+    white-space: pre;
+  }
+  .vv-flap[data-digit] .vv-flap-glyph {
+    padding-top: 0.02em;
+  }
+  .vv-flap-top .vv-flap-glyph,
+  .vv-flap-leaf-top .vv-flap-glyph {
+    top: 0;
+  }
+  .vv-flap-bottom .vv-flap-glyph,
+  .vv-flap-leaf-bottom .vv-flap-glyph {
+    bottom: 0;
+  }
+  /* The hinge, with the two axle notches at its ends. */
+  .vv-flap::after {
+    content: '';
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    right: 0;
+    top: calc(50% - 0.5px);
+    height: 1px;
+    background: color-mix(in oklab, var(--flap-bg) var(--hinge-mix, 45%), var(--color-coal));
+  }
+  .vv-flap::before {
+    content: '';
+    position: absolute;
+    z-index: 3;
+    left: -1px;
+    right: -1px;
+    top: calc(50% - 1.5px);
+    height: 3px;
+    background:
+      linear-gradient(var(--color-coal), var(--color-coal)) left / 2px 100% no-repeat,
+      linear-gradient(var(--color-coal), var(--color-coal)) right / 2px 100% no-repeat;
+  }
+
+  /* ── WordStamp ──────────────────────────────────────────────────────── */
+
+  .vv-stamp {
+    --stamp-ink: var(--color-ink-blue);
+    white-space: nowrap;
+  }
+  .vv-stamp[data-tone='red'] {
+    --stamp-ink: var(--color-verm-text);
+  }
+  .vv-stamp[data-tone='print'] {
+    --stamp-ink: var(--color-ink);
+  }
+  .vv-stamp-slot {
+    display: inline-grid;
+    vertical-align: baseline;
+  }
+  .vv-stamp-slot > * {
+    grid-area: 1 / 1;
+  }
+  .vv-stamp-sizer {
+    visibility: hidden;
+  }
+  .vv-stamp-live {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    justify-self: start;
+  }
+  .vv-stamp-box {
+    display: inline-block;
+    margin-inline: 0.04em;
+    padding: 0.03em 0.16em 0.07em;
+    border: max(2px, 0.06em) solid currentColor;
+    border-radius: 0.13em;
+    line-height: 1;
+  }
+  /* Rubber-stamp ink: flat colour that does not quite take everywhere. */
+  .vv-stamp-ink {
+    color: var(--stamp-ink);
+    transform-origin: 50% 60%;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -11 7.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -11 7.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+    -webkit-mask-size: 220px 220px;
+    mask-size: 220px 220px;
+  }
+
+  /* ── Keycap ─────────────────────────────────────────────────────────── */
+
+  .vv-key {
+    --key-h: 2.75rem;
+    --key-w: 2.75rem;
+    --key-travel: 4px;
+    --key-radius: 0.7rem;
+    --key-face: var(--color-card);
+    --key-side: color-mix(in oklab, var(--color-ink) 16%, var(--color-card-2));
+    --key-edge: var(--color-line);
+    --key-ink: var(--color-ink);
+    --key-fill: color-mix(in oklab, var(--color-cobalt) 20%, transparent);
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    min-width: var(--key-w);
+    height: calc(var(--key-h) + var(--key-travel));
+    padding: 0;
+    border: 0;
+    border-radius: var(--key-radius);
+    background: none;
+    color: var(--key-ink);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  button.vv-key {
+    cursor: pointer;
+    touch-action: none;
+  }
+  button.vv-key:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  .vv-key[data-size='sm'] {
+    --key-h: 1.5em;
+    --key-w: 1.5em;
+    --key-travel: 2px;
+    --key-radius: 0.34em;
+    margin-inline: 0.1em;
+    font-size: 0.78em;
+    vertical-align: -0.36em;
+  }
+  .vv-key[data-size='sm'][data-wide] {
+    --key-w: 4.6em;
+  }
+  .vv-key[data-size='lg'] {
+    --key-h: 4.25rem;
+    --key-w: 4.25rem;
+    --key-travel: 6px;
+    --key-radius: 1.05rem;
+    font-size: 1.125rem;
+  }
+  .vv-key[data-wide] {
+    --key-w: 7.5em;
+  }
+  .vv-key[data-size='lg'][data-wide] {
+    --key-w: 16rem;
+  }
+  .vv-key[data-tone='coal'] {
+    --key-face: var(--color-coal-2);
+    --key-side: var(--color-coal);
+    --key-edge: var(--color-line-dark);
+    --key-ink: var(--color-paper);
+    --key-fill: color-mix(in oklab, var(--color-cobalt-lift) 26%, transparent);
+  }
+  .vv-key[data-tone='cobalt'] {
+    --key-face: var(--color-cobalt);
+    --key-side: var(--color-cobalt-deep);
+    --key-edge: transparent;
+    --key-ink: var(--color-paper);
+    --key-fill: color-mix(in oklab, var(--color-paper) 22%, transparent);
+  }
+  .vv-key-skirt {
+    position: absolute;
+    inset: var(--key-travel) 0 0;
+    border-radius: var(--key-radius);
+    background: var(--key-side);
+  }
+  .vv-key-cap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    height: var(--key-h);
+    padding-inline: 0.8em;
+    overflow: hidden;
+    border-radius: var(--key-radius);
+    background: var(--key-face);
+    box-shadow: inset 0 0 0 1px var(--key-edge);
+    transition: transform var(--key-release, 300ms var(--ease-out));
+  }
+  .vv-key[data-size='sm'] .vv-key-cap {
+    padding-inline: 0.45em;
+  }
+  .vv-key[data-pressed] .vv-key-cap {
+    transform: translateY(calc(var(--key-travel) - 1px));
+    transition: transform 70ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    button.vv-key:hover:not(:disabled) .vv-key-cap {
+      background: color-mix(in oklab, var(--key-face) 94%, var(--key-ink));
+    }
+  }
+  .vv-key-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--key-fill);
+    transform: scaleX(var(--key-progress, 0));
+    transform-origin: left center;
+  }
+  .vv-key-legend {
+    position: relative;
+    letter-spacing: 0.01em;
+  }
+
+  /* ── Paddle ─────────────────────────────────────────────────────────── */
+
+  .vv-paddle {
+    --d: 5rem;
+    --t: calc(var(--d) * 0.075);
+    --face: var(--color-paper);
+    --bevel: color-mix(in oklab, var(--color-paper) 88%, var(--color-coal-2));
+    --rim: color-mix(in oklab, var(--color-paper) 70%, var(--color-coal-2));
+    --back: color-mix(in oklab, var(--color-paper) 94%, var(--color-coal-2));
+    --back-ink: color-mix(in oklab, var(--color-coal) 72%, var(--color-paper));
+    --numeral: var(--color-coal);
+    --stick: var(--color-coal);
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    filter: drop-shadow(0 calc(var(--d) * 0.06) calc(var(--d) * 0.07) rgb(var(--vv-shadow) / 0.16));
+  }
+  @media (prefers-color-scheme: dark) {
+    .vv-paddle {
+      --stick: color-mix(in oklab, var(--color-paper) 28%, var(--color-coal));
+    }
+  }
+  .vv-paddle[data-size='sm'] {
+    --d: 3.5rem;
+  }
+  .vv-paddle[data-size='lg'] {
+    --d: 7.25rem;
+  }
+  .vv-paddle[data-tone='verm'] {
+    --face: var(--color-verm);
+    --bevel: color-mix(in oklab, var(--color-verm) 88%, var(--color-coal));
+    --rim: color-mix(in oklab, var(--color-verm) 66%, var(--color-coal));
+    --back: color-mix(in oklab, var(--color-verm) 90%, var(--color-paper));
+    --back-ink: var(--color-coal);
+  }
+  .vv-paddle[data-tone='coal'] {
+    --face: var(--color-coal-2);
+    --bevel: color-mix(in oklab, var(--color-coal-2) 86%, var(--color-paper));
+    --rim: var(--color-coal);
+    --back: var(--color-coal-2);
+    --back-ink: var(--color-paper-mut);
+    --numeral: var(--color-paper);
+  }
+  .vv-paddle-stage {
+    position: relative;
+    z-index: 1;
+    width: var(--d);
+    height: var(--d);
+    perspective: calc(var(--d) * 6);
+  }
+  .vv-paddle-disc {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+  .vv-paddle[data-face='back'] .vv-paddle-disc {
+    transform: rotateY(180deg);
+  }
+  .vv-paddle-rim {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--rim);
+    transform: translateZ(calc(var(--z) * var(--t)));
+  }
+  .vv-paddle-face {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .vv-paddle-front {
+    background: var(--face);
+    box-shadow:
+      inset 0 0 0 calc(var(--d) * 0.045) var(--bevel),
+      inset 0 0 0 calc(var(--d) * 0.056) color-mix(in oklab, var(--bevel) 55%, var(--face));
+    transform: translateZ(calc(var(--t) / 2 + 0.5px));
+  }
+  /* The minted inner ring of a coin. */
+  .vv-paddle-front::before,
+  .vv-paddle-back::before {
+    content: '';
+    position: absolute;
+    inset: calc(var(--d) * 0.1);
+    border: max(1px, calc(var(--d) * 0.012)) solid color-mix(in oklab, var(--bevel) 70%, transparent);
+    border-radius: 50%;
+  }
+  .vv-paddle-back {
+    background: var(--back);
+    box-shadow: inset 0 0 0 calc(var(--d) * 0.045) var(--bevel);
+    transform: rotateY(180deg) translateZ(calc(var(--t) / 2 + 0.5px));
+  }
+  .vv-paddle-mark {
+    color: var(--numeral);
+    font-size: calc(var(--d) * 0.37);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .vv-paddle-axis {
+    max-width: 76%;
+    overflow: hidden;
+    color: var(--back-ink);
+    font-size: max(0.5rem, calc(var(--d) * 0.105));
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .vv-paddle-handle {
+    position: relative;
+    width: calc(var(--d) * 0.1);
+    height: calc(var(--d) * 0.62);
+    margin-top: calc(var(--d) * -0.08);
+    border-radius: 0 0 999px 999px;
+    background: var(--stick);
+  }
+  /* The ferrule where the handle is fixed to the disc. */
+  .vv-paddle-handle::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--d) * 0.075);
+    left: 50%;
+    width: calc(var(--d) * 0.17);
+    height: calc(var(--d) * 0.075);
+    border-radius: calc(var(--d) * 0.025);
+    background: color-mix(in oklab, var(--stick) 78%, var(--color-paper));
+    transform: translateX(-50%);
+  }
+
+  /* ── TearTicket ─────────────────────────────────────────────────────── */
+
+  .vv-ticket {
+    --notch: 11px;
+    --hole: 3.25px;
+    --pitch: 13px;
+    --radius: 14px;
+    --stub-w: clamp(6.25rem, 27%, 8.5rem);
+    --stub-bg: var(--color-cobalt);
+    --stub-ink: var(--color-paper);
+    --stub-focus: var(--color-paper);
+    position: relative;
+    display: flex;
+    width: 100%;
+    max-width: 36rem;
+    color: var(--color-coal);
+    /* Masks cut the paper, so the shadow has to follow its alpha. */
+    filter: drop-shadow(0 0 0.6px rgb(var(--vv-shadow) / 0.28))
+      drop-shadow(0 12px 18px rgb(var(--vv-shadow) / 0.14));
+  }
+  @media (prefers-color-scheme: dark) {
+    .vv-ticket {
+      filter: drop-shadow(0 14px 22px rgb(var(--vv-shadow) / 0.5));
+    }
+  }
+  .vv-ticket[data-stub='butter'] {
+    --stub-bg: var(--color-butter);
+    --stub-ink: var(--color-coal);
+    --stub-focus: var(--color-coal);
+  }
+  .vv-ticket[data-stub='paper'] {
+    --stub-bg: var(--color-paper);
+    --stub-ink: var(--color-coal);
+    --stub-focus: var(--color-cobalt);
+  }
+  .vv-ticket-body,
+  .vv-ticket-stub {
+    -webkit-mask-repeat: no-repeat, no-repeat, repeat-y;
+    mask-repeat: no-repeat, no-repeat, repeat-y;
+    -webkit-mask-size:
+      100% 100%,
+      100% 100%,
+      100% var(--pitch);
+    mask-size:
+      100% 100%,
+      100% 100%,
+      100% var(--pitch);
+    -webkit-mask-position:
+      0 0,
+      0 0,
+      0 50%;
+    mask-position:
+      0 0,
+      0 0,
+      0 50%;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+  .vv-ticket-body {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    border-radius: var(--radius) 0 0 var(--radius);
+    background: var(--color-paper);
+    -webkit-mask-image:
+      radial-gradient(circle var(--notch) at 100% 0, transparent 96%, #000),
+      radial-gradient(circle var(--notch) at 100% 100%, transparent 96%, #000),
+      radial-gradient(circle var(--hole) at 100% 50%, transparent 92%, #000);
+    mask-image:
+      radial-gradient(circle var(--notch) at 100% 0, transparent 96%, #000),
+      radial-gradient(circle var(--notch) at 100% 100%, transparent 96%, #000),
+      radial-gradient(circle var(--hole) at 100% 50%, transparent 92%, #000);
+  }
+  .vv-ticket-body:focus {
+    outline: none;
+  }
+  .vv-ticket-stub {
+    position: relative;
+    display: flex;
+    flex: none;
+    width: var(--stub-w);
+    padding: 0;
+    border: 0;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: var(--stub-bg);
+    color: var(--stub-ink);
+    font: inherit;
+    text-align: center;
+    cursor: grab;
+    touch-action: none;
+    transform-origin: 0 calc(100% - var(--notch));
+    filter: drop-shadow(
+      calc(var(--open, 0) * 3px) calc(var(--open, 0) * 5px) calc(var(--open, 0) * 7px)
+        rgb(var(--vv-shadow) / 0.22)
+    );
+    -webkit-mask-image:
+      radial-gradient(circle var(--notch) at 0 0, transparent 96%, #000),
+      radial-gradient(circle var(--notch) at 0 100%, transparent 96%, #000),
+      radial-gradient(circle var(--hole) at 0 50%, transparent 92%, #000);
+    mask-image:
+      radial-gradient(circle var(--notch) at 0 0, transparent 96%, #000),
+      radial-gradient(circle var(--notch) at 0 100%, transparent 96%, #000),
+      radial-gradient(circle var(--hole) at 0 50%, transparent 92%, #000);
+  }
+  .vv-ticket[data-phase='pulling'] .vv-ticket-stub {
+    cursor: grabbing;
+  }
+  .vv-ticket[data-phase='falling'] .vv-ticket-stub {
+    cursor: default;
+    pointer-events: none;
+  }
+  /* The mask would cut an outside ring away, so focus is drawn inside. */
+  .vv-ticket-stub:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 4px var(--stub-bg),
+      inset 0 0 0 6px var(--stub-focus);
+  }
+  .vv-ticket-stub-face {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 1.1rem 0.5rem 1rem 0.75rem;
+  }
+
+  /* ── Loader ─────────────────────────────────────────────────────────── */
+
+  .vv-loader {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65em;
+    color: inherit;
+  }
+  .vv-loader-waiting {
+    visibility: hidden;
+  }
+  .vv-loader-glyph {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+  }
+  .vv-loader-live,
+  .vv-loader-still {
+    grid-area: 1 / 1;
+  }
+  .vv-loader-live {
+    display: inline-flex;
+  }
+  .vv-loader-still {
+    display: none;
+    width: 100%;
+    height: 100%;
+  }
+  .vv-loader-label {
+    font-weight: 700;
+  }
+
+  /* ── Portrait ───────────────────────────────────────────────────────── */
+
+  .vv-portrait {
+    --tint: var(--color-coal);
+    position: relative;
+    display: inline-block;
+    flex: none;
+    max-width: 100%;
+    height: auto;
+    vertical-align: bottom;
+  }
+  .vv-portrait[data-axis='clarity'] {
+    --tint: var(--color-butter);
+  }
+  .vv-portrait[data-axis='structure'] {
+    --tint: var(--color-paper);
+  }
+  .vv-portrait[data-axis='conciseness'] {
+    /* stone: a warm grey */
+    --tint: color-mix(in oklab, var(--color-paper-mut) 75%, var(--color-butter));
+  }
+  .vv-portrait[data-axis='confidence'] {
+    --tint: var(--color-cobalt);
+  }
+  .vv-portrait-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: 50% 100%;
+    transition: opacity 220ms var(--ease-out);
+  }
+  .vv-portrait-img[data-entering] {
+    opacity: 0;
+  }
+  .vv-silhouette {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .vv-silhouette-body {
+    fill: color-mix(in oklab, var(--tint) 30%, color-mix(in oklab, var(--color-ink) 12%, var(--color-card-2)));
+    stroke: color-mix(in oklab, var(--color-ink) 16%, transparent);
+    stroke-width: 1;
+    paint-order: stroke;
+  }
+  .vv-silhouette-visor {
+    fill: color-mix(in oklab, var(--color-coal) 84%, var(--tint));
+  }
+  .vv-silhouette-eyes {
+    color: color-mix(in oklab, var(--color-paper) 78%, transparent);
+  }
+  .vv-silhouette-voice {
+    fill: var(--color-verm);
+  }
+  .vv-silhouette-floor {
+    fill: rgb(var(--vv-shadow) / 0.08);
+  }
+  .vv-silhouette-paddle {
+    fill: color-mix(in oklab, var(--color-ink) 22%, var(--color-card-2));
+  }
+}
+
+/* rough-notation's stroke animation, shipped here so no <style> is injected. */
+@keyframes rough-notation-dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes vv-loader-breathe {
+  0%,
+  100% {
+    opacity: 0.32;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Loaders: a still glyph whose parts fade in turn; nothing travels. */
+  .vv-loader-live {
+    display: none;
+  }
+  .vv-loader-still {
+    display: block;
+  }
+  .vv-loader-still [style*='--i'] {
+    animation: vv-loader-breathe 1.8s var(--ease-in-out) infinite;
+    animation-delay: calc(var(--i) * 240ms);
+  }
+
+  /* Keys snap down and up: the press stays, the travel is instant. */
+  .vv-key-cap,
+  .vv-key[data-pressed] .vv-key-cap {
+    transition: none;
+  }
+
+  /* Paddles swap faces with a fade instead of turning over. */
+  .vv-paddle-disc {
+    transform: none !important;
+  }
+  .vv-paddle-front,
+  .vv-paddle-back {
+    transform: none;
+    transition: opacity 200ms ease;
+  }
+  .vv-paddle[data-face='front'] .vv-paddle-back,
+  .vv-paddle[data-face='back'] .vv-paddle-front {
+    opacity: 0;
+  }
+  .vv-paddle-rim {
+    display: none;
+  }
+}

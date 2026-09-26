@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
+import { Smartphone } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
 import { WaitlistForm } from '@/components/site/WaitlistForm';
-import { Reveal } from '@/components/ui/Reveal';
 
 export const metadata: Metadata = {
   title: 'Early access',
@@ -10,41 +10,38 @@ export const metadata: Metadata = {
 };
 
 const perks = [
-  'First access as spots open. Exam dates jump the queue.',
-  'Founding-user pricing, locked in for good.',
-  'A direct line to shape what gets built next.',
+  ['Exam dates jump the queue.', 'First access as spots open, soonest exams first.'],
+  ['Founding-user pricing.', 'Locked in for good once you are in.'],
+  ['A direct line.', 'Help shape what gets built next.'],
 ] as const;
 
 export default function WaitlistPage() {
   return (
     <>
       <PageHero
-        title="Get in before the exam does."
+        title="Get in before the exam *does.*"
         intro="VivaVoce is in private beta. Leave your email and we will bring you in as spots open."
       />
-      <section className="bg-canvas text-ink">
-        <div className="mx-auto grid w-full max-w-[1360px] gap-10 px-4 pt-4 pb-20 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:gap-20">
-          <Reveal>
-            <ul className="flex flex-col gap-6">
-              {perks.map((perk) => (
-                <li key={perk} className="flex items-start gap-4">
-                  <span className="mt-2 h-1.5 w-8 shrink-0 bg-verm" />
-                  <p className="text-lg font-bold leading-snug">{perk}</p>
+      <section aria-label="Join the early-access list" className="mx-auto w-full max-w-[1360px] px-3 pb-24 sm:px-5 sm:pb-32">
+        <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr]">
+          <div className="tile tile-verm flex flex-col justify-between gap-10 rounded-field p-7 sm:p-12">
+            <p className="display text-[clamp(1.8rem,3.4vw,2.8rem)]">One email. No spam. A spot when it opens.</p>
+            <WaitlistForm tone="verm" />
+          </div>
+          <div className="tile flex flex-col rounded-field p-7 sm:p-12">
+            <ul className="space-y-7">
+              {perks.map(([lead, body]) => (
+                <li key={lead}>
+                  <p className="text-xl font-black leading-snug">{lead}</p>
+                  <p className="mt-1.5 leading-relaxed text-ink-mut">{body}</p>
                 </li>
               ))}
             </ul>
-            <a
-              href="/download/apk"
-              className="pressable mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-ink px-6 font-bold text-paper transition-colors duration-150 hover:bg-[#2E2B27]"
-            >
+            <a href="/download/apk" className="btn btn-secondary mt-10 h-12 self-start px-6">
+              <Smartphone size={17} aria-hidden />
               Download the Android beta
             </a>
-          </Reveal>
-          <Reveal delay={0.08}>
-            <div className="tile p-7 sm:p-10">
-              <WaitlistForm />
-            </div>
-          </Reveal>
+          </div>
         </div>
       </section>
     </>

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { Plus } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
-import { WaitlistSection } from '@/components/marketing/sections';
+import Link from 'next/link';
+import { Close } from '@/components/home/Closing';
 
 export const metadata: Metadata = {
   title: 'FAQ',
@@ -54,29 +55,44 @@ export default function FaqPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PageHero
-        title="Questions, answered."
+        title="Questions, *answered.*"
         intro="The things people ask before they trust an app with their voice. If yours is missing, write to us."
       />
-      <section className="bg-canvas text-ink">
-        <div className="mx-auto w-full max-w-[1360px] px-4 pt-4 pb-20 sm:px-6">
-          <ul className="max-w-3xl">
+      <section aria-label="Frequently asked questions" className="mx-auto w-full max-w-[1360px] px-4 pb-24 sm:px-5 sm:pb-32">
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <p className="text-xl font-black leading-snug">Still unsure?</p>
+            <p className="mt-2 max-w-xs leading-relaxed text-ink-mut">
+              Try the engine on the home page, no account needed, or ask us
+              directly.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href="/#live" className="btn btn-primary h-11 px-5 text-sm">
+                Try the engine
+              </Link>
+              <Link href="/contact" className="btn btn-secondary h-11 px-5 text-sm">
+                Contact us
+              </Link>
+            </div>
+          </div>
+          <ul className="faq">
             {faqs.map(([q, a]) => (
-              <li key={q} className="border-t border-line last:border-b">
-                <details className="group py-6">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-xl font-black [&::-webkit-details-marker]:hidden">
+              <li key={q} className="border-t border-line">
+                <details className="group">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-7 text-[clamp(1.25rem,2vw,1.6rem)] font-black leading-snug transition-colors duration-150 hover:text-verm-text [&::-webkit-details-marker]:hidden">
                     {q}
-                    <span className="grid h-9 w-9 shrink-0 place-items-center bg-card-2 text-verm transition-transform duration-200 group-open:rotate-45">
-                      <Plus size={18} strokeWidth={3} />
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-card-2 text-ink transition-[transform,background-color,color] duration-300 ease-out group-open:rotate-45 group-open:bg-verm group-open:text-coal">
+                      <Plus size={20} strokeWidth={2.75} aria-hidden />
                     </span>
                   </summary>
-                  <p className="mt-4 max-w-2xl leading-relaxed text-ink-mut">{a}</p>
+                  <p className="max-w-2xl pb-8 pr-16 text-[1.05rem] leading-relaxed text-ink-mut">{a}</p>
                 </details>
               </li>
             ))}
           </ul>
         </div>
       </section>
-      <WaitlistSection />
+      <Close />
     </>
   );
 }

@@ -11,8 +11,16 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-/* Same ratio bucketing as the mobile heat grid, on the vermilion ramp. */
-const RAMP = ['#E9E7E1', '#FFD2C2', '#FF4D26', '#D63A17'] as const;
+/*
+ * Same ratio bucketing as the mobile heat grid. Each step mixes more vermilion
+ * into the empty cell, so busier days read hotter on both the day and night canvas.
+ */
+const RAMP = [
+  'var(--color-card-2)',
+  'color-mix(in oklab, var(--color-verm) 38%, var(--color-card-2))',
+  'color-mix(in oklab, var(--color-verm) 70%, var(--color-card-2))',
+  'var(--color-verm)',
+] as const;
 function level(count: number, max: number): 0 | 1 | 2 | 3 {
   if (count === 0 || max === 0) return 0;
   const r = count / max;
@@ -80,7 +88,7 @@ export default async function DashboardPage() {
             <SignInButton mode="modal">
               <button
                 type="button"
-                className="pressable inline-flex h-12 cursor-pointer items-center rounded-full bg-verm px-7 font-bold text-ink"
+                className="btn btn-primary h-12 px-7"
               >
                 Sign in to see your marks
               </button>
@@ -104,24 +112,24 @@ export default async function DashboardPage() {
         <div className="mx-auto w-full max-w-[1360px] px-4 pb-24 sm:px-6">
           {/* marks row */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-[24px] bg-inktile p-6 text-paper">
-              <p className="marks text-xs text-paper-mut">OVERALL AVERAGE</p>
+            <div className="tile tile-ink p-6">
+              <p className="text-xs font-bold text-paper-mut">Overall average</p>
               <p className="display mt-2 text-6xl">{stats.hasData ? stats.overall : '–'}</p>
             </div>
-            <div className="rounded-[24px] border border-line bg-card p-6">
-              <p className="marks text-xs text-ink-faint">STREAK</p>
+            <div className="tile p-6">
+              <p className="text-xs font-bold text-ink-mut">Streak</p>
               <p className="display mt-2 text-6xl">{stats.streak.current}d</p>
               <p className="marks mt-1 text-xs text-ink-mut">best {stats.streak.longest}d</p>
             </div>
-            <div className="rounded-[24px] border border-line bg-card p-6">
-              <p className="marks text-xs text-ink-faint">THIS WEEK</p>
+            <div className="tile p-6">
+              <p className="text-xs font-bold text-ink-mut">This week</p>
               <p className="display mt-2 text-6xl">{stats.minutesThisWeek}m</p>
               <p className="marks mt-1 text-xs text-ink-mut">goal 60m</p>
             </div>
-            <div className="rounded-[24px] bg-cobalt p-6 text-paper">
-              <p className="marks text-xs text-paper-mut">LIFETIME</p>
+            <div className="tile tile-cobalt p-6">
+              <p className="text-xs font-bold text-paper">Lifetime</p>
               <p className="display mt-2 text-6xl">{stats.answersTotal}</p>
-              <p className="marks mt-1 text-xs text-paper-mut">
+              <p className="marks mt-1 text-xs text-paper">
                 answers · {stats.sessionsTotal} sessions
               </p>
             </div>
@@ -129,16 +137,16 @@ export default async function DashboardPage() {
 
           <div className="mt-3 grid gap-3 lg:grid-cols-2">
             {/* heat */}
-            <div className="rounded-[24px] border border-line bg-card p-6">
-              <p className="marks text-xs text-ink-faint">PRACTICE HEAT · 12 WEEKS</p>
+            <div className="tile p-6">
+              <p className="text-xs font-bold text-ink-mut">Practice heat, last 12 weeks</p>
               <div className="mt-5">
                 <HeatGrid heatmap={stats.heatmap} />
               </div>
             </div>
 
             {/* axes */}
-            <div className="rounded-[24px] border border-line bg-card p-6">
-              <p className="marks text-xs text-ink-faint">AVERAGE BY AXIS</p>
+            <div className="tile p-6">
+              <p className="text-xs font-bold text-ink-mut">Average by axis</p>
               <div className="mt-5 flex flex-col gap-4">
                 {bars.map((b) => (
                   <div key={b.label}>
@@ -159,8 +167,8 @@ export default async function DashboardPage() {
           </div>
 
           {/* recent sessions */}
-          <div className="mt-3 rounded-[24px] border border-line bg-card p-6">
-            <p className="marks text-xs text-ink-faint">RECENT SESSIONS</p>
+          <div className="mt-3 tile p-6">
+            <p className="text-xs font-bold text-ink-mut">Recent sessions</p>
             {stats.recent.length === 0 ? (
               <div className="mt-5">
                 <p className="text-lg font-bold">No sessions yet.</p>
@@ -169,7 +177,7 @@ export default async function DashboardPage() {
                 </p>
                 <a
                   href="/download/apk"
-                  className="pressable mt-5 inline-flex h-11 items-center rounded-full bg-ink px-6 text-sm font-bold text-paper"
+                  className="btn btn-primary mt-5 h-11 px-6 text-sm"
                 >
                   Download the Android beta
                 </a>
@@ -183,7 +191,7 @@ export default async function DashboardPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-bold">{s.deckTitle}</p>
-                      <p className="marks text-xs text-ink-mut">
+                      <p className="text-xs font-semibold text-ink-mut">
                         {s.mode} · fix {s.weakest} · {s.when}
                       </p>
                     </div>
@@ -193,8 +201,8 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          <p className="marks mt-6 text-center text-xs text-ink-faint">
-            SCORES ARE GUIDANCE, NOT GRADES.
+          <p className="mt-6 text-center text-xs font-semibold text-ink-mut">
+            Scores are guidance, not grades.
           </p>
         </div>
       </section>
