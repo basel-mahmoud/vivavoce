@@ -2,7 +2,7 @@
 
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, advance, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
 import { Panel } from '@/components/room/panel/Panel';
 import { createChannels, type PanelChannels } from '@/components/room/panel/channels';
@@ -16,7 +16,7 @@ import { verdictFace } from '@/components/room/data';
 import type { DofState } from '@/components/room/Director';
 import { ASK_HOLD, BEAT, beatsAt, conferProgress, speakDuration, speechEnvelope } from './choreo';
 import type { Meter } from './useMicMeter';
-import { stageNow, type StageCue, type StageOverlays } from './stage';
+import { holdStageClock, stageNow, type StageCue, type StageOverlays } from './stage';
 
 /** Contact AO and anti-aliasing: the room's post chain, the same lazily loaded chunk. */
 const Post = lazy(() => import('@/components/room/Post'));
@@ -25,6 +25,38 @@ type Tier = 1 | 2;
 
 /** A lighter canvas than the room: no depth of field, and a lower pixel-ratio cap. */
 const DPR: Record<Tier, [number, number]> = { 1: [1, 1.25], 2: [1, 1.5] };
+
+/**
+ * Development only: `?step` stops the stage's own frame loop so a review script can step the round
+ * frame by frame (window.__vvStageStep), 3D and cue clock together. Production compiles this out.
+ */
+function stepMode(): boolean {
+  return process.env.NODE_ENV !== 'production' && new URLSearchParams(window.location.search).has('step');
+}
+
+/** Development only: `window.__vvStageStep(seconds, fps)` advances the held clock and renders. */
+function Stepper() {
+  const get = useThree((s) => s.get);
+  useEffect(() => {
+    let t = stageNow();
+    holdStageClock(t);
+    const w = window as unknown as { __vvStageStep?: (seconds: number, fps?: number) => number };
+    w.__vvStageStep = (seconds, fps = 30) => {
+      const n = Math.max(1, Math.round(seconds * fps));
+      for (let k = 0; k < n; k++) {
+        t += 1 / fps;
+        holdStageClock(t);
+        advance(t, true, get());
+      }
+      return t;
+    };
+    return () => {
+      delete w.__vvStageStep;
+      holdStageClock(null);
+    };
+  }, [get]);
+  return null;
+}
 
 /** Development only: ?tier=1|2 pins the tier for review (production compiles this out). */
 function forcedTier(): boolean {
@@ -396,6 +428,7 @@ export interface EngineStageProps {
 export default function EngineStage({ cueRef, meterRef, overlaysRef, dark, active, fine, onReady }: EngineStageProps) {
   const [tier, setTier] = useState<Tier>(guessTier);
   const [locked] = useState(forcedTier);
+  const [stepping] = useState(stepMode);
   const channelsRef = useRef<PanelChannels>(createChannels());
   const focusRef = useRef<FocusLight>({ target: new THREE.Vector3(-0.035, 1.23, -0.53), strength: 0.55 });
   const castRef = useRef<Cast | null>(null);
@@ -422,7 +455,7 @@ export default function EngineStage({ cueRef, meterRef, overlaysRef, dark, activ
     <Canvas
       shadows="percentage"
       dpr={DPR[tier]}
-      frameloop={active ? 'always' : 'never'}
+      frameloop={active && !stepping ? 'always' : 'never'}
       camera={{ fov: 22, near: 0.25, far: 140, position: [0, 2.2, 12] }}
       gl={{ antialias: tier === 1, alpha: false, powerPreference: 'high-performance', toneMapping: THREE.NeutralToneMapping }}
       onCreated={({ gl }) => gl.setClearColor(dark ? CANVAS.dark : CANVAS.light, 1)}
@@ -455,6 +488,7 @@ export default function EngineStage({ cueRef, meterRef, overlaysRef, dark, activ
         <Panel channelsRef={channelsRef} dark={dark} shadows={shadows} onReady={onCast} />
         <Reveal ready={panel && post} onReady={onReady} />
         {process.env.NODE_ENV !== 'production' && <DrawCounter tier={tier} />}
+        {process.env.NODE_ENV !== 'production' && stepping && <Stepper />}
       </Suspense>
       {tier >= 2 && (
         <Suspense fallback={null}>

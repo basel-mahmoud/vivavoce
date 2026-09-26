@@ -54,7 +54,18 @@ export function stageScale(): number {
   return scale;
 }
 
+let held: number | null = null;
+
 /** The round's clock, in seconds: what the cue's times are measured on. */
 export function stageNow(): number {
+  if (process.env.NODE_ENV !== 'production' && held !== null) return held;
   return (performance.now() / 1000) * stageScale();
+}
+
+/**
+ * Development only: hold the round's clock at `t` seconds (null lets it run again). The stage's
+ * `?step` review mode steps it, frame by frame, together with the 3D panel.
+ */
+export function holdStageClock(t: number | null) {
+  if (process.env.NODE_ENV !== 'production') held = t;
 }
