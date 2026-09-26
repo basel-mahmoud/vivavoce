@@ -3,6 +3,7 @@ import { Text, configureTextBuilder } from 'troika-three-text';
 import {
   AXIS_NAME,
   BENCH_LABELS,
+  COIN,
   DETAIL_TEXTURES,
   EXAMINERS,
   FINISH,
@@ -34,6 +35,9 @@ const COAL = '#10131a';
 const BUTTER = '#ffc838';
 /** Bench inlay size: about 15 px cap height in the 1440 hero. */
 const LABEL_SIZE = 0.15;
+/** Paddle-back names: set in the display face, fitted to this share of the coin's diameter. */
+const NAME_SIZE = 0.05;
+const NAME_FIT = 0.74;
 
 /** Parts that cast a visible shadow: the big forms only (small metal would cost a draw each). */
 const CASTS = /^ex_(shell|bisque|rubber|fabric|coin|bench)/;
@@ -56,6 +60,8 @@ export function detailMaps(textures: THREE.Texture[]): DetailTextures {
 export interface Cast {
   root: THREE.Object3D;
   runtimes: ExaminerRuntime[];
+  /** The five bench inlays (AXES order); a director fades them per shot via `fillOpacity`. */
+  labels: Text[];
   /** Resolves once every label and mark has its glyphs. */
   ready: Promise<void>;
   setScheme(scheme: Scheme): void;
@@ -112,6 +118,8 @@ export function buildCast(source: THREE.Object3D, maps: DetailTextures, initial:
   const coinMaterials: THREE.MeshPhysicalMaterial[] = [];
   const disposables: { dispose(): void }[] = [];
   const texts: Text[] = [];
+  const names: Text[] = [];
+  const labels: Text[] = [];
   const runtimes: ExaminerRuntime[] = [];
 
   const markMaterials: THREE.MeshPhysicalMaterial[] = [];
@@ -138,11 +146,13 @@ export function buildCast(source: THREE.Object3D, maps: DetailTextures, initial:
     const front = root.getObjectByName(NODES.paddleFront(key))!;
     const back = root.getObjectByName(NODES.paddleBack(key))!;
     const markText = makeText(front, '0', FONT_MONO, 0.2, markMaterial, { offset: [0.004, -0.006, 0] });
-    const nameText = makeText(back, AXIS_NAME[key].toUpperCase(), FONT_DISPLAY, 0.045, nameMaterial, { letter: 0.02 });
+    const nameText = makeText(back, AXIS_NAME[key].toUpperCase(), FONT_DISPLAY, NAME_SIZE, nameMaterial, { letter: 0.03 });
     const label = makeText(root.getObjectByName(NODES.benchLabel(key))!, AXIS_NAME[key], FONT_DISPLAY, LABEL_SIZE, labelMaterial, {
       curve: BENCH_LABELS[key].curveRadius,
     });
-    texts.push(markText, nameText, label);
+    texts.push(markText, label);
+    names.push(nameText);
+    labels.push(label);
 
     runtimes.push(
       new ExaminerRuntime({
@@ -192,7 +202,23 @@ export function buildCast(source: THREE.Object3D, maps: DetailTextures, initial:
   };
   assign();
 
-  const ready = Promise.all(texts.map((t) => new Promise<void>((res) => t.sync(() => res())))).then(() => undefined);
+  // every name fits inside its coin: CONCISENESS, CORRECTNESS and CONFIDENCE set a little smaller
+  const fit = (t: Text) =>
+    new Promise<void>((res) =>
+      t.sync(() => {
+        const b = t.textRenderInfo?.blockBounds;
+        const width = b ? b[2] - b[0] : 0;
+        const max = COIN.radius * 2 * NAME_FIT;
+        if (width > max) {
+          t.fontSize *= max / width;
+          t.sync(() => res());
+        } else res();
+      }),
+    );
+  const ready = Promise.all([
+    ...texts.map((t) => new Promise<void>((res) => t.sync(() => res()))),
+    ...names.map(fit),
+  ]).then(() => undefined);
 
   const targets = EXAMINERS.map(() => new THREE.Vector3());
   const pointerWorld = new THREE.Vector3();
@@ -203,6 +229,7 @@ export function buildCast(source: THREE.Object3D, maps: DetailTextures, initial:
   return {
     root,
     runtimes,
+    labels,
     ready,
     setScheme(next) {
       if (next === scheme) return;
@@ -253,6 +280,7 @@ export function buildCast(source: THREE.Object3D, maps: DetailTextures, initial:
       markMaterials.forEach((m) => m.dispose());
       faces.forEach((f) => f.dispose());
       texts.forEach((t) => t.dispose());
+      names.forEach((t) => t.dispose());
       disposables.forEach((d) => d.dispose());
       root.traverse((o) => {
         const mesh = o as THREE.Mesh;

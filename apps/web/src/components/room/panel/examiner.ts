@@ -536,8 +536,16 @@ export class ExaminerRuntime {
 
     /* Draw only the paddle face that points at the camera. */
     _camR.setFromMatrixPosition(camera.matrixWorld);
-    this.parts.markText.visible = facesCamera(this.parts.front, _camR);
-    this.parts.nameText.visible = facesCamera(this.parts.back, _camR);
+    this.parts.markText.visible = facesCamera(this.parts.front, _camR, -0.05);
+    // The axis name shows only on a paddle lying face-down at rest, seen from high enough to read,
+    // and always upright for the lens: never mid-flight, rotated, mirrored or upside down.
+    const name = this.parts.nameText;
+    name.visible = this.raise.x < 0.03 && this.flip.x > 2.9 && facesCamera(this.parts.back, _camR, 0.3);
+    if (name.visible) {
+      _x.set(1, 0, 0).transformDirection(this.parts.back.matrixWorld);
+      _y.setFromMatrixColumn(camera.matrixWorld, 0);
+      name.rotation.z = _x.dot(_y) < 0 ? Math.PI : 0;
+    }
 
     this.first = false;
   }
@@ -600,10 +608,11 @@ function blinkCurve(t: number) {
   return 1 - (t - 0.09) / 0.12;
 }
 
-function facesCamera(anchor: THREE.Object3D, camWorld: THREE.Vector3) {
+/** Whether an anchor's face (+z) points at the camera by more than `min` (the cosine of the view). */
+function facesCamera(anchor: THREE.Object3D, camWorld: THREE.Vector3, min: number) {
   anchor.updateWorldMatrix(true, false);
   _n.set(0, 0, 1).transformDirection(anchor.matrixWorld);
   _tmp2.setFromMatrixPosition(anchor.matrixWorld);
   _tmp.copy(camWorld).sub(_tmp2).normalize();
-  return _n.dot(_tmp) > -0.05;
+  return _n.dot(_tmp) > min;
 }
