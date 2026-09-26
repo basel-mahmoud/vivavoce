@@ -76,7 +76,7 @@ export function AnswerSheet({ id, state, pen, clock, reduce, speechReady, onType
               srLabel={PEN_LABEL[seg.mark.kind]}
               iterations={seg.mark.kind === 'claim' ? 2 : 1}
               // the circle runs a little wide of its words: keep the neighbours out of it
-              className={seg.mark.kind === 'claim' ? 'mx-[0.3em] whitespace-nowrap' : undefined}
+              className={seg.mark.kind === 'claim' ? 'mx-[0.45em] whitespace-nowrap' : undefined}
             >
               {seg.text}
             </RedPen>
