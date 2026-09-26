@@ -137,6 +137,13 @@ export function AdmitSlip() {
                   setEmail(e.target.value);
                   if (hint) setHint('');
                 }}
+                onKeyDown={(e) => {
+                  // The honeypot is a second text field, which stops the browser submitting
+                  // the form on Enter by itself, so Enter submits it here.
+                  if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
+                  e.preventDefault();
+                  e.currentTarget.form?.requestSubmit();
+                }}
                 placeholder="you@university.edu"
                 aria-invalid={Boolean(hint) || status === 'error'}
                 aria-describedby={`${uid}-note`}
