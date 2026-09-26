@@ -26,8 +26,8 @@ export default function HomePage() {
       />
       <RoomStory />
       <LiveEngine />
-      <Modes />
       <Loop />
+      <Modes />
       <Subjects />
       <Rooms />
       <Privacy />
