@@ -1,408 +1,396 @@
 'use client';
 
-import { Fragment, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+} from 'react';
+import {
+  animate,
+  motion,
+  useDragControls,
+  useInView,
+  useMotionValue,
+  useTransform,
+  type MotionValue,
+  type Transition,
+} from 'motion/react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { EASE, SPRING } from '@/lib/motion';
 import { cn } from '@/lib/cn';
-import { useLoop, useOnScreen } from '@/components/ui/hooks';
+import { MODES, ModePreview } from './ModePreviews';
+import { poseFor, isFlick, flickDirection, type Pose } from './deck';
+import { useMedia, useReducedMarkup } from './useHome';
 
-type CSSVars = React.CSSProperties & Record<`--${string}`, string>;
-const d = (ms: number): CSSVars => ({ '--d': `${ms}ms` });
+const N = MODES.length;
 
-const MODES = [
-  {
-    id: 'mock-viva',
-    name: 'Mock Viva',
-    blurb: 'A chained examiner. Every follow-up targets your weakest axis.',
-    period: 5600,
-  },
-  {
-    id: 'interview',
-    name: 'Interview',
-    blurb: 'Behavioural and role questions, scored on STAR structure.',
-    period: 5600,
-  },
-  {
-    id: 'quick',
-    name: 'Quick Question',
-    blurb: 'One question, one answer, instant marks. The warm-up.',
-    period: 4200,
-  },
-  {
-    id: 'flash',
-    name: 'Flash Recall',
-    blurb: 'Rapid recall, spaced around the things you keep missing.',
-    period: 4400,
-  },
-  {
-    id: 'explain',
-    name: 'Explain It',
-    blurb: 'Teach it simply or you do not own it. Marked on clarity.',
-    period: 6000,
-  },
-  {
-    id: 'rapid',
-    name: 'Rapid Fire',
-    blurb: 'A countdown per question. Composure is the skill.',
-    period: 8000,
-  },
-] as const;
-
-type ModeId = (typeof MODES)[number]['id'];
-
-/* ── Previews: small working versions of each mode, replayed on a loop ───── */
-
-function MockViva() {
-  const chain = [
-    { tag: 'Opening question', q: 'Walk me through how you would assess a patient with chest pain.' },
-    { tag: 'Follow-up on Correctness', q: 'You skipped the differential. What else could it be?' },
-    { tag: 'Follow-up on Structure', q: 'Good. Now say it again, in order this time.' },
-  ];
-  return (
-    <ol className="relative space-y-3 pl-7">
-      <span aria-hidden className="grow-y absolute bottom-10 left-[9px] top-4 w-[2px] rounded-full bg-line" style={d(150)} />
-      {chain.map((c, i) => (
-        <li key={c.q} className="seq relative" style={d(i * 1100)}>
-          <span
-            aria-hidden
-            className={cn(
-              'absolute -left-7 top-4 h-[20px] w-[20px] rounded-full border-[3px] border-card',
-              i === 0 ? 'bg-ink' : 'bg-verm',
-            )}
-          />
-          <div className="rounded-2xl border border-line bg-canvas px-4 py-3.5">
-            <p className={cn('text-xs font-bold', i === 0 ? 'text-ink-mut' : 'text-verm-text')}>{c.tag}</p>
-            <p className="mt-1 font-bold leading-snug">{c.q}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
+/** How the front card last changed, so each card knows how to travel. */
+interface Move {
+  kind: 'next' | 'prev' | 'jump';
+  /** Which way a flung card leaves. */
+  dir: 1 | -1;
+  /** Release velocity in px/s after a flick; 0 for buttons and keys. */
+  velocity: number;
 }
 
-function Interview() {
-  const star = [
-    ['Situation', 1, 'Two teams, one launch date.'],
-    ['Task', 0.9, 'Get them to agree on scope.'],
-    ['Action', 0.85, 'A shared list, cut to what mattered.'],
-    ['Result', 0.28, 'Thin. What changed because of you?'],
-  ] as const;
-  return (
-    <div>
-      <p className="seq rounded-2xl bg-ink px-4 py-3.5 font-bold leading-snug text-canvas" style={d(0)}>
-        Tell me about a time you resolved a conflict on a team.
-      </p>
-      <ul className="mt-5 space-y-3.5">
-        {star.map(([label, fill, note], i) => (
-          <li key={label} className="grid grid-cols-[5.5rem_1fr] items-center gap-3">
-            <span className="text-sm font-black">{label}</span>
-            <div>
-              <div className="h-2.5 overflow-hidden rounded-full">
-                <span
-                  className={cn('grow-x block h-full rounded-full', i === 3 ? 'bg-verm' : 'bg-cobalt')}
-                  style={{ ...d(500 + i * 700), width: `${fill * 100}%` }}
-                />
-              </div>
-              <p
-                className={cn('seq mt-1 text-xs font-semibold', i === 3 ? 'text-verm-text' : 'text-ink-mut')}
-                style={d(800 + i * 700)}
-              >
-                {note}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+/** Anything inside a card that takes its own pointer input. */
+function isControl(target: EventTarget | null) {
+  return target instanceof Element && Boolean(target.closest('button, input, a, [role="slider"]'));
 }
 
-function Quick() {
-  return (
-    <div className="flex h-full flex-col">
-      <p className="seq text-[1.35rem] font-black leading-tight" style={d(0)}>
-        What is the difference between weather and climate?
-      </p>
-      <div className="mt-auto flex items-end gap-5 pt-6">
-        <div key="stamp" className="seq" style={d(1300)}>
-          <div className="stamp rounded-2xl bg-verm px-5 py-3 text-coal">
-            <span className="marks block text-5xl font-bold leading-none">74</span>
-            <span className="marks text-xs font-bold">/100</span>
-          </div>
-        </div>
-        <div className="seq pb-1" style={d(1700)}>
-          <p className="font-bold">
-            Fix first: <span className="text-verm-text">Structure</span>
-          </p>
-          <p className="mt-1 max-w-xs text-sm leading-snug text-ink-mut">
-            Lead with the one-line distinction, then give the example.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+interface CardProps {
+  index: number;
+  slot: number;
+  narrow: boolean;
+  reduce: boolean;
+  move: RefObject<Move>;
+  dealt: boolean;
+  running: boolean;
+  tabId: string;
+  panelId: string;
+  register: (index: number, el: HTMLDivElement | null) => void;
+  onFlick: (dir: 1 | -1, velocity: number) => void;
+  onPick: (index: number) => void;
+  onSettled: (index: number) => void;
+  onKey: (e: ReactKeyboardEvent<HTMLDivElement>) => void;
+  nudge: boolean;
 }
 
-function Flash() {
-  const steps = ['Again in 10 min', 'Tomorrow', 'In 4 days'];
-  return (
-    <div className="flex h-full flex-col">
-      <div className="mx-auto w-full max-w-sm [perspective:900px]">
-        <div className="relative h-44 [transform-style:preserve-3d] motion-safe:animate-[vv-flip_4.4s_var(--ease-in-out)_both]">
-          <div className="absolute inset-0 grid place-items-center rounded-2xl border border-line bg-canvas p-5 text-center [backface-visibility:hidden]">
-            <div>
-              <p className="text-xs font-bold text-ink-mut">Contract law</p>
-              <p className="display mt-2 text-3xl">Define: tort</p>
-            </div>
-          </div>
-          <div className="absolute inset-0 grid place-items-center rounded-2xl bg-cobalt p-5 text-center text-paper [backface-visibility:hidden] [transform:rotateY(180deg)]">
-            <p className="text-lg font-bold leading-snug">
-              A civil wrong that causes harm, for which the courts give a remedy.
-            </p>
-          </div>
-        </div>
-      </div>
-      <ul className="mt-auto flex flex-wrap justify-center gap-2 pt-6">
-        {steps.map((s, i) => (
-          <li
-            key={s}
-            className={cn(
-              'seq rounded-full px-3.5 py-1.5 text-sm font-bold',
-              i === 1 ? 'bg-ink text-canvas' : 'bg-card-2 text-ink-mut',
-            )}
-            style={d(2600 + i * 120)}
-          >
-            {s}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+function DeckCard({
+  index,
+  slot,
+  narrow,
+  reduce,
+  move,
+  dealt,
+  running,
+  tabId,
+  panelId,
+  register,
+  onFlick,
+  onPick,
+  onSettled,
+  onKey,
+  nudge,
+}: CardProps) {
+  const mode = MODES[index]!;
+  const start = poseFor(slot, narrow);
+  const x = useMotionValue(start.x);
+  const y = useMotionValue(start.y);
+  const rotate = useMotionValue(start.rotate);
+  const scale = useMotionValue(start.scale);
+  const z = useMotionValue(N - slot);
+  // The hand's pull, separate from the resting pose, with a tilt that follows it.
+  const pull = useMotionValue(0);
+  const tilt = useTransform(pull, [-360, 0, 360], [-10, 0, 10]);
+  const controls = useDragControls();
+  const shell = useRef<HTMLDivElement | null>(null);
+  const was = useRef({ slot, narrow });
+  const token = useRef(0);
+  const front = slot === 0;
 
-function Explain() {
-  const parts: ([string] | [string, string])[] = [
-    ['The '],
-    ['myocardium', 'heart muscle'],
-    [' '],
-    ['depolarises', 'fires a signal'],
-    [', so the chambers '],
-    ['contract synchronously', 'squeeze in time'],
-    ['.'],
-  ];
-  let swap = 0;
-  return (
-    <div className="flex h-full flex-col">
-      <p className="text-[1.3rem] font-bold leading-[1.7]">
-        {parts.map((p, i) => {
-          if (p.length === 1) return <span key={i}>{p[0]}</span>;
-          const at = 700 + swap++ * 1100;
-          // Each phrase holds together, but the swap may break between the
-          // struck words and their replacement on narrow screens.
-          return (
-            <Fragment key={i}>
-              <del className="relative whitespace-nowrap text-ink-mut no-underline">
-                {p[0]}
-                <span aria-hidden className="grow-x absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-verm" style={d(at)} />
-              </del>{' '}
-              <ins className="seq whitespace-nowrap rounded-md bg-butter px-1 text-coal no-underline" style={d(at + 350)}>
-                {p[1]}
-              </ins>
-            </Fragment>
-          );
-        })}
-      </p>
-      <div className="mt-auto flex items-center gap-3 pt-6">
-        <span className="text-sm font-black">Clarity</span>
-        <span className="marks relative inline-grid h-9 w-14 place-items-center overflow-hidden rounded-full bg-card-2 text-sm font-bold">
-          <span className="seq-out col-start-1 row-start-1" style={d(3600)}>52</span>
-          <span className="seq col-start-1 row-start-1 grid h-full w-full place-items-center bg-pass text-paper" style={d(3800)}>
-            81
-          </span>
-        </span>
-        <span className="seq text-sm text-ink-mut" style={d(3900)}>
-          Same idea, no jargon.
-        </span>
-      </div>
-    </div>
-  );
-}
-
-const RAPID = [
-  'Name three causes of acute kidney injury.',
-  'What does a p-value actually tell you?',
-  'Give one argument against judicial review.',
-  'Why is the sky blue, in one sentence?',
-];
-const RAPID_SECONDS = 8;
-
-function Rapid({ cycle }: { cycle: number }) {
-  const reduce = useReducedMotion();
-  const [left, setLeft] = useState(RAPID_SECONDS);
   useEffect(() => {
-    if (reduce) return;
-    const start = performance.now();
-    const id = setInterval(() => {
-      const s = RAPID_SECONDS - Math.floor((performance.now() - start) / 1000);
-      setLeft(Math.max(0, s));
-    }, 200);
-    return () => clearInterval(id);
-  }, [cycle, reduce]);
-  const C = 2 * Math.PI * 52;
+    const prev = was.current;
+    was.current = { slot, narrow };
+    const id = ++token.current;
+    const stale = () => token.current !== id;
+    const target = poseFor(slot, narrow);
+    const all = (p: Pose, t: Transition) =>
+      Promise.all([
+        animate(x, p.x, t),
+        animate(y, p.y, t),
+        animate(rotate, p.rotate, t),
+        animate(scale, p.scale, t),
+      ]);
+    const place = () => {
+      x.set(target.x);
+      y.set(target.y);
+      rotate.set(target.rotate);
+      scale.set(target.scale);
+      z.set(N - slot);
+    };
+    const arrived = () => {
+      if (stale()) return;
+      z.set(N - slot);
+      if (slot === 0) onSettled(index);
+    };
+
+    if (prev.slot === slot) {
+      // The layout changed (a phone turned sideways): no travel.
+      if (prev.narrow !== narrow) place();
+      return;
+    }
+    if (reduce) {
+      place();
+      arrived();
+      return;
+    }
+
+    const m = move.current;
+    if (prev.slot === 0 && slot === N - 1 && m.kind === 'next') {
+      // Thrown: it leaves the way it was flung, then tucks in under the pile.
+      z.set(N + 2);
+      const away = narrow ? 460 : 640;
+      const out: Transition = m.velocity
+        ? { type: 'spring', bounce: 0.2, visualDuration: 0.34, velocity: m.velocity }
+        : { duration: 0.34, ease: EASE.inOut };
+      void Promise.all([
+        animate(x, m.dir * away, out),
+        animate(y, -24, { duration: 0.34, ease: EASE.out }),
+        animate(rotate, m.dir * 13, { duration: 0.34, ease: EASE.out }),
+      ]).then(() => {
+        if (stale()) return;
+        z.set(N - slot);
+        void all(target, { duration: 0.5, ease: EASE.inOut }).then(arrived);
+      });
+      return;
+    }
+    if (prev.slot === N - 1 && slot === 0 && m.kind === 'prev') {
+      // Drawn from the bottom: out past the pile, then laid on top.
+      const side = narrow ? 1 : -1;
+      void animate(x, x.get() + side * (narrow ? 300 : 240), { duration: 0.24, ease: EASE.out }).then(() => {
+        if (stale()) return;
+        z.set(N + 2);
+        void all(target, SPRING.ui).then(arrived);
+      });
+      return;
+    }
+    z.set(slot === 0 ? N + 1 : N - slot);
+    void all(target, slot === 0 ? SPRING.ui : { duration: 0.46, ease: EASE.inOut }).then(arrived);
+    // Travel only when the slot or the layout changes; the rest is read fresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slot, narrow, reduce]);
+
+  // A small tug the first time the deck is seen, to say the card moves.
+  useEffect(() => {
+    if (!nudge || !front || reduce) return;
+    const ctrl = animate(pull, [0, -34, 6, 0], {
+      duration: 1.1,
+      times: [0, 0.4, 0.75, 1],
+      ease: EASE.inOut,
+      delay: 0.5,
+    });
+    return () => ctrl.stop();
+  }, [nudge, front, reduce, pull]);
+
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!front || reduce || isControl(e.target)) return;
+    controls.start(e);
+  };
+
   return (
-    <div className="flex h-full flex-col items-center justify-center text-center">
-      <div className="relative h-36 w-36">
-        <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90" aria-hidden>
-          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--color-card-2)" strokeWidth="9" />
-          <circle
-            cx="60"
-            cy="60"
-            r="52"
-            fill="none"
-            stroke="var(--color-verm)"
-            strokeWidth="9"
-            strokeLinecap="round"
-            strokeDasharray={C}
-            className="motion-safe:animate-[vv-countdown_8s_linear_both]"
-            style={{ '--c': `${C}` } as CSSVars}
-          />
-        </svg>
-        <span className="marks absolute inset-0 grid place-items-center text-4xl font-bold">
-          {reduce ? RAPID_SECONDS : left}
-        </span>
-      </div>
-      <p className="marks mt-5 text-xs font-bold text-ink-mut">
-        Question {(cycle % 10) + 1} of 10
-      </p>
-      <p className="seq mt-2 max-w-sm text-xl font-black leading-tight" style={d(0)}>
-        {RAPID[cycle % RAPID.length]}
-      </p>
-    </div>
+    <motion.div
+      ref={(el) => {
+        shell.current = el;
+        register(index, el);
+      }}
+      role="tabpanel"
+      id={panelId}
+      aria-labelledby={tabId}
+      aria-roledescription="slide"
+      aria-hidden={front ? undefined : true}
+      tabIndex={front ? 0 : -1}
+      onKeyDown={front ? onKey : undefined}
+      onClick={front ? undefined : () => onPick(index)}
+      className={cn('vv-deck-card', !front && 'vv-deck-card-back')}
+      style={{ x, y, rotate, scale, zIndex: z as MotionValue<number> }}
+    >
+      <motion.div
+        drag={front && !reduce ? 'x' : false}
+        dragListener={false}
+        dragControls={controls}
+        dragMomentum={false}
+        onPointerDown={onPointerDown}
+        onDragEnd={(_, info) => {
+          const width = shell.current?.offsetWidth ?? 560;
+          if (isFlick(info.offset.x, info.velocity.x, width)) {
+            // Hand the pull over to the pose in one frame, so nothing jumps.
+            x.set(x.get() + pull.get());
+            rotate.set(rotate.get() + tilt.get());
+            pull.set(0);
+            onFlick(flickDirection(info.offset.x, info.velocity.x), info.velocity.x);
+          } else {
+            void animate(pull, 0, SPRING.ui);
+          }
+        }}
+        className="vv-deck-grip"
+        style={{ x: pull, rotate: tilt }}
+      >
+        <article className="vv-index-card" inert={!front}>
+          <header className="vv-index-card-head">
+            <h3 className="text-[1.3rem] font-black leading-tight tracking-[-0.01em] sm:text-[1.45rem]">
+              {mode.name}
+            </h3>
+            <p className="mt-0.5 text-[0.9rem] font-medium leading-snug text-ink-mut">{mode.blurb}</p>
+          </header>
+          <div className="vv-index-card-body">
+            <ModePreview id={mode.id} running={running} dealt={dealt} />
+          </div>
+        </article>
+      </motion.div>
+    </motion.div>
   );
 }
 
-function Preview({ id, cycle }: { id: ModeId; cycle: number }) {
-  switch (id) {
-    case 'mock-viva':
-      return <MockViva />;
-    case 'interview':
-      return <Interview />;
-    case 'quick':
-      return <Quick />;
-    case 'flash':
-      return <Flash />;
-    case 'explain':
-      return <Explain />;
-    case 'rapid':
-      return <Rapid cycle={cycle} />;
-  }
-}
-
-/* ── The switcher ─────────────────────────────────────────────────────────── */
-
-export function Modes() {
-  const [active, setActive] = useState<ModeId>('mock-viva');
-  const [stageRef, onScreen] = useOnScreen<HTMLDivElement>('-10% 0px');
-  const mode = MODES.find((m) => m.id === active)!;
-  const cycle = useLoop(mode.period, onScreen);
+/**
+ * Six modes as a deck of question cards you can handle. Drag or flick the
+ * front card away and it tucks in at the back; the rest fan out behind it.
+ * The buttons, the mode list and the arrow keys deal cards too. The card in
+ * front plays a small working version of its mode while it is on screen.
+ */
+export function Modes({ className }: { className?: string }) {
+  const uid = useId();
+  const reduce = useReducedMarkup();
+  const narrow = useMedia('(max-width: 1023px)');
+  const [front, setFront] = useState(0);
+  const [settled, setSettled] = useState(0);
+  const [touched, setTouched] = useState(false);
+  const [said, setSaid] = useState('');
+  const move = useRef<Move>({ kind: 'jump', dir: 1, velocity: 0 });
+  const cards = useRef<(HTMLDivElement | null)[]>([]);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const deck = useRef<HTMLDivElement>(null);
+  const seen = useInView(deck, { amount: 0.35 });
+  const firstLook = useInView(deck, { amount: 0.6, once: true });
 
-  function onKeyDown(e: React.KeyboardEvent) {
-    const i = MODES.findIndex((m) => m.id === active);
-    let next = -1;
-    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') next = (i + 1) % MODES.length;
-    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') next = (i - 1 + MODES.length) % MODES.length;
-    if (e.key === 'Home') next = 0;
-    if (e.key === 'End') next = MODES.length - 1;
-    if (next < 0) return;
+  const go = useCallback(
+    (to: number, m: Move, focus?: 'card' | 'tab') => {
+      const i = ((to % N) + N) % N;
+      if (i === front) return;
+      move.current = m;
+      setTouched(true);
+      setFront(i);
+      setSettled(-1);
+      setSaid(`${MODES[i]!.name}, card ${i + 1} of ${N}`);
+      if (focus) {
+        requestAnimationFrame(() =>
+          (focus === 'card' ? cards.current[i] : tabs.current[i])?.focus({ preventScroll: true }),
+        );
+      }
+    },
+    [front],
+  );
+
+  const next = (focus?: 'card' | 'tab') => go(front + 1, { kind: 'next', dir: 1, velocity: 0 }, focus);
+  const prev = (focus?: 'card' | 'tab') => go(front - 1, { kind: 'prev', dir: -1, velocity: 0 }, focus);
+
+  const onCardKey = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      next('card');
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      prev('card');
+    }
+  };
+
+  const onTabKey = (e: ReactKeyboardEvent<HTMLButtonElement>) => {
+    let to: number;
+    let kind: Move['kind'] = 'jump';
+    if (e.key === 'ArrowRight') {
+      to = front + 1;
+      kind = 'next';
+    } else if (e.key === 'ArrowLeft') {
+      to = front - 1;
+      kind = 'prev';
+    } else if (e.key === 'Home') to = 0;
+    else if (e.key === 'End') to = N - 1;
+    else return;
     e.preventDefault();
-    setActive(MODES[next]!.id);
-    tabs.current[next]?.focus();
-  }
+    go(to, { kind, dir: kind === 'prev' ? -1 : 1, velocity: 0 }, 'tab');
+  };
+
+  const register = useCallback((i: number, el: HTMLDivElement | null) => {
+    cards.current[i] = el;
+  }, []);
+  const onSettled = useCallback((i: number) => setSettled(i), []);
 
   return (
-    <section aria-labelledby="modes-title" className="mx-auto w-full max-w-[1360px] px-4 py-24 sm:px-5 sm:py-32">
-      <div className="max-w-3xl">
-        <h2 id="modes-title" className="display text-[clamp(2.4rem,5.2vw,4.6rem)]">
-          Six ways to spar.
-        </h2>
-        <p className="mt-5 max-w-xl text-lg font-medium leading-relaxed text-ink-mut">
-          Pick the room you are preparing for. Each mode trains a different part
-          of saying it well.
-        </p>
-      </div>
+    <section
+      aria-labelledby={`${uid}-title`}
+      className={cn('vv-modes mx-auto w-full max-w-[1360px] px-4 py-20 sm:px-5 sm:py-28', className)}
+    >
+      <h2 id={`${uid}-title`} className="display max-w-[17ch] text-[clamp(2.1rem,3.9vw,3.3rem)] lg:max-w-none">
+        Six ways to spar. <span className="text-ink-mut">Deal yourself the room you are facing.</span>
+      </h2>
 
-      <div className="mt-12 grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.3fr)] lg:gap-6">
-        <div
-          role="tablist"
-          aria-label="Practice modes"
-          onKeyDown={onKeyDown}
-          className="-mx-4 flex snap-x gap-1 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0"
-        >
+      <div role="region" aria-roledescription="carousel" aria-label="Practice modes" className="mt-10 sm:mt-14">
+        <div ref={deck} className="vv-deck" data-narrow={narrow ? '' : undefined}>
           {MODES.map((m, i) => {
-            const on = m.id === active;
+            const slot = (i - front + N) % N;
+            const dealt = slot === 0 && settled === i;
             return (
-              <button
+              <DeckCard
                 key={m.id}
-                ref={(n) => {
-                  tabs.current[i] = n;
-                }}
-                role="tab"
-                id={`tab-${m.id}`}
-                aria-selected={on}
-                aria-controls="mode-stage"
-                tabIndex={on ? 0 : -1}
-                onClick={() => setActive(m.id)}
-                className={cn(
-                  'relative shrink-0 snap-start cursor-pointer rounded-2xl px-4 py-3 text-left transition-colors duration-150 lg:px-5 lg:py-4',
-                  on ? 'text-canvas' : 'text-ink hover:bg-card-2',
-                )}
-              >
-                {on && (
-                  <motion.span
-                    layoutId="mode-pill"
-                    aria-hidden
-                    className="absolute inset-0 -z-10 rounded-2xl bg-ink"
-                    transition={{ type: 'spring', duration: 0.42, bounce: 0.12 }}
-                  />
-                )}
-                <span className="block whitespace-nowrap text-base font-black lg:text-xl">{m.name}</span>
-                <span
-                  className={cn(
-                    'mt-1 hidden text-[0.95rem] leading-snug lg:block',
-                    on ? 'text-canvas/75' : 'text-ink-mut',
-                  )}
-                >
-                  {m.blurb}
-                </span>
-              </button>
+                index={i}
+                slot={slot}
+                narrow={narrow}
+                reduce={reduce}
+                move={move}
+                dealt={dealt}
+                running={dealt && seen && !reduce}
+                tabId={`${uid}-tab-${i}`}
+                panelId={`${uid}-card-${i}`}
+                register={register}
+                onFlick={(dir, velocity) => go(front + 1, { kind: 'next', dir, velocity })}
+                onPick={(pick) => go(pick, { kind: 'jump', dir: 1, velocity: 0 })}
+                onSettled={onSettled}
+                onKey={onCardKey}
+                nudge={firstLook && !touched}
+              />
             );
           })}
         </div>
 
-        <div
-          ref={stageRef}
-          id="mode-stage"
-          role="tabpanel"
-          aria-labelledby={`tab-${active}`}
-          className="tile relative flex min-h-[27rem] flex-col overflow-hidden p-6 sm:p-9"
-        >
-          <p className="text-[1.02rem] font-semibold leading-snug text-ink-mut lg:hidden">{mode.blurb}</p>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={`${active}-${cycle}`}
-              initial={{ opacity: 0, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, filter: 'blur(4px)', transition: { duration: 0.14 } }}
-              transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-              className="mt-6 flex flex-1 flex-col justify-center lg:mt-0"
-            >
-              <Preview id={active} cycle={cycle} />
-            </motion.div>
-          </AnimatePresence>
-          <p className="mt-6 text-xs font-semibold text-ink-mut">
-            Example previews. Scores are guidance, not grades.
-          </p>
+        <div className="vv-deck-controls">
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={() => prev()} aria-label="Previous mode" className="btn btn-secondary btn-icon">
+              <ArrowLeft size={18} aria-hidden />
+            </button>
+            <p className="min-w-[3.4rem] text-center text-sm font-bold text-ink-mut" aria-hidden>
+              <span className="marks text-ink">{front + 1}</span> / <span className="marks">{N}</span>
+            </p>
+            <button type="button" onClick={() => next()} aria-label="Next mode" className="btn btn-secondary btn-icon">
+              <ArrowRight size={18} aria-hidden />
+            </button>
+          </div>
+
+          <div role="tablist" aria-label="Modes" className="vv-mode-list">
+            {MODES.map((m, i) => (
+              <button
+                key={m.id}
+                ref={(el) => {
+                  tabs.current[i] = el;
+                }}
+                type="button"
+                role="tab"
+                id={`${uid}-tab-${i}`}
+                aria-selected={i === front}
+                aria-controls={`${uid}-card-${i}`}
+                tabIndex={i === front ? 0 : -1}
+                onClick={() => go(i, { kind: 'jump', dir: 1, velocity: 0 })}
+                onKeyDown={onTabKey}
+                className="vv-mode-tab"
+              >
+                {m.name}
+              </button>
+            ))}
+          </div>
         </div>
+        <p className="mt-6 flex flex-wrap gap-x-6 gap-y-1 text-[0.8rem] font-semibold text-ink-mut">
+          <span className="vv-hint-fine">Drag or flick the card, or use the arrow keys.</span>
+          <span className="vv-hint-touch">Swipe the card for the next one.</span>
+          <span>Example previews. Scores are guidance, not grades.</span>
+        </p>
+        <p className="sr-only" aria-live="polite">
+          {said}
+        </p>
       </div>
     </section>
   );

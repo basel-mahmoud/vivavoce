@@ -1,0 +1,270 @@
+/*
+ * Styles for the home sections (components/home). Imported by
+ * app/globals.css after ui.css, so they share the theme tokens. Tokens only.
+ */
+
+@layer components {
+  /* ── Modes: the deck ────────────────────────────────────────────────── */
+
+  .vv-deck {
+    --card-w: min(37rem, 100%);
+    --card-h: 25.5rem;
+    position: relative;
+    height: calc(var(--card-h) + 5.5rem);
+  }
+  .vv-deck[data-narrow] {
+    --card-w: min(100%, 36rem);
+    --card-h: 28.5rem;
+    height: calc(var(--card-h) + 3.5rem);
+  }
+  @media (max-width: 420px) {
+    .vv-deck[data-narrow] {
+      --card-h: 30.5rem;
+    }
+  }
+  .vv-deck-card {
+    position: absolute;
+    top: 0;
+    /* The fan (five cards, 6rem apart) opens to the left of the front card. */
+    left: min(calc(50% - var(--card-w) / 2 + 15rem), calc(100% - var(--card-w)));
+    width: var(--card-w);
+    height: var(--card-h);
+    border-radius: 1.4rem;
+    transform-origin: 50% 50%;
+    touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .vv-deck[data-narrow] .vv-deck-card {
+    top: 3.25rem;
+    left: calc(50% - var(--card-w) / 2);
+  }
+  .vv-deck-card:focus-visible {
+    outline-offset: 5px;
+  }
+  .vv-deck-card-back {
+    cursor: pointer;
+  }
+  .vv-deck-grip {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
+  .vv-deck-card:not(.vv-deck-card-back) .vv-deck-grip {
+    cursor: grab;
+  }
+  .vv-deck-card:not(.vv-deck-card-back) .vv-deck-grip:active {
+    cursor: grabbing;
+  }
+
+  /* An index card: a red rule under the heading, faint blue rules below. */
+  .vv-index-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    border-radius: inherit;
+    background: var(--color-card);
+    box-shadow: var(--shadow-float);
+    transition:
+      translate 220ms var(--ease-out),
+      box-shadow 220ms var(--ease-out);
+  }
+  .vv-deck-card-back .vv-index-card {
+    box-shadow: var(--shadow-paper);
+  }
+  .vv-index-card-head {
+    flex: none;
+    padding: 1.2rem 1.5rem 0.95rem;
+    border-bottom: 1.5px solid var(--color-margin);
+  }
+  .vv-index-card-body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    padding: 1.15rem 1.5rem 1.35rem;
+  }
+  /* Cards in the pile are there to be picked, not read. */
+  .vv-deck-card-back .vv-index-card-body > * {
+    opacity: 0.5;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-deck-card-back:hover .vv-index-card {
+      translate: 0 -10px;
+      box-shadow: var(--shadow-float);
+    }
+  }
+
+  .vv-deck-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-deck-controls {
+      flex-direction: row;
+      align-items: center;
+      gap: 2.5rem;
+      margin-top: 0.5rem;
+    }
+  }
+
+  /* The mode list: the names of the cards, the one in front underlined in blue ink. */
+  .vv-mode-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 1.25rem;
+  }
+  .vv-mode-tab {
+    position: relative;
+    padding: 0.55rem 0.1rem;
+    color: var(--color-ink-mut);
+    font-size: 0.98rem;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color var(--dur-hover) ease;
+  }
+  .vv-mode-tab::after {
+    content: '';
+    position: absolute;
+    left: 0.1rem;
+    right: 0.1rem;
+    bottom: 0.3rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--color-ink-blue);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 320ms var(--ease-out);
+  }
+  .vv-mode-tab[aria-selected='true'] {
+    color: var(--color-ink);
+  }
+  .vv-mode-tab[aria-selected='true']::after {
+    transform: scaleX(1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-mode-tab:hover {
+      color: var(--color-ink);
+    }
+  }
+
+  .vv-hint-touch {
+    display: none;
+  }
+  @media (pointer: coarse) {
+    .vv-hint-fine {
+      display: none;
+    }
+    .vv-hint-touch {
+      display: inline;
+    }
+  }
+
+  /* The flagged STAR tile: the red pen rings the whole tile. */
+  .vv-star-flag .vv-redpen-words {
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  /* Quick Question paddles, a size down on phones. */
+  .vv-paddle.vv-quick-paddle {
+    --d: 2.9rem;
+  }
+  @media (min-width: 640px) {
+    .vv-paddle.vv-quick-paddle {
+      --d: 3.75rem;
+    }
+  }
+
+  /* Flash Recall: a card that turns over. */
+  .vv-flashcard-inner {
+    transform-style: preserve-3d;
+    transition: transform 560ms var(--ease-in-out);
+  }
+  .vv-flashcard[data-flipped] .vv-flashcard-inner {
+    transform: rotateY(180deg);
+  }
+  .vv-flashcard-face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .vv-flashcard-back {
+    transform: rotateY(180deg);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-flashcard:hover .vv-flashcard-face:not(.vv-flashcard-back) {
+      border-color: color-mix(in oklab, var(--color-ink) 30%, var(--color-line));
+    }
+  }
+
+  /* Explain It: your answer on the left of the rule, the improved one right. */
+  .vv-compare-top {
+    clip-path: inset(0 0 0 var(--pct, 100%));
+  }
+  .vv-compare-rule {
+    left: var(--pct, 100%);
+    width: 2px;
+    margin-left: -1px;
+    background: var(--color-ink);
+  }
+  .vv-compare:has(.vv-compare-input:focus-visible) {
+    outline: 2px solid var(--vv-focus);
+    outline-offset: 3px;
+  }
+
+  /* Rapid Fire: the dot-matrix clock. */
+  .vv-dotclock circle {
+    fill: color-mix(in oklab, var(--color-paper) 7%, transparent);
+    transition: fill 140ms ease;
+  }
+  .vv-dotclock circle[data-on] {
+    fill: var(--color-paper);
+  }
+  .vv-dotclock-out circle[data-on] {
+    fill: var(--color-butter);
+  }
+
+  @keyframes vv-rise-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 6px, 0);
+    }
+  }
+  .vv-rise-in {
+    animation: vv-rise-in 420ms var(--ease-out) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-index-card {
+      transition: none;
+    }
+    .vv-flashcard-inner,
+    .vv-flashcard[data-flipped] .vv-flashcard-inner {
+      transform: none;
+      transition: none;
+    }
+    .vv-flashcard-face {
+      backface-visibility: visible;
+      transition: opacity 200ms ease;
+    }
+    .vv-flashcard-back {
+      transform: none;
+      opacity: 0;
+    }
+    .vv-flashcard[data-flipped] .vv-flashcard-back {
+      opacity: 1;
+    }
+    .vv-flashcard[data-flipped] .vv-flashcard-face:not(.vv-flashcard-back) {
+      opacity: 0;
+    }
+    .vv-dotclock circle {
+      transition: none;
+    }
+    .vv-rise-in {
+      animation: none;
+    }
+  }
+}
