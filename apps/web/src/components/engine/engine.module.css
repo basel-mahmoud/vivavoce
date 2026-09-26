@@ -317,6 +317,8 @@
 .bench {
   position: absolute;
   inset: 0;
+  /* the lamp pool behind the panel runs wider than the bench: never past the screen's edge */
+  overflow: clip;
   display: flex;
   flex-direction: column;
   justify-content: center;
