@@ -16,7 +16,7 @@ const SHEET_S = 0.5;
 /**
  * A floating capsule with a hairline edge that turns into a solid card once
  * the page moves under it. One hover pill slides between the links (fine
- * pointers). Below 768px the links live in a sheet of ruled paper that drops
+ * pointers). Below 960px the links live in a sheet of ruled paper that drops
  * from behind the capsule on the drawer curve: focus is held inside it,
  * Escape or the scrim closes it, and the page behind is inert.
  */
@@ -70,7 +70,7 @@ export function Nav() {
       e.preventDefault();
       loop[next]?.focus();
     };
-    const wide = window.matchMedia('(min-width: 768px)');
+    const wide = window.matchMedia('(min-width: 960px)');
     const onWide = () => {
       if (wide.matches) setOpen(false);
     };
