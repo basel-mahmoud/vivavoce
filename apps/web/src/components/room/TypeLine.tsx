@@ -48,12 +48,31 @@ export function TypeLine({
   }, [text, cps, delay, instant]);
 
   const shown = instant ? text.length : count;
-  const done = shown >= text.length;
+  if (shown >= text.length) {
+    return (
+      <span className={className}>
+        <span className="sr-only">{text}</span>
+        <span aria-hidden>{text}</span>
+      </span>
+    );
+  }
+  // While it types, the rest of the line holds its place (invisible), so the note has its final
+  // size from the first letter and nothing reflows. The word being typed never breaks at the
+  // caret, and the caret takes no room of its own.
+  const wordStart = text.lastIndexOf(' ', shown - 1) + 1;
+  const space = text.indexOf(' ', shown);
+  const wordEnd = space < 0 ? text.length : space;
   return (
     <span className={className}>
       <span className="sr-only">{text}</span>
-      <span aria-hidden className={done || !caret ? undefined : 'caret'}>
-        {text.slice(0, shown)}
+      <span aria-hidden>
+        {text.slice(0, wordStart)}
+        <span className="whitespace-nowrap">
+          {text.slice(wordStart, shown)}
+          {caret && <span className="caret mr-[calc(-0.5em_-_2px)]" />}
+          <span className="invisible">{text.slice(shown, wordEnd)}</span>
+        </span>
+        <span className="invisible">{text.slice(wordEnd)}</span>
       </span>
     </span>
   );

@@ -7,8 +7,9 @@ import type { RoomOverlays, RoundState } from './Director';
 /**
  * The example round's words, as margin notes pinned to the room: the examiner's note sits above
  * the whole panel (never over a face or a raised mark) with a red-pen leader down to the speaker;
- * the candidate's answer is written in blue ink under the bench. The Director positions them
- * every frame; React only changes their words once per phase.
+ * the candidate's answer is written in blue ink under the bench (on phones, in the questions'
+ * slot above the panel). The Director positions them every frame; React only changes their words
+ * once per phase.
  */
 export function RoomTags({ round, reduce, overlaysRef }: { round: RoundState; reduce: boolean; overlaysRef: React.RefObject<RoomOverlays> }) {
   const script = ROUNDS[round.index % ROUNDS.length]!;

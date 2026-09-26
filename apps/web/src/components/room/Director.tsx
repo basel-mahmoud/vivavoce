@@ -123,8 +123,26 @@ export function Director({
   const timeScale = useRef(devTimeScale());
   const speech = useRef(0);
   const still = useRef(-1);
-  const tagBox = useRef({ w: 0, h: 0, key: '' });
-  const answerBox = useRef({ w: 0, h: 0, key: '' });
+  // the tags' sizes, kept current by a ResizeObserver: they change only when their words do
+  const boxes = useRef({ tagW: 0, tagH: 0, answerW: 0, answerH: 0 });
+
+  useEffect(() => {
+    const tag = overlaysRef.current?.tag;
+    const answer = overlaysRef.current?.answer;
+    if (!tag || !answer) return;
+    const measure = () => {
+      const b = boxes.current;
+      b.tagW = tag.offsetWidth;
+      b.tagH = tag.offsetHeight;
+      b.answerW = answer.offsetWidth;
+      b.answerH = answer.offsetHeight;
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(tag);
+    ro.observe(answer);
+    return () => ro.disconnect();
+  }, [overlaysRef]);
 
   useEffect(() => {
     const fine = window.matchMedia('(pointer: fine)').matches;
@@ -409,36 +427,37 @@ export function Director({
     /* ── DOM tags: the examiner's margin note and the candidate's words ─ */
     const o = overlaysRef.current;
     if (o && cs) {
-      const showTag = inHero && speaker >= 0 && !reduce ? 1 : inHero && reduce && speaker >= 0 ? 1 : 0;
+      const showTag = inHero && speaker >= 0;
+      const showAnswer = inHero && liveRound && (phase === 'listen' || phase === 'mark');
+      // Notes above the panel sit clear of its top edge (the highest crown or raised mark), so they
+      // never cover a face or a mark; on compact layouts they stay below the hero copy.
+      const minTop = shots.compact ? h * (insets.hero + 0.01) : 76;
+      let top = Infinity;
+      if (showTag || (showAnswer && shots.compact)) {
+        for (let i = 0; i < EXAMINERS.length; i++) {
+          const s = SEATS[EXAMINERS[i]!];
+          _v.set(s.position[0], s.top + 0.06, s.position[2]).project(camera);
+          top = Math.min(top, (1 - _v.y) * 0.5 * h);
+          const e = ch.examiners[i]!;
+          if (e.paddle > 0.5) {
+            _v.copy(e.coin).setY(e.coin.y + 0.3).project(camera);
+            top = Math.min(top, (1 - _v.y) * 0.5 * h);
+          }
+        }
+      }
       if (o.tag && o.leader) {
         if (showTag) {
-          if (tagBox.current.key !== key || tagBox.current.w === 0) {
-            tagBox.current = { w: o.tag.offsetWidth, h: o.tag.offsetHeight, key };
-          }
-          // the tag sits above the whole panel (never over a face or a raised mark), its leader
-          // dropping to the speaker's crown
-          let top = Infinity;
-          for (let i = 0; i < EXAMINERS.length; i++) {
-            const k = EXAMINERS[i]!;
-            const s = SEATS[k];
-            _v.set(s.position[0], s.top + 0.06, s.position[2]).project(camera);
-            top = Math.min(top, (1 - _v.y) * 0.5 * h);
-            const e = ch.examiners[i]!;
-            if (e.paddle > 0.5) {
-              _v.copy(e.coin).setY(e.coin.y + 0.3).project(camera);
-              top = Math.min(top, (1 - _v.y) * 0.5 * h);
-            }
-          }
+          // the examiner's note, its red-pen leader dropping to the speaker's crown
           cs.visorWorld(speaker, _w);
           const vis = VISORS[EXAMINERS[speaker]!];
           _v.copy(_w).setY(_w.y + vis.halfHeight * 2.4).project(camera);
           const ax = (_v.x + 1) * 0.5 * w;
           const ay = (1 - _v.y) * 0.5 * h;
-          const tw = tagBox.current.w;
-          const th = tagBox.current.h;
+          const tw = boxes.current.tagW;
+          const th = boxes.current.tagH;
           const minX = shots.compact ? 12 : w * 0.46;
           const tx = Math.min(Math.max(ax - tw / 2, minX), w - tw - 16);
-          const ty = Math.max(top - th - 18, shots.compact ? h * (insets.hero + 0.01) : 76);
+          const ty = Math.max(top - th - 18, minTop);
           o.tag.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0)`;
           o.tag.style.opacity = '1';
           const ly = ty + th;
@@ -450,17 +469,23 @@ export function Director({
         }
       }
       if (o.answer) {
-        const showAnswer = inHero && liveRound && (phase === 'listen' || phase === 'mark');
         if (showAnswer) {
-          if (answerBox.current.key !== key || answerBox.current.w === 0) {
-            answerBox.current = { w: o.answer.offsetWidth, h: o.answer.offsetHeight, key };
+          const aw = boxes.current.answerW;
+          const ah = boxes.current.answerH;
+          let tx: number;
+          let ty: number;
+          if (shots.compact) {
+            // phones: the same slot as the examiners' questions, so the eye never hunts for it
+            tx = Math.max(12, (w - aw) / 2);
+            ty = Math.max(top - ah - 18, minTop);
+          } else {
+            // under the bench, clear of the example-round caption along the bottom
+            _v.set(0, -0.62, 0.55).project(camera);
+            const ax = (_v.x + 1) * 0.5 * w;
+            const ay = (1 - _v.y) * 0.5 * h;
+            tx = Math.min(Math.max(ax - aw / 2, w * 0.46), w - aw - 16);
+            ty = Math.min(ay + 10, h - ah - 68);
           }
-          _v.set(0, -0.62, 0.55).project(camera);
-          const ax = (_v.x + 1) * 0.5 * w;
-          const ay = (1 - _v.y) * 0.5 * h;
-          const tx = Math.min(Math.max(ax - answerBox.current.w / 2, shots.compact ? 12 : w * 0.46), w - answerBox.current.w - 16);
-          // under the bench, clear of the example-round caption along the bottom
-          const ty = Math.min(ay + 10, h - answerBox.current.h - (shots.compact ? 48 : 68));
           o.answer.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0)`;
           o.answer.style.opacity = '1';
         } else {
