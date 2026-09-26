@@ -1,9 +1,9 @@
 'use client';
 
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { AXES, verdictFace } from '@/components/room/data';
 import { Paddle } from '@/components/ui/Paddle';
-import { Portrait, type ExaminerState } from '@/components/ui/Portrait';
+import { Portrait, portraitSrc, type ExaminerAxis, type ExaminerState } from '@/components/ui/Portrait';
 import { TypeLine } from '@/components/room/TypeLine';
 import { cn } from '@/lib/cn';
 import { beatsAt } from './choreo';
@@ -45,6 +45,38 @@ function seatState(phase: Phase, clock: number, mark: number | null, i: number, 
 }
 
 /**
+ * One examiner's face on the bench. A new expression is decoded before it replaces the old one,
+ * then swapped in whole, like a frame of animation: the face never blanks between expressions.
+ */
+function Face({ axis, want, hot }: { axis: ExaminerAxis; want: ExaminerState; hot: boolean }) {
+  // the first face loads lazily with the page; every later one is already decoded, so it mounts
+  // eagerly and paints at once (a lazy image waits a beat even when it is cached)
+  const [face, setFace] = useState<{ shown: ExaminerState; swapped: boolean }>({ shown: want, swapped: false });
+  const { shown, swapped } = face;
+  useEffect(() => {
+    if (want === shown) return;
+    let live = true;
+    const img = new window.Image();
+    img.src = portraitSrc(axis, want);
+    // a render that fails to load still swaps: the portrait falls back to its neutral face
+    void img
+      .decode()
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setFace({ shown: want, swapped: true });
+      });
+    return () => {
+      live = false;
+    };
+  }, [axis, want, shown]);
+  return (
+    <span className={cn(styles.seatFace, hot && styles.seatHot)}>
+      <Portrait key={shown} axis={axis} state={shown} size={220} decorative priority={swapped} />
+    </span>
+  );
+}
+
+/**
  * The same five examiners as 2D renders of the 3D cast, on a bench: the panel wherever WebGL is
  * missing or motion is reduced, and the stage's poster while the canvas loads. Same states as the
  * 3D panel: listening, marking, then paddles up with their marks, faces by mark, the weakest in
@@ -79,7 +111,7 @@ export function PortraitBench({ phase, clock, marks, weakest, say, reduce, hidde
                 <span className={styles.seatPaddle}>
                   <Paddle value={mark ?? 0} label={a.label} revealed={up} tone={hot ? 'verm' : 'coal'} size="sm" delay={reduce ? 0 : 140} />
                 </span>
-                <Portrait axis={a.key} state={seatState(phase, clock, mark, i, say)} size={220} decorative className={cn(styles.seatFace, hot && styles.seatHot)} />
+                <Face axis={a.key} want={seatState(phase, clock, mark, i, say)} hot={hot} />
               </div>
             );
           })}

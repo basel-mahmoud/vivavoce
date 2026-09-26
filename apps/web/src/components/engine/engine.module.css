@@ -363,6 +363,8 @@
   display: flex;
   flex: 0 0 26%;
   justify-content: center;
+  /* let the portrait shrink to the seat (a flex item is otherwise as wide as its render) */
+  min-width: 0;
   margin-inline: -3%;
 }
 .seat:nth-child(2),
@@ -377,6 +379,9 @@
   z-index: 4;
 }
 .seatFace {
+  display: flex;
+  justify-content: center;
+  width: 100%;
   transition: transform 520ms var(--ease-out);
 }
 .seatHot {
