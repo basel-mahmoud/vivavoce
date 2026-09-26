@@ -801,6 +801,121 @@
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
   }
+
+  /* ── FAQ ────────────────────────────────────────────────────────────── */
+
+  .vv-faq-grid {
+    display: grid;
+    gap: 3rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-faq-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      gap: 4rem;
+    }
+    .vv-faq-aside {
+      position: sticky;
+      top: 7rem;
+      align-self: start;
+    }
+  }
+  .vv-faq {
+    border-bottom: 1px solid var(--color-line);
+  }
+  .vv-faq-item {
+    border-top: 1px solid var(--color-line);
+  }
+  .vv-faq-q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    width: 100%;
+    padding-block: 1.5rem;
+    color: var(--color-ink);
+    font-size: clamp(1.2rem, 2vw, 1.55rem);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    text-align: left;
+    cursor: pointer;
+  }
+  .vv-faq-q:focus-visible {
+    border-radius: 0.5rem;
+    outline-offset: 4px;
+  }
+  .vv-faq-text {
+    transition: color var(--dur-hover) ease;
+  }
+  .vv-faq-toggle {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1.5px solid var(--color-line);
+    border-radius: 999px;
+    color: var(--color-ink);
+    transition:
+      background-color 220ms ease,
+      border-color 220ms ease,
+      color 220ms ease;
+  }
+  .vv-faq-toggle svg {
+    transition: transform 300ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-faq-q:hover .vv-faq-text {
+      color: var(--color-ink-blue);
+    }
+    .vv-faq-q:hover .vv-faq-toggle {
+      border-color: color-mix(in oklab, var(--color-ink-blue) 55%, var(--color-line));
+    }
+  }
+  /* Open: the toggle is filled in blue ink, the candidate's own mark. */
+  .vv-faq-item[data-open] .vv-faq-toggle {
+    border-color: var(--color-cobalt);
+    background: var(--color-cobalt);
+    color: var(--color-paper);
+  }
+  .vv-faq-item[data-open] .vv-faq-toggle svg {
+    transform: rotate(45deg);
+  }
+  .vv-faq-a {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 230ms var(--ease-out);
+  }
+  .vv-faq-item[data-open] .vv-faq-a {
+    grid-template-rows: 1fr;
+    transition-duration: 340ms;
+  }
+  .vv-faq-a-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .vv-faq-a p {
+    max-width: 44rem;
+    padding: 0 1rem 1.9rem 0;
+    color: var(--color-ink-mut);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition:
+      opacity 180ms ease,
+      transform 260ms var(--ease-out);
+  }
+  @media (min-width: 640px) {
+    .vv-faq-a p {
+      padding-right: 4.25rem;
+    }
+  }
+  .vv-faq-item[data-open] .vv-faq-a p {
+    opacity: 1;
+    transform: none;
+    transition-delay: 60ms;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -815,5 +930,14 @@
   .vv-ledge[data-pleased] .vv-peek-head {
     transform: none;
     transition: none;
+  }
+  .vv-faq-a,
+  .vv-faq-toggle svg {
+    transition: none;
+  }
+  .vv-faq-a p,
+  .vv-faq-item[data-open] .vv-faq-a p {
+    transform: none;
+    transition: opacity 150ms ease;
   }
 }
