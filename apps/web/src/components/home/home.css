@@ -609,4 +609,203 @@
       transform: none;
     }
   }
+
+  /* ── Rooms: ruled index rows that flood with their colour ───────────── */
+
+  .vv-room-list {
+    border-bottom: 1px solid var(--color-line);
+  }
+  .vv-room {
+    --field: var(--color-cobalt);
+    --field-ink: var(--color-paper);
+    --field-mut: color-mix(in oklab, var(--color-paper) 84%, var(--color-cobalt));
+    --field-focus: var(--color-paper);
+    position: relative;
+    border-top: 1px solid var(--color-line);
+  }
+  .vv-room[data-field='coal'] {
+    --field: var(--color-coal);
+    --field-mut: var(--color-paper-mut);
+    --field-focus: var(--color-cobalt-lift);
+  }
+  @media (prefers-color-scheme: dark) {
+    .vv-room[data-field='coal'] {
+      --field: var(--color-coal-2);
+    }
+  }
+  .vv-room[data-field='butter'] {
+    --field: var(--color-butter);
+    --field-ink: var(--color-coal);
+    --field-mut: color-mix(in oklab, var(--color-coal) 78%, var(--color-butter));
+    --field-focus: var(--color-coal);
+  }
+  .vv-room[data-field='paper'] {
+    --field: var(--color-paper);
+    --field-ink: var(--color-coal);
+    --field-mut: color-mix(in oklab, var(--color-coal) 72%, var(--color-paper));
+    --field-focus: var(--color-cobalt);
+  }
+  .vv-room-face {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 2.25rem;
+    grid-template-areas:
+      'title sign'
+      'body body'
+      'more more';
+    column-gap: 1rem;
+    align-items: start;
+    padding: 1.35rem 0.25rem 1.45rem;
+  }
+  .vv-room-title {
+    grid-area: title;
+    font-size: clamp(1.8rem, 3.3vw, 3rem);
+    font-weight: 900;
+    font-stretch: 118%;
+    letter-spacing: -0.028em;
+    line-height: 0.98;
+  }
+  .vv-room-toggle {
+    text-align: left;
+    cursor: pointer;
+  }
+  /* The whole row is the button's target. */
+  .vv-room-face[data-layer='base'] .vv-room-toggle::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .vv-room-body {
+    grid-area: body;
+    max-width: 30rem;
+    margin-top: 0.7rem;
+    color: var(--color-ink-mut);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.55;
+  }
+  .vv-room-more {
+    grid-area: more;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 360ms var(--ease-out);
+  }
+  .vv-room[data-open] .vv-room-more {
+    grid-template-rows: 1fr;
+  }
+  .vv-room-more-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .vv-room-visual {
+    padding-top: 1.1rem;
+  }
+  .vv-room-face[data-layer='base'] .vv-room-visual {
+    visibility: hidden;
+  }
+  .vv-room-card {
+    width: 15.5rem;
+    padding: 0.95rem 1.05rem;
+    border-radius: 1rem;
+  }
+  .vv-room-sign {
+    grid-area: sign;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-top: 0.1rem;
+    border: 1px solid color-mix(in oklab, currentColor 28%, transparent);
+    border-radius: 999px;
+    transition: transform 320ms var(--ease-out);
+  }
+  .vv-room[data-open] .vv-room-sign {
+    transform: rotate(45deg);
+  }
+  /* The flood bleeds past the text column (to the screen edge on phones). */
+  .vv-room-flood {
+    --bleed: 1rem;
+    position: absolute;
+    inset: 0 calc(var(--bleed) * -1);
+    z-index: 1;
+    padding-inline: var(--bleed);
+    background: var(--field);
+    color: var(--field-ink);
+    clip-path: inset(0% 0% 100% 0%);
+    pointer-events: none;
+  }
+  .vv-room[data-field='paper'] .vv-room-flood {
+    background-image:
+      linear-gradient(to right, transparent 0.55rem, color-mix(in oklab, var(--color-verm) 46%, var(--color-paper)) 0.55rem 0.65rem, transparent 0.65rem),
+      repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper)) calc(1.9rem - 1px) 1.9rem);
+  }
+  .vv-room-flood .vv-room-body {
+    color: var(--field-mut);
+  }
+  .vv-room-flood .vv-room-sign {
+    border-color: color-mix(in oklab, var(--field-ink) 35%, transparent);
+  }
+  /* Focus is drawn on the flooded copy, in a colour that reads on the field. */
+  .vv-room:has(.vv-room-toggle:focus-visible) .vv-room-flood .vv-room-toggle {
+    outline: 2px solid var(--field-focus);
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
+
+  @media (min-width: 1024px) {
+    .vv-room-face {
+      grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.9fr) 16.5rem 2.25rem;
+      grid-template-areas: 'title body more sign';
+      column-gap: 2.5rem;
+      align-items: center;
+      min-height: 9.75rem;
+      padding: 1.5rem 0.25rem;
+    }
+    .vv-room-body {
+      margin-top: 0;
+    }
+    .vv-room-more,
+    .vv-room[data-open] .vv-room-more {
+      grid-template-rows: 1fr;
+    }
+    .vv-room-visual {
+      padding-top: 0;
+    }
+    .vv-room-face[data-layer='flood'] .vv-room-visual > * {
+      translate: 0 10px;
+      opacity: 0;
+      transition:
+        translate 420ms var(--ease-out),
+        opacity 260ms ease;
+    }
+    .vv-room[data-open] .vv-room-face[data-layer='flood'] .vv-room-visual > * {
+      translate: 0 0;
+      opacity: 1;
+      transition-delay: 90ms;
+    }
+    .vv-room-flood {
+      --bleed: 1.5rem;
+      border-radius: 0.9rem;
+    }
+    .vv-room[data-field='paper'] .vv-room-flood {
+      background-image:
+        linear-gradient(to right, transparent 0.9rem, color-mix(in oklab, var(--color-verm) 46%, var(--color-paper)) 0.9rem 1rem, transparent 1rem),
+        repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper)) calc(1.9rem - 1px) 1.9rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-room-flood {
+      clip-path: none !important;
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+    .vv-room[data-open] .vv-room-flood {
+      opacity: 1;
+    }
+    .vv-room-more,
+    .vv-room-sign,
+    .vv-room-face[data-layer='flood'] .vv-room-visual > * {
+      transition: none !important;
+    }
+  }
 }
