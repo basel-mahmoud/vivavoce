@@ -808,4 +808,204 @@
       transition: none !important;
     }
   }
+
+  /* ── Privacy: the transcript slip that is not kept ─────────────────── */
+
+  .vv-slip-desk {
+    max-width: 34rem;
+    padding-inline: 0.5rem;
+  }
+  .vv-slip {
+    position: relative;
+    rotate: -1.2deg;
+    /* On the parent, so the shadow follows the torn edges. */
+    filter: drop-shadow(0 1px 1px rgb(var(--vv-shadow) / 0.08)) drop-shadow(0 12px 20px rgb(var(--vv-shadow) / 0.16));
+  }
+  .vv-slip-piece {
+    position: relative;
+  }
+  .vv-slip-piece + .vv-slip-piece {
+    position: absolute;
+    inset: 0;
+  }
+  .vv-slip-face {
+    --perf-r: 5px;
+    --perf-pitch: 16px;
+    padding: 1.35rem 1.5rem 1.6rem 3.4rem;
+    border-radius: 0.4rem;
+    background-color: var(--color-paper);
+    background-image:
+      linear-gradient(
+        to right,
+        transparent 2.35rem,
+        color-mix(in oklab, var(--color-verm) 46%, var(--color-paper)) 2.35rem 2.45rem,
+        transparent 2.45rem
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 calc(1.9rem - 1px),
+        color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper)) calc(1.9rem - 1px) 1.9rem
+      );
+    background-position:
+      0 0,
+      0 0.95rem;
+    color: var(--color-coal);
+    -webkit-mask-repeat: repeat-x, no-repeat;
+    mask-repeat: repeat-x, no-repeat;
+    -webkit-mask-image:
+      radial-gradient(circle at 50% 0, transparent var(--perf-r), #000 calc(var(--perf-r) + 0.5px)),
+      linear-gradient(#000, #000);
+    mask-image:
+      radial-gradient(circle at 50% 0, transparent var(--perf-r), #000 calc(var(--perf-r) + 0.5px)),
+      linear-gradient(#000, #000);
+    -webkit-mask-size:
+      var(--perf-pitch) calc(var(--perf-r) + 1px),
+      100% calc(100% - var(--perf-r) - 1px);
+    mask-size:
+      var(--perf-pitch) calc(var(--perf-r) + 1px),
+      100% calc(100% - var(--perf-r) - 1px);
+    -webkit-mask-position:
+      50% 0,
+      0 100%;
+    mask-position:
+      50% 0,
+      0 100%;
+  }
+  .vv-slip-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.9rem;
+    text-transform: uppercase;
+  }
+  .vv-slip-line {
+    font-size: 1.02rem;
+    line-height: 1.9rem;
+  }
+  .vv-slip-line + .vv-slip-line {
+    margin-top: 1.9rem;
+  }
+  .vv-slip-who {
+    position: absolute;
+    margin-left: -2.9rem;
+    width: 2.2rem;
+    color: color-mix(in oklab, var(--color-coal) 55%, var(--color-paper));
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-align: right;
+  }
+  /* Redaction: a black bar runs across each word, one after another. */
+  .vv-redact {
+    position: relative;
+  }
+  .vv-redact::after {
+    content: '';
+    position: absolute;
+    left: -0.1em;
+    right: -0.1em;
+    top: 0.08em;
+    bottom: -0.02em;
+    border-radius: 1px;
+    background: var(--color-coal);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 170ms var(--ease-out);
+    transition-delay: calc(var(--i) * 26ms);
+  }
+  .vv-slip:is([data-phase='redacting'], [data-phase='redacted'], [data-phase='torn']) .vv-redact::after {
+    transform: scaleX(1);
+  }
+
+  .vv-promises > li {
+    padding-block: 1.35rem;
+    border-top: 1px solid var(--color-line);
+  }
+  .vv-promises > li:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-redact::after {
+      transition: none;
+    }
+  }
+
+  /* ── Close: the admission slip ─────────────────────────────────────── */
+
+  .vv-admit {
+    width: 100%;
+    max-width: 36rem;
+    text-align: left;
+  }
+  .vv-admit .vv-ticket {
+    max-width: none;
+  }
+  .vv-admit-body {
+    padding: 1.4rem 1.5rem 1.35rem;
+  }
+  .vv-admit-input {
+    width: 100%;
+    height: 3rem;
+    margin-top: 0.45rem;
+    padding: 0 0.1rem;
+    border: 0;
+    border-bottom: 2px solid color-mix(in oklab, var(--color-coal) 30%, var(--color-paper));
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-cobalt-deep);
+    caret-color: var(--color-cobalt);
+    font-size: 1.15rem;
+    font-weight: 700;
+    transition: border-color var(--dur-hover) ease;
+  }
+  .vv-admit-input::placeholder {
+    color: color-mix(in oklab, var(--color-coal) 45%, var(--color-paper));
+    font-weight: 600;
+  }
+  .vv-admit-input:focus {
+    outline: none;
+    border-bottom-color: var(--color-cobalt);
+  }
+  .vv-admit-input:focus-visible {
+    outline: 2px solid var(--color-cobalt);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+  .vv-admit-input[aria-invalid='true'] {
+    border-bottom-color: var(--color-verm-text);
+  }
+  .vv-admit-input:disabled {
+    opacity: 0.6;
+  }
+  .vv-admitted {
+    display: inline-block;
+    padding: 0.05em 0.25em 0.1em;
+    border: 3px solid currentColor;
+    border-radius: 0.2em;
+    color: var(--color-cobalt-deep);
+    font-size: 1.8rem;
+    font-weight: 900;
+    font-stretch: 118%;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    rotate: -3deg;
+    animation: vv-stamp-down 420ms var(--ease-out) both;
+  }
+  @keyframes vv-stamp-down {
+    from {
+      opacity: 0;
+      scale: 1.4;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-admitted {
+      animation: none;
+    }
+  }
 }
