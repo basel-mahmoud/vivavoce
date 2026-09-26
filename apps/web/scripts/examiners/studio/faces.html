@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Examiner face sheet</title>
+<link rel="icon" href="data:," />
+<!--
+  Parity sheet for faceMaterial.ts: all 10 states for all 5 eye styles, each drawn by the GPU shader
+  on a quad with the visor's aspect and corner radius (rig.ts VISORS). Driven by render.mjs faces.
+  Query: theme=dark, dpr, w (cell width px), time, look=x,y, lens=x,y,r,m, only=<style,...>.
+-->
+<style>
+  @font-face { font-family: 'Archivo'; src: url(fonts/archivo-900.woff) format('woff'); font-weight: 900; }
+  html, body { margin: 0; background: #f3f5f8; }
+  body { padding: 22px 26px; font-family: system-ui, sans-serif; color: #10131a; display: inline-block; }
+  body.dark { background: #0c0e14; color: #eef1f6; }
+  h1 { margin: 0 0 14px; font: 900 18px/1 Archivo, system-ui, sans-serif; letter-spacing: -0.01em; }
+  h1 span { font: 500 13px/1 system-ui, sans-serif; color: #556072; margin-left: 10px; letter-spacing: 0; }
+  body.dark h1 span { color: #a4abbb; }
+  table { border-collapse: separate; border-spacing: 10px 9px; margin-left: -10px; }
+  th { text-align: left; font: 600 11px/1.2 system-ui, sans-serif; letter-spacing: 0.02em; color: #556072; white-space: nowrap; padding-bottom: 2px; }
+  body.dark th { color: #a4abbb; }
+  th.row { padding-right: 6px; }
+  .bez { background: #181b23; padding: 7px; box-shadow: inset 0 0 0 1.5px #cfc6b6, 0 1px 0 rgb(16 19 26 / 0.06); }
+  .slot { display: block; }
+  #gl { position: absolute; left: 0; top: 0; pointer-events: none; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./three/build/three.module.js" } }
+</script>
+</head>
+<body>
+<h1>Examiner faces from the GPU shader<span>10 states by 5 eye styles, rendered by faceMaterial.ts</span></h1>
+<table id="t"></table>
+<canvas id="gl"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { createFaceMaterial, FACE_STATES, EYE_STYLES } from './lib/faceMaterial.js';
+import { VISORS } from './lib/rig.js';
+
+const q = new URLSearchParams(location.search);
+const DARK = q.get('theme') === 'dark';
+if (DARK) document.body.classList.add('dark');
+await document.fonts.load('900 18px Archivo');
+const STYLES = Object.keys(EYE_STYLES);
+const ASPECT = Object.fromEntries(STYLES.map((k) => [k, VISORS[k].halfWidth / VISORS[k].halfHeight]));
+const RADIUS = Object.fromEntries(STYLES.map((k) => [k, VISORS[k].radius / VISORS[k].halfHeight / 2]));   // corner radius / visor height
+const W = Number(q.get('w') || 150);
+const t = document.getElementById('t');
+const head = t.insertRow(); head.insertCell();
+for (const s of FACE_STATES) { const th = document.createElement('th'); th.textContent = s[0].toUpperCase() + s.slice(1); head.append(th); }
+const slots = [];
+for (const k of STYLES) {
+  const row = t.insertRow();
+  const th = document.createElement('th'); th.className = 'row'; th.textContent = k[0].toUpperCase() + k.slice(1); row.append(th);
+  const H = Math.round(W / ASPECT[k]);
+  for (const s of FACE_STATES) {
+    const bez = document.createElement('div'); bez.className = 'bez';
+    const rad = RADIUS[k] * H;
+    bez.style.borderRadius = `${rad + 7}px`;
+    const slot = document.createElement('div'); slot.className = 'slot';
+    Object.assign(slot.style, { width: `${W}px`, height: `${H}px`, borderRadius: `${rad}px` });
+    bez.append(slot); row.insertCell().append(bez);
+    slots.push({ k, s, slot, rad });
+  }
+}
+const PW = document.documentElement.scrollWidth, PH = document.documentElement.scrollHeight;
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Number(q.get('dpr') || 2));
+renderer.setSize(PW, PH);
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.setClearColor(0x000000, 0);
+const scene = new THREE.Scene();
+const cam = new THREE.OrthographicCamera(0, PW, 0, -PH, -10, 10);
+/** A rounded rectangle whose UVs span the visor (u left to right, v bottom to top, as in the GLB). */
+function roundedRect(w, h, r) {
+  const s = new THREE.Shape();
+  s.moveTo(-w / 2 + r, -h / 2); s.lineTo(w / 2 - r, -h / 2); s.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
+  s.lineTo(w / 2, h / 2 - r); s.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2); s.lineTo(-w / 2 + r, h / 2);
+  s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r); s.lineTo(-w / 2, -h / 2 + r); s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
+  const g = new THREE.ShapeGeometry(s, 12);
+  const p = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / w + 0.5, p.getY(i) / h + 0.5);
+  return g;
+}
+const only = q.get('only')?.split(',');
+for (const { k, s, slot, rad } of slots) {
+  const r = slot.getBoundingClientRect();
+  const f = createFaceMaterial({ style: k, aspect: ASPECT[k], scheme: DARK ? 'dark' : 'light' });
+  f.setState(s);
+  f.setTime(Number(q.get('time') || 0));
+  if (q.get('look')) f.setLook(...q.get('look').split(',').map(Number));
+  if (q.get('lens')) { const [x, y, radius, magnification] = q.get('lens').split(',').map(Number); f.setLens({ x: x * ASPECT[k], y, radius, magnification }); }
+  const m = new THREE.Mesh(roundedRect(r.width, r.height, rad), f.material);
+  m.position.set(r.left + r.width / 2 + scrollX, -(r.top + r.height / 2 + scrollY), 0);
+  m.visible = !only || only.includes(k);
+  scene.add(m);
+}
+renderer.render(scene, cam);
+window.__stats = { width: PW, height: PH };
+document.body.dataset.done = '1';
+</script>
+</body>
+</html>

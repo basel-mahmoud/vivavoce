@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Examiner portraits</title>
+<link rel="icon" href="data:," />
+<!--
+  Sprite studio for public/examiners/ (driven by render.mjs, which serves this folder with ./lib,
+  ./three and the public models). Query: mode=portrait|half, who=<examiner>, state=<face state>.
+  One examiner at its own origin, the day studio of the hero, Neutral tone mapping, a transparent
+  clear. Portrait: head and shoulders, hands below the frame (sceptical brings a hand up). Half: the
+  paddle raised with a blank coin (the page overlays the live mark at window.__stats.coin), cut at
+  the bench line.
+-->
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  canvas { display: block; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./three/build/three.module.js", "three/addons/": "./three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { createFaceMaterial, lensOnFace, FACE_STATES } from './lib/faceMaterial.js';
+import * as RIG from './lib/rig.js';
+
+const q = new URLSearchParams(location.search);
+const MODE = q.get('mode') === 'half' ? 'half' : 'portrait';
+const WHO = RIG.EXAMINERS.includes(q.get('who')) ? q.get('who') : 'structure';
+const STATE = FACE_STATES.includes(q.get('state')) ? q.get('state') : MODE === 'half' ? 'attentive' : 'neutral';
+const W = innerWidth, H = innerHeight;
+const deg = (d) => (d * Math.PI) / 180;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H);
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.localClippingEnabled = true;
+renderer.setClearColor(0x000000, 0);
+document.body.append(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(22, W / H, 0.3, 80);
+
+/* The hero's day studio: Lightformer panels built in code (no HDR file), a shadowing key, two rims
+   and a soft front fill. The sprites use the light-scheme finishes and read on both canvases. */
+{
+  const env = new THREE.Scene();
+  env.background = new THREE.Color('#4c4f57');
+  const former = ({ w, h, pos, i, color = '#ffffff', look = [0, 1, 0] }) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(i), side: THREE.DoubleSide, toneMapped: false }));
+    m.scale.set(w, h, 1); m.position.set(...pos); m.lookAt(...look); env.add(m);
+  };
+  former({ w: 7, h: 4.5, pos: [-5, 6, 7], i: 3.0, color: '#fff6ea' });           // key softbox
+  former({ w: 16, h: 1.0, pos: [0, 7, -9], i: 1.1 });                              // horizon strip
+  former({ w: 9, h: 9, pos: [0, 10, 0], i: 1.25, look: [0, 0, 0] });               // overhead
+  former({ w: 1.0, h: 12, pos: [-8, 2, -4], i: 4.2, color: '#eef2ff' });           // rim strip L
+  former({ w: 1.0, h: 12, pos: [8, 2, -4], i: 4.2, color: '#eef2ff' });            // rim strip R
+  former({ w: 1.2, h: 10, pos: [4.5, 3, 8], i: 2.1 });                             // the visor's long glint
+  former({ w: 5, h: 5, pos: [7, 2, 6], i: 0.85, color: '#e9efff' });               // cool fill
+  former({ w: 16, h: 6, pos: [0, -5, 4], i: 0.42, color: '#ffe8d2', look: [0, 2, 0] }); // warm bounce
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(env, 0, 0.1, 100, { size: 256 }).texture;
+  scene.environmentIntensity = 0.78;
+  const key = new THREE.DirectionalLight('#fff4e8', 2.7);
+  key.position.set(-6.5, 9, 7.5); key.target.position.set(0, 0.7, 0);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  Object.assign(key.shadow.camera, { left: -2, right: 2, top: 2.6, bottom: -1, near: 4, far: 26 });
+  key.shadow.radius = 5; key.shadow.bias = -0.0004; key.shadow.normalBias = 0.022; key.shadow.intensity = 0.6;
+  // the rims are stronger than the hero's: a sprite has no set behind it, so the coal parts (conduits,
+  // coins, graphite) need a lit edge to keep their outline on the night canvas
+  const rim = new THREE.DirectionalLight('#e8eeff', 3.2); rim.position.set(5, 6, -8);
+  const rim2 = new THREE.DirectionalLight('#ffffff', 2.4); rim2.position.set(-6, 5, -7);
+  const fill = new THREE.DirectionalLight('#fff8f0', 0.6); fill.position.set(0.6, 2.2, 10);
+  scene.add(key, key.target, rim, rim2, fill);
+}
+
+/* Model, detail maps and the shared materials, exactly as the site loads them. */
+const gltf = await new GLTFLoader().loadAsync('models/examiners.glb');
+const root = gltf.scene;
+scene.add(root);
+const manager = new THREE.LoadingManager();
+const mapsLoaded = new Promise((resolve) => { manager.onLoad = resolve; });
+const maps = RIG.loadDetailTextures(new THREE.TextureLoader(manager));
+await mapsLoaded;
+const MATS = RIG.createExaminerMaterials('light', maps);
+// the night conduit finish (a lighter sheen) keeps the arms outlined on either canvas
+MATS.set(RIG.MATERIALS.rubber, RIG.finishMaterial(RIG.MATERIALS.rubber, RIG.FINISH.dark.ex_rubber, maps));
+let glass = null;
+root.traverse((o) => {
+  if (!o.isMesh) return;
+  const m = MATS.get(o.material.name);
+  if (m) o.material = m;
+  o.castShadow = /^ex_(shell|bisque|rubber|fabric|coin|lacquer)/.test(o.material.name);
+  o.receiveShadow = true;
+  if (o.material.name === RIG.MATERIALS.face(WHO)) glass = o;
+});
+root.getObjectByName(RIG.NODES.bench).visible = false;
+for (const k of RIG.EXAMINERS) root.getObjectByName(RIG.NODES.root(k)).visible = k === WHO;
+const nodes = RIG.examinerNodes(root, WHO);
+nodes.root.position.set(0, 0, 0);   // alone at the origin, facing +z: every view below is in its own frame
+nodes.root.rotation.set(0, 0, 0);
+const v = RIG.VISORS[WHO];
+const face = createFaceMaterial({ style: WHO, aspect: v.halfWidth / v.halfHeight, scheme: 'light' });
+glass.material = face.material;
+root.getObjectByName(RIG.NODES.coin(WHO)).material = MATS.get(RIG.MATERIALS.coin);
+
+/* Poses. The paddle side holds the paddle, the other hand is free (Clarity's holds the loupe). */
+const ps = RIG.PADDLE_SIDE[WHO], fs = ps === 'L' ? 'R' : 'L';
+const low = (s) => ({ pos: [s === 'L' ? -0.46 : 0.46, -0.62, 0.34], gesture: 'rest' });
+const visorBottom = v.centre[1] - v.halfHeight;
+/** A hand at the chin: fingertips at the visor's lower bezel, off to the free side (Confidence's chin
+ *  is nearly on the bench, so its hand rides higher and its fingertips reach the boom mic). */
+const chin = () => ({ pos: [(fs === 'L' ? -1 : 1) * v.halfWidth * 0.42, visorBottom - (WHO === 'confidence' ? 0.25 : 0.33), v.centre[2] + 0.1], gesture: 'chin' });
+const HEAD = {
+  neutral: [0, 0, 0],
+  listening: [deg(4), deg(3), deg(-2)],
+  pleased: [0, deg(-2), deg(-3)],
+  sceptical: [deg(5), deg(-2), deg(4)],
+  speaking: [deg(-2), deg(-1), 0],
+  marking: [0, deg(5), 0],
+};
+function portraitPose(state) {
+  const P = { L: low('L'), R: low('R'), flip: Math.PI, body: [0, 0, 0], head: HEAD[state] ?? [0, 0, 0], needle: 0.16 };
+  if (state === 'sceptical') {
+    if (WHO === 'clarity') { const l = RIG.POSES.loupe; P[fs] = l[fs]; P.head = [0, 0, 0]; }   // scrutiny through the loupe
+    else P[fs] = chin();
+  }
+  return P;
+}
+/** Coin centres for the raised sprites (root frame): up beside the head, clear of the visor. */
+const RAISED_COIN = {
+  correctness: [-0.64, 1.6, 0.36],
+  clarity: [-0.6, 1.78, 0.3],
+  structure: [0.68, 1.58, 0.42],
+  conciseness: [0.52, 1.8, 0.3],
+  confidence: [0.74, 1.44, 0.42],
+};
+function halfPose(dirLocal) {
+  const P = structuredClone(RIG.POSES[WHO].raise);
+  // the coin turns square to the camera so the page can set the mark on it as a flat circle
+  const side = ps === 'L' ? 0.3 : -0.3;
+  P[ps] = { coin: RAISED_COIN[WHO], facing: dirLocal.toArray(), up: [side, 1, 0] };
+  P[fs] = low(fs);
+  P.body = [0, 0, 0]; P.head = [0, 0, 0]; P.needle = 0.16;
+  return P;
+}
+
+/** Clip everything below the bench top (y = 0), like a bust on a plinth. */
+function cutAtBench() {
+  const cut = [new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)];
+  for (const m of MATS.values()) m.clippingPlanes = cut;
+  face.material.clippingPlanes = cut;
+}
+
+/* Camera: solve distance + lens shift so a point set lands in a pixel rectangle. */
+function fit(pts, dir, target, rect) {
+  const d = dir.clone().normalize();
+  let dist = 8, sx = 0, sy = 0;
+  for (let it = 0; it < 10; it++) {
+    camera.clearViewOffset();
+    camera.position.copy(target).addScaledVector(d, dist); camera.lookAt(target);
+    camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (const p of pts) { const n = p.clone().project(camera); x0 = Math.min(x0, n.x); x1 = Math.max(x1, n.x); y0 = Math.min(y0, n.y); y1 = Math.max(y1, n.y); }
+    const k = Math.max(((x1 - x0) / 2 * W) / (rect[2] - rect[0]), ((y1 - y0) / 2 * H) / (rect[3] - rect[1]));
+    dist *= k;
+    sx = ((x0 + x1) / 2 + 1) / 2 * W - (rect[0] + rect[2]) / 2;
+    sy = (1 - (y0 + y1) / 2) / 2 * H - (rect[1] + rect[3]) / 2;
+    if (Math.abs(k - 1) < 0.002) break;
+  }
+  camera.setViewOffset(W, H, sx, sy, W, H);
+  camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
+}
+function points(filter) {
+  root.updateMatrixWorld(true);
+  const out = [], p = new THREE.Vector3();
+  nodes.root.traverse((m) => {
+    if (!m.isMesh || !filter(m)) return;
+    let shown = true; m.traverseAncestors((a) => { if (!a.visible) shown = false; });
+    if (!shown || !m.visible) return;
+    const pos = m.geometry.attributes.position, step = Math.max(1, Math.floor(pos.count / 400));
+    for (let i = 0; i < pos.count; i += step) out.push(p.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld).clone());
+  });
+  return out;
+}
+
+if (MODE === 'portrait') {
+  nodes.paddle.visible = false;
+  // the head (everything on the head pivot) fills the upper two thirds; the shoulders fill the rest.
+  // Framed on the neutral pose, so every state of one examiner shares the same camera.
+  RIG.applyPose(WHO, nodes, portraitPose('neutral'));
+  const head = new Set(); nodes.head.traverse((o) => head.add(o));
+  if (nodes.needle) nodes.needle.traverse((o) => head.delete(o));   // the metronome's needle may leave the top
+  fit(points((m) => head.has(m)), new THREE.Vector3(0.16, 0.06, 1), new THREE.Vector3(...v.centre), [W * 0.13, H * 0.07, W * 0.87, H * 0.64]);
+  // nothing below the bench line: when it shows inside the frame (Confidence, the short one), the
+  // whole figure is fitted wider instead and sits on the sprite's bottom edge
+  cutAtBench();
+  const pts = points(() => true).filter((p) => p.y >= 0);
+  const lowest = () => Math.max(...pts.map((p) => (1 - p.clone().project(camera).y) / 2 * H));
+  if (lowest() < H - 1) {
+    fit(pts, new THREE.Vector3(0.16, 0.06, 1), new THREE.Vector3(...v.centre), [W * 0.04, H * 0.1, W * 0.96, H - 1]);
+    camera.view.offsetY -= H - 1 - lowest();
+    camera.updateProjectionMatrix();
+  }
+  RIG.applyPose(WHO, nodes, portraitPose(STATE));
+} else {
+  // each figure fills its card: centred across, the lowest cut edge on the sprite's bottom row (so a
+  // row of raised sprites can share one bench line)
+  const dir = new THREE.Vector3(0.14, 0.1, 1).normalize();
+  RIG.applyPose(WHO, nodes, halfPose(dir));
+  cutAtBench();
+  const pts = points(() => true).filter((p) => p.y >= 0);
+  fit(pts, dir, new THREE.Vector3(...v.centre), [W * 0.05, H * 0.03, W * 0.95, H - 1]);
+  const low = Math.max(...pts.map((p) => (1 - p.clone().project(camera).y) / 2 * H));
+  camera.view.offsetY += low - (H - 1);
+  camera.updateProjectionMatrix();
+}
+/* Face: a fixed moment of each state (time, speech level and marking progress are pinned). */
+face.setState(STATE);
+face.setTime(1.3);
+face.setSpeakLevel(0.8);
+face.setProgress(0.62);
+face.setTally(STATE === 'speaking' ? 1 : 0);
+if (WHO === 'clarity') {
+  const lens = new THREE.Vector3(0, RIG.LOUPE.lensCentre, 0).applyMatrix4(root.getObjectByName(RIG.NODES.loupe).matrixWorld);
+  face.setLens(lensOnFace(camera, lens, RIG.LOUPE.lensRadius, root.getObjectByName(RIG.NODES.visor('clarity')), v.halfWidth, v.halfHeight, RIG.LOUPE.magnification));
+}
+
+renderer.render(scene, camera);
+renderer.render(scene, camera);
+
+/* The coin anchor for the page's live mark: the centre as fractions of the sprite's width and
+   height, the radius as a fraction of its width. */
+let coin = null;
+if (MODE === 'half') {
+  const a = root.getObjectByName(RIG.NODES.paddleFront(WHO));
+  a.updateWorldMatrix(true, false);
+  const px = (x, y) => { const n = new THREE.Vector3(x, y, 0).applyMatrix4(a.matrixWorld).project(camera); return [(n.x + 1) / 2 * W, (1 - n.y) / 2 * H]; };
+  const c = px(0, 0);
+  const r = [[1, 0], [-1, 0], [0, 1], [0, -1]].reduce((s, [x, y]) => { const p = px(x * RIG.COIN.radius, y * RIG.COIN.radius); return s + Math.hypot(p[0] - c[0], p[1] - c[1]) / 4; }, 0);
+  coin = { x: +(c[0] / W).toFixed(4), y: +(c[1] / H).toFixed(4), r: +(r / W).toFixed(4) };
+}
+window.__stats = { mode: MODE, who: WHO, state: STATE, coin, calls: renderer.info.render.calls, tris: renderer.info.render.triangles };
+window.__studio = { THREE, scene, camera, nodes };   // for poking at the frame from devtools
+document.body.dataset.done = '1';
+</script>
+</body>
+</html>
