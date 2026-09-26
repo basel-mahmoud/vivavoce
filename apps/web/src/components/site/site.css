@@ -1139,6 +1139,78 @@
     padding-top: 0;
     border-top: 0;
   }
+
+  /* ── 404 ────────────────────────────────────────────────────────────── */
+
+  .vv-404 {
+    padding-top: clamp(7.25rem, 11vw, 10rem);
+    padding-bottom: clamp(4rem, 8vw, 7rem);
+  }
+  .vv-404-grid {
+    display: grid;
+    gap: 3rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-404-grid {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.85fr);
+      align-items: center;
+      gap: 4rem;
+    }
+  }
+  .vv-404-board {
+    max-width: 48rem;
+  }
+  .vv-404-path {
+    margin-top: 2.25rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+  .vv-404-code {
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  .vv-404-hint {
+    margin-top: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+  .vv-404-copy {
+    max-width: 34rem;
+    margin-top: 1.25rem;
+    color: var(--color-ink-mut);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+  }
+  .vv-404-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  .vv-404-examiner {
+    position: relative;
+    justify-self: center;
+    width: min(78%, 22rem);
+  }
+  .vv-404-examiner .vv-portrait {
+    width: 100% !important;
+  }
+  .vv-404-seeme {
+    position: absolute;
+    top: -11%;
+    left: -15%;
+    color: var(--color-verm-text);
+    font-size: clamp(2rem, 3.6vw, 3.1rem);
+    font-weight: 900;
+    font-stretch: 112%;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    white-space: nowrap;
+    rotate: -7deg;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
