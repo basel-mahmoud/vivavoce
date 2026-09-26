@@ -56,7 +56,7 @@ const SAMPLES: Record<ExaminerAxis, Sample> = {
   },
 };
 
-function AxisRow({ axis }: { axis: (typeof AXES)[number] }) {
+function AxisRow({ axis, demo, onEngage }: { axis: (typeof AXES)[number]; demo: boolean; onEngage: () => void }) {
   const key = axis.key as ExaminerAxis;
   const sample = SAMPLES[key];
   const row = useRef<HTMLLIElement>(null);
@@ -65,8 +65,9 @@ function AxisRow({ axis }: { axis: (typeof AXES)[number] }) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [pinned, setPinned] = useState(false);
-  // With a mouse, the pen marks the answer you point at; on touch it marks as you scroll to it.
-  const marked = fine ? hovered || focused || pinned : inView || pinned;
+  // With a mouse, the pen marks the answer you point at (the first row shows how until you
+  // do); on touch it marks each one as you scroll to it.
+  const marked = fine ? hovered || focused || pinned || (demo && inView) : inView || pinned;
   // Marks land in reading order, a beat apart.
   const penAt = sample.parts.map((_, i) => sample.parts.slice(0, i).filter((p) => typeof p !== 'string').length);
 
@@ -75,7 +76,11 @@ function AxisRow({ axis }: { axis: (typeof AXES)[number] }) {
       ref={row}
       className="vv-axis"
       data-marked={marked ? '' : undefined}
-      onPointerEnter={(e) => e.pointerType === 'mouse' && setHovered(true)}
+      onPointerEnter={(e) => {
+        if (e.pointerType !== 'mouse') return;
+        setHovered(true);
+        onEngage();
+      }}
       onPointerLeave={(e) => e.pointerType === 'mouse' && setHovered(false)}
     >
       <span className="vv-axis-face">
@@ -91,8 +96,15 @@ function AxisRow({ axis }: { axis: (typeof AXES)[number] }) {
         className="vv-axis-sample"
         aria-pressed={pinned}
         aria-label={`Example answer for ${axis.label}. ${marked ? `Marked: ${sample.note}` : 'Show how it is marked.'}`}
-        onClick={() => setPinned((p) => !p)}
-        onFocus={(e) => e.currentTarget.matches(':focus-visible') && setFocused(true)}
+        onClick={() => {
+          setPinned((p) => !p);
+          onEngage();
+        }}
+        onFocus={(e) => {
+          if (!e.currentTarget.matches(':focus-visible')) return;
+          setFocused(true);
+          onEngage();
+        }}
         onBlur={() => setFocused(false)}
       >
         <span className="vv-axis-answer" aria-hidden="true">
@@ -126,12 +138,14 @@ function AxisRow({ axis }: { axis: (typeof AXES)[number] }) {
 
 /**
  * The rubric as an index: one row per examiner. Point at an answer (or tab
- * to it) and that examiner marks it in red pen and turns their paddle over.
- * Every sample answers the same question, so the flaw each axis catches
- * is easy to see.
+ * to it) and that examiner marks it in red pen and turns their paddle over;
+ * the first row does it on its own until you do. Every sample answers the
+ * same question, so the flaw each axis catches is easy to see.
  */
 export function AxesIndex({ className }: { className?: string }) {
   const uid = useId();
+  const [engaged, setEngaged] = useState(false);
+  const engage = () => setEngaged(true);
   return (
     <section
       aria-labelledby={`${uid}-title`}
@@ -147,8 +161,8 @@ export function AxesIndex({ className }: { className?: string }) {
         <span className="vv-hint-touch">Each one is marked as you reach it.</span>
       </p>
       <ol className="vv-axis-list mt-12 sm:mt-16">
-        {AXES.map((a) => (
-          <AxisRow key={a.key} axis={a} />
+        {AXES.map((a, i) => (
+          <AxisRow key={a.key} axis={a} demo={i === 0 && !engaged} onEngage={engage} />
         ))}
       </ol>
       <p className="mt-6 text-[0.8rem] font-semibold text-ink-mut">
