@@ -347,17 +347,21 @@
       justify-content: flex-start;
     }
   }
+  /* Each window is the head's peek plus some headroom above it, so a hop up
+     is never cut off at the top; the ledge (the window's foot) still hides
+     everything below it. */
   .vv-peek {
+    --headroom: 0.22;
     position: relative;
     flex: none;
     width: var(--head-w);
-    height: calc(var(--head-w) * var(--peek));
+    height: calc(var(--head-w) * (var(--peek) + var(--headroom)));
     margin-inline: calc(var(--head-w) * var(--trim-l) * -1) calc(var(--head-w) * var(--trim-r) * -1);
     overflow: hidden;
   }
   .vv-peek-head {
     position: absolute;
-    top: 0;
+    top: calc(var(--head-w) * var(--headroom));
     left: 0;
     display: block;
     width: 100%;
@@ -376,6 +380,37 @@
     transform: translateY(-5%);
     transition: transform var(--perk);
     transition-delay: calc(var(--i) * 40ms);
+  }
+  /* Let in: the five hop up together, a beat apart. Two names, so each new
+     admission restarts the hop. */
+  .vv-ledge[data-hop='a'] .vv-peek-head {
+    animation: vv-hop-a 620ms var(--ease-out) calc(var(--i) * 45ms) both;
+  }
+  .vv-ledge[data-hop='b'] .vv-peek-head {
+    animation: vv-hop-b 620ms var(--ease-out) calc(var(--i) * 45ms) both;
+  }
+  @keyframes vv-hop-a {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    38% {
+      translate: 0 -14%;
+    }
+  }
+  @keyframes vv-hop-b {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    38% {
+      translate: 0 -14%;
+    }
+  }
+  /* A slip torn at without an email: Structure rises for a sceptical look. */
+  .vv-ledge[data-frown] .vv-peek[data-axis='structure'] .vv-peek-head {
+    transform: translateY(-9%);
+    transition: transform var(--perk);
   }
 
   /* The note: ruled paper lying on the bench, signed by all five. Text sits
@@ -1033,6 +1068,9 @@
   }
   .vv-wl-grid {
     display: grid;
+    /* One track that may shrink below its content: a form field's intrinsic
+       width must never set the page's width on a small phone. */
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas: 'copy' 'slip' 'more';
     gap: 2.5rem;
   }
@@ -1063,75 +1101,8 @@
       align-self: center;
     }
   }
-  .vv-slip-wl .vv-ticket {
-    max-width: 38rem;
-  }
-  /* Paper stays paper at night: the slip keeps its daytime pen and focus ink. */
-  .vv-wl-body {
-    --vv-verm-text: color-mix(in oklab, var(--color-verm) 72%, var(--color-coal));
-    --color-verm-text: var(--vv-verm-text);
-    --color-line: color-mix(in oklab, var(--color-coal) 18%, var(--color-paper));
-    --vv-focus: var(--color-cobalt);
-    position: relative;
-    padding: 1.6rem 1.6rem 1.5rem;
-  }
-  .vv-wl-input {
-    width: 100%;
-    height: 3.1rem;
-    margin-top: 0.45rem;
-    padding: 0 0.1rem;
-    border: 0;
-    border-bottom: 2px solid color-mix(in oklab, var(--color-coal) 30%, var(--color-paper));
-    border-radius: 0;
-    background: transparent;
-    color: var(--color-cobalt-deep);
-    caret-color: var(--color-cobalt);
-    font-size: 1.2rem;
-    font-weight: 700;
-    transition: border-color var(--dur-hover) ease;
-  }
-  .vv-wl-input::placeholder {
-    color: color-mix(in oklab, var(--color-coal) 45%, var(--color-paper));
-    font-weight: 600;
-  }
-  .vv-wl-input:focus {
-    outline: none;
-    border-bottom-color: var(--color-cobalt);
-  }
-  .vv-wl-input:focus-visible {
-    border-radius: 4px;
-    outline: 2px solid var(--color-cobalt);
-    outline-offset: 4px;
-  }
-  .vv-wl-input[aria-invalid='true'] {
-    border-bottom-color: var(--color-verm-text);
-  }
-  .vv-wl-input:disabled {
-    opacity: 0.6;
-  }
-  .vv-wl-note {
-    min-height: 1.4rem;
-    margin-top: 0.6rem;
-    color: color-mix(in oklab, var(--color-coal) 66%, var(--color-paper));
-    font-size: 0.85rem;
-    font-weight: 700;
-  }
-  .vv-wl-submit.btn {
-    width: 100%;
-    margin-top: 1.1rem;
-  }
-  .vv-wl-done {
-    position: relative;
-    min-height: 11rem;
-    padding-right: 5.5rem;
-    outline: none;
-  }
-  .vv-wl-tick {
-    position: absolute;
-    top: -0.35rem;
-    right: 0;
-    width: 5rem;
-    height: auto;
+  .vv-wl-slip {
+    min-width: 0;
   }
   .vv-perks > li {
     padding-block: 1.1rem;
@@ -1699,9 +1670,11 @@
     transition: none;
   }
   .vv-peek-head,
-  .vv-ledge[data-pleased] .vv-peek-head {
+  .vv-ledge[data-pleased] .vv-peek-head,
+  .vv-ledge[data-frown] .vv-peek[data-axis='structure'] .vv-peek-head {
     transform: none;
     transition: none;
+    animation: none !important;
   }
   .vv-faq-a,
   .vv-faq-toggle svg {

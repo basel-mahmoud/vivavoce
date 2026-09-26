@@ -47,6 +47,10 @@
   --vv-scroll-thumb-hover: #8f99ab;
   /* A coal field: print by day; at night a well below the canvas. */
   --vv-coal-field: #10131a;
+  /* Paper lying on the desk (slips, the panel's note, the admission ticket).
+     By day it is the sheet itself; at night it is lamp-lit, a step below
+     white, so the examiners' faces stay the brightest thing on the page. */
+  --vv-paper-obj: #fdfdfe;
 
   /* Motion: durations. Curves live in @theme below. */
   --dur-press: 160ms;
@@ -76,6 +80,7 @@
     --vv-scroll-thumb: #2e3547;
     --vv-scroll-thumb-hover: #454f66;
     --vv-coal-field: #080a0f;
+    --vv-paper-obj: #e4e2dc;
     color-scheme: dark;
   }
 }
@@ -107,9 +112,8 @@
   --color-cobalt-lift: #8391ff;
   --color-butter: #ffc838;
   --color-line-dark: rgb(253 253 254 / 0.16);
-
-  /* Semantics. */
-  --color-pass: #2c7a4b;
+  /* Paper objects on the desk: white by day, lamp-lit at night. */
+  --color-paper-obj: var(--vv-paper-obj);
 
   --font-sans: var(--font-archivo), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, 'SF Mono', monospace;
@@ -139,6 +143,9 @@
     background-color: var(--color-canvas);
     accent-color: var(--color-cobalt);
     scrollbar-color: var(--vv-scroll-thumb) var(--color-canvas);
+    /* Nothing may widen a phone's layout viewport (a torn slip, a stamp
+       landing): the fixed nav would stretch with it and lose its menu. */
+    overflow-x: clip;
   }
   @media (prefers-reduced-motion: no-preference) {
     html {

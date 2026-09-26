@@ -208,20 +208,17 @@
     --stamp-ink: var(--color-ink);
   }
   .vv-stamp-slot {
-    display: inline-grid;
+    display: inline-block;
     vertical-align: baseline;
-  }
-  .vv-stamp-slot > * {
-    grid-area: 1 / 1;
-  }
-  .vv-stamp-sizer {
-    visibility: hidden;
   }
   .vv-stamp-live {
     position: relative;
     display: inline-flex;
     align-items: baseline;
-    justify-self: start;
+  }
+  /* The headline's full stop sits right against the stamp's edge, on the baseline. */
+  .vv-stamp-suffix {
+    margin-left: 0.03em;
   }
   .vv-stamp-box {
     display: inline-block;
@@ -234,11 +231,23 @@
   /* Rubber-stamp ink: flat colour that does not quite take everywhere. */
   .vv-stamp-ink {
     color: var(--stamp-ink);
-    transform-origin: 50% 60%;
+    transform-origin: 50% 50%;
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -11 7.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -11 7.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
     -webkit-mask-size: 220px 220px;
     mask-size: 220px 220px;
+  }
+
+  /* A single stamp, pressed once on arrival (Stamp). */
+  .vv-stamp-once {
+    rotate: -2.5deg;
+    animation: vv-stamp-once 460ms var(--ease-out) 260ms both;
+  }
+  @keyframes vv-stamp-once {
+    from {
+      scale: 1.07;
+      rotate: -5deg;
+    }
   }
 
   /* ── Keycap ─────────────────────────────────────────────────────────── */
@@ -512,13 +521,14 @@
     width: 100%;
     max-width: 36rem;
     color: var(--color-coal);
-    /* Masks cut the paper, so the shadow has to follow its alpha. */
-    filter: drop-shadow(0 0 0.6px rgb(var(--vv-shadow) / 0.28))
-      drop-shadow(0 12px 18px rgb(var(--vv-shadow) / 0.14));
+    /* Masks cut the paper, so the shadow has to follow its alpha. Kept short
+       and soft, so a punched hole shows the desk, not a grey dimple. */
+    filter: drop-shadow(0 0 0.6px rgb(var(--vv-shadow) / 0.26))
+      drop-shadow(0 9px 14px rgb(var(--vv-shadow) / 0.1));
   }
   @media (prefers-color-scheme: dark) {
     .vv-ticket {
-      filter: drop-shadow(0 14px 22px rgb(var(--vv-shadow) / 0.5));
+      filter: drop-shadow(0 12px 20px rgb(var(--vv-shadow) / 0.45));
     }
   }
   .vv-ticket[data-stub='butter'] {
@@ -559,7 +569,7 @@
     flex: 1 1 auto;
     min-width: 0;
     border-radius: var(--radius) 0 0 var(--radius);
-    background: var(--color-paper);
+    background: var(--color-paper-obj);
     -webkit-mask-image:
       radial-gradient(circle var(--notch) at 100% 0, transparent 96%, #000),
       radial-gradient(circle var(--notch) at 100% 100%, transparent 96%, #000),
@@ -585,7 +595,8 @@
     font: inherit;
     text-align: center;
     cursor: grab;
-    touch-action: none;
+    /* A thumb swiping up or down scrolls the page; sideways is a pull. */
+    touch-action: pan-y;
     transform-origin: 0 calc(100% - var(--notch));
     filter: drop-shadow(
       calc(var(--open, 0) * 3px) calc(var(--open, 0) * 5px) calc(var(--open, 0) * 7px)
@@ -602,6 +613,7 @@
   }
   .vv-ticket[data-phase='pulling'] .vv-ticket-stub {
     cursor: grabbing;
+    touch-action: none;
   }
   .vv-ticket[data-phase='falling'] .vv-ticket-stub {
     cursor: default;
@@ -620,8 +632,69 @@
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
+    gap: 0.75rem;
     min-width: 0;
-    padding: 1.1rem 0.5rem 1rem 0.75rem;
+    padding: 1.1rem 0.45rem 1rem 0.7rem;
+  }
+  /* The stub's print, all in the field's own ink at full strength. */
+  .vv-stub-admit {
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    line-height: 1.35;
+    text-transform: uppercase;
+  }
+  .vv-stub-cta {
+    font-size: 1.06rem;
+    font-weight: 900;
+    line-height: 1.12;
+  }
+  .vv-stub-tear {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  /* The scissors on the perforation: out once the slip is filled in, and
+     they travel down the seam while a mouse points at the stub. */
+  .vv-ticket-snip {
+    position: absolute;
+    top: calc(var(--notch) + 0.2rem);
+    right: var(--stub-w);
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 999px;
+    background: var(--color-paper-obj);
+    box-shadow: 0 0 0 1.5px var(--stub-bg);
+    color: var(--stub-bg);
+    opacity: 0;
+    translate: 50% 0;
+    rotate: 90deg;
+    pointer-events: none;
+    transition:
+      opacity 180ms ease,
+      translate 620ms var(--ease-out);
+  }
+  .vv-ticket[data-ready] .vv-ticket-snip {
+    opacity: 1;
+  }
+  .vv-ticket:not([data-phase='intact']) .vv-ticket-snip {
+    opacity: 0;
+    transition-duration: 120ms;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-ticket[data-phase='intact'] .vv-ticket-stub:hover + .vv-ticket-snip {
+      opacity: 1;
+      translate: 50% 3.25rem;
+    }
   }
 
   /* ── Loader ─────────────────────────────────────────────────────────── */
@@ -757,6 +830,19 @@
   .vv-key-cap,
   .vv-key[data-pressed] .vv-key-cap {
     transition: none;
+  }
+
+  .vv-stamp-once {
+    animation: none;
+  }
+  .vv-redpen[data-mark='highlight'] > .vv-redpen-words {
+    transition: none;
+  }
+  .vv-ticket-snip {
+    transition: opacity 180ms ease;
+  }
+  .vv-ticket[data-phase='intact'] .vv-ticket-stub:hover + .vv-ticket-snip {
+    translate: 50% 0;
   }
 
   /* Paddles swap faces with a fade instead of turning over. */

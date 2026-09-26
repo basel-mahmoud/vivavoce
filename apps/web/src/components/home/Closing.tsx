@@ -35,7 +35,7 @@ export function Privacy({ className }: { className?: string }) {
               </li>
             ))}
           </ul>
-          <Link href="/privacy" className="group mt-8 inline-flex items-center gap-1.5 text-lg font-bold">
+          <Link href="/privacy" className="group mt-8 inline-flex min-h-11 items-center gap-1.5 text-lg font-bold">
             <span className="link-quiet">Read the privacy policy</span>
             <ArrowUpRight size={18} aria-hidden className="text-ink-blue" />
           </Link>
@@ -53,23 +53,24 @@ export function Close({ className }: { className?: string }) {
       className={cn('vv-close mx-auto w-full max-w-[1360px] px-4 pb-24 pt-16 sm:px-5 sm:pb-32 sm:pt-24', className)}
     >
       <div className="flex flex-col items-center text-center">
-        <h2 id="close-title" className="display text-[clamp(2.7rem,7vw,6rem)] leading-[1.02]">
-          Say it before the
-          <br />
-          <WordStamp words={['viva', 'interview', 'pitch']} suffix="." reserve={false} />
+        <h2 id="close-title" className="display vv-close-title">
+          <span className="block">Say it before the</span>
+          <span className="vv-close-stamp">
+            <WordStamp words={['viva', 'interview', 'pitch']} suffix="." />
+          </span>
         </h2>
-        <p className="mt-6 max-w-lg text-lg font-medium leading-relaxed text-ink-mut">
+        <p className="mt-8 max-w-lg text-lg font-medium leading-relaxed text-ink-mut">
           The app is in private beta. Spots open in small groups, and students with exam dates go first.
         </p>
         <div className="mt-10 flex w-full justify-center sm:mt-12">
           <AdmitSlip />
         </div>
-        <div className="mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[0.95rem] font-bold">
-          <a href="/download/apk" className="group inline-flex items-center gap-1.5">
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-1 text-[0.95rem] font-bold">
+          <a href="/download/apk" className="group inline-flex min-h-11 items-center gap-1.5">
             <Smartphone size={16} aria-hidden className="text-ink-blue" />
             <span className="link-quiet">Download the Android beta</span>
           </a>
-          <Link href="/faq" className="group inline-flex items-center gap-1.5">
+          <Link href="/faq" className="group inline-flex min-h-11 items-center gap-1.5">
             <span className="link-quiet">Questions first? Read the FAQ</span>
             <ArrowRight size={15} aria-hidden className="text-ink-blue" />
           </Link>

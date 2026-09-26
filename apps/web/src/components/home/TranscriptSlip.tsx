@@ -105,9 +105,18 @@ export function TranscriptSlip({ className }: { className?: string }) {
       return;
     }
     const part = { duration: 0.85, times: [0, 0.18, 0.8, 1], ease: [EASE.out, EASE.inOut, EASE.out] };
-    // Offsets in % of the slip, so a phone-width slip stays on screen.
-    const ca = animate(a, { x: ['0%', '-0.4%', '-2.8%', '-2.6%'], y: [0, -3, 12, 10], rotate: [0, -0.6, -4.8, -4.5] }, part);
-    const cb = animate(b, { x: ['0%', '0.6%', '5%', '4.7%'], y: [0, -5, 29, 26], rotate: [0, 1.2, 7, 6.5] }, part);
+    // Offsets in % of the slip; on a phone the halves part half as far, so both stay on the desk.
+    const k = window.matchMedia('(max-width: 639px)').matches ? 0.5 : 1;
+    const ca = animate(
+      a,
+      { x: ['0%', `${-0.4 * k}%`, `${-2.8 * k}%`, `${-2.6 * k}%`], y: [0, -3, 12, 10], rotate: [0, -0.6, -4.8 * k, -4.5 * k] },
+      part,
+    );
+    const cb = animate(
+      b,
+      { x: ['0%', `${0.6 * k}%`, `${5 * k}%`, `${4.7 * k}%`], y: [0, -5, 29, 26], rotate: [0, 1.2, 7 * k, 6.5 * k] },
+      part,
+    );
     return () => {
       ca.stop();
       cb.stop();

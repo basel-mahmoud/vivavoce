@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Smartphone } from 'lucide-react';
 import { HeroMark } from '@/components/site/HeroMark';
-import { WaitlistForm } from '@/components/site/WaitlistForm';
+import { AdmitSlip } from '@/components/home/AdmitSlip';
 
 export const metadata: Metadata = {
   title: 'Get early access',
@@ -33,7 +33,7 @@ export default function WaitlistPage() {
         </div>
 
         <div className="vv-wl-slip">
-          <WaitlistForm />
+          <AdmitSlip size="page" fieldId="wl-email" />
         </div>
 
         <div className="vv-wl-more">
