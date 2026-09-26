@@ -26,8 +26,7 @@ export function PageHero({
       className={cn('vv-hero mx-auto w-full max-w-[1360px] px-4 sm:px-5', className)}
       data-flush={flush ? '' : undefined}
     >
-      {/* Older pages still pass a string with an *asterisked* word: print it plain. */}
-      <h1 className="vv-hero-title display">{typeof title === 'string' ? title.replaceAll('*', '') : title}</h1>
+      <h1 className="vv-hero-title display">{title}</h1>
       {intro ? <p className="vv-hero-intro">{intro}</p> : null}
       {children ? <div className="vv-hero-actions">{children}</div> : null}
     </section>
