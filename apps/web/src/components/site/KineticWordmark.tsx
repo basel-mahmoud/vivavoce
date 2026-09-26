@@ -6,17 +6,19 @@ const WORD = 'VivaVoce';
 // Archivo's variable axes. The word rests black and expanded, like every
 // headline; letters near the pointer give way, thinning and narrowing.
 const REST = { wght: 900, wdth: 118 };
-const PEAK = { wght: 460, wdth: 70 };
-const RADIUS = 260;
+const PEAK = { wght: 380, wdth: 72 };
+/** The reach of the pointer, in letter heights. */
+const REACH = 2.6;
 
 /**
- * The footer wordmark. On a fine pointer, letters under the cursor give way
- * along Archivo's weight and width axes, pressed like a key, and spring back
- * when it leaves. Writes straight to style in a rAF loop that only runs while
- * something is moving. Touch and reduced motion get the resting word.
+ * The footer's small wordmark. On a fine pointer, letters under the cursor
+ * give way along Archivo's weight and width axes, pressed like keys, and
+ * spring back when it leaves. It writes straight to style in a rAF loop that
+ * only runs while something is moving. Touch and reduced motion get the
+ * resting word.
  */
 export function KineticWordmark({ className }: { className?: string }) {
-  const root = useRef<HTMLDivElement>(null);
+  const root = useRef<HTMLSpanElement>(null);
   const letters = useRef<(HTMLSpanElement | null)[]>([]);
 
   useEffect(() => {
@@ -26,11 +28,11 @@ export function KineticWordmark({ className }: { className?: string }) {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!fine || reduce) return;
 
-    el.dataset.live = 'true';
     const values = WORD.split('').map(() => 0);
     let pointer: { x: number; y: number } | null = null;
     let frame = 0;
     let last = performance.now();
+    const radius = () => (parseFloat(getComputedStyle(el).fontSize) || 48) * REACH;
 
     const apply = (i: number, t: number) => {
       const span = letters.current[i];
@@ -43,16 +45,15 @@ export function KineticWordmark({ className }: { className?: string }) {
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
+      const reach = radius();
       let moving = false;
       letters.current.forEach((span, i) => {
         if (!span) return;
         let target = 0;
         if (pointer) {
           const r = span.getBoundingClientRect();
-          const dx = pointer.x - (r.left + r.width / 2);
-          const dy = pointer.y - (r.top + r.height / 2);
-          const d = Math.hypot(dx, dy);
-          target = Math.max(0, 1 - d / RADIUS);
+          const d = Math.hypot(pointer.x - (r.left + r.width / 2), pointer.y - (r.top + r.height / 2));
+          target = Math.max(0, 1 - d / reach);
           target = target * target * (3 - 2 * target);
         }
         // Exponential damping: responsive, never snaps.
@@ -71,6 +72,7 @@ export function KineticWordmark({ className }: { className?: string }) {
       }
     };
     const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return;
       pointer = { x: e.clientX, y: e.clientY };
       start();
     };
@@ -79,7 +81,6 @@ export function KineticWordmark({ className }: { className?: string }) {
       start();
     };
 
-    WORD.split('').forEach((_, i) => apply(i, 0));
     const zone = el.parentElement ?? el;
     zone.addEventListener('pointermove', onMove);
     zone.addEventListener('pointerleave', onLeave);
@@ -91,12 +92,8 @@ export function KineticWordmark({ className }: { className?: string }) {
   }, []);
 
   return (
-    <div
-      ref={root}
-      aria-hidden
-      className={`group select-none whitespace-nowrap text-center leading-[0.8] ${className ?? ''}`}
-      style={{ fontVariationSettings: "'wght' 900, 'wdth' 118" }}
-    >
+    // The name is printed in the line beside it; the word itself is a toy.
+    <span ref={root} aria-hidden="true" className={`vv-wordmark ${className ?? ''}`}>
       {WORD.split('').map((ch, i) => (
         <span
           key={i}
@@ -108,6 +105,6 @@ export function KineticWordmark({ className }: { className?: string }) {
           {ch}
         </span>
       ))}
-    </div>
+    </span>
   );
 }

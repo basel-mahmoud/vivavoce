@@ -288,6 +288,300 @@
       display: none;
     }
   }
+
+  /* ── Footer: the bench, the panel and their note ────────────────────── */
+
+  .vv-foot {
+    --bench-pad: clamp(3rem, 5.2vw, 4.5rem);
+    --head-w: clamp(4.1rem, 11vw, 10.5rem);
+    margin-top: calc(var(--head-w) * 0.84 + 1.5rem);
+  }
+  .vv-foot-bench {
+    position: relative;
+    padding: var(--bench-pad) 1rem 1.25rem;
+    /* The lit front edge of the bench, so the ledge reads at night too. */
+    box-shadow: inset 0 1px 0 rgb(253 253 254 / 0.1);
+  }
+  @media (min-width: 640px) {
+    .vv-foot-bench {
+      padding-inline: 1.25rem;
+    }
+  }
+  .vv-foot-inner {
+    display: grid;
+    gap: 3.5rem;
+    max-width: 1360px;
+    margin-inline: auto;
+  }
+  @media (min-width: 1024px) {
+    .vv-foot-inner {
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
+      align-items: start;
+      gap: 5rem;
+    }
+  }
+  .vv-foot-notecol {
+    position: relative;
+    min-width: 0;
+    max-width: 38rem;
+  }
+
+  /* The heads, behind the ledge. Each clip shows the top of its frame. */
+  .vv-ledge {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + var(--bench-pad));
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(0.35rem, 1.2vw, 1.25rem);
+    pointer-events: none;
+  }
+  /* Wide screens: the panel sits right behind their note, from its left edge. */
+  @media (min-width: 1024px) {
+    .vv-ledge {
+      right: auto;
+      left: 0.25rem;
+      justify-content: flex-start;
+    }
+  }
+  .vv-peek {
+    position: relative;
+    flex: none;
+    width: var(--head-w);
+    height: calc(var(--head-w) * var(--peek));
+    margin-inline: calc(var(--head-w) * var(--trim-l) * -1) calc(var(--head-w) * var(--trim-r) * -1);
+    overflow: hidden;
+  }
+  .vv-peek-head {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: 100%;
+    transition: transform var(--rise);
+    transition-delay: calc(var(--i) * 70ms);
+  }
+  .vv-peek-head .vv-portrait {
+    display: block;
+    width: 100% !important;
+  }
+  .vv-ledge[data-sunk] .vv-peek-head {
+    transform: translateY(calc(var(--peek) * 100% + 2px));
+    transition: none;
+  }
+  .vv-ledge[data-pleased] .vv-peek-head {
+    transform: translateY(-5%);
+    transition: transform var(--perk);
+    transition-delay: calc(var(--i) * 40ms);
+  }
+
+  /* The note: ruled paper lying on the bench, signed by all five. Text sits
+     on the rules; each examiner's head sits in the margin beside their line. */
+  .vv-note {
+    --gap: 2.125rem;
+    --margin-x: 2.75rem;
+    --note-rule: color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper));
+    --note-margin: color-mix(in oklab, var(--color-verm) 46%, var(--color-paper));
+    --vv-focus: var(--color-cobalt);
+    position: relative;
+    padding: var(--gap) 1.5rem calc(var(--gap) * 0.75) calc(var(--margin-x) + 1rem);
+    border-radius: 0.6rem;
+    background-color: var(--color-paper);
+    background-image:
+      linear-gradient(
+        to right,
+        transparent calc(var(--margin-x) - 1px),
+        var(--note-margin) calc(var(--margin-x) - 1px) var(--margin-x),
+        transparent var(--margin-x)
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 calc(var(--gap) - 1px),
+        var(--note-rule) calc(var(--gap) - 1px) var(--gap)
+      );
+    /* Rules land a little under each baseline. */
+    background-position:
+      0 0,
+      0 calc(var(--gap) - 0.52rem);
+    background-repeat: no-repeat, repeat;
+    color: var(--color-coal);
+    rotate: -1deg;
+    box-shadow:
+      0 1px 1px rgb(0 0 0 / 0.22),
+      0 26px 40px -26px rgb(0 0 0 / 0.75);
+  }
+  .vv-note-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    font-stretch: 116%;
+    letter-spacing: -0.02em;
+    line-height: var(--gap);
+  }
+  .vv-note-body {
+    margin-top: var(--gap);
+    max-width: 34rem;
+    font-size: 1.03rem;
+    font-weight: 500;
+    line-height: var(--gap);
+  }
+  .vv-note-sigs {
+    margin-top: var(--gap);
+  }
+  .vv-note-sig {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    height: var(--gap);
+  }
+  /* The examiner's head, in the margin: the examiner's side of the page. */
+  .vv-note-sig .vv-portrait {
+    position: absolute;
+    left: calc(-1rem - var(--margin-x) + (var(--margin-x) - 1.75rem) / 2);
+    bottom: 0.3rem;
+    width: 1.75rem !important;
+  }
+  .vv-note-line {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: var(--gap);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .vv-note-name {
+    margin-left: auto;
+    color: color-mix(in oklab, var(--color-coal) 62%, var(--color-paper));
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: var(--gap);
+    white-space: nowrap;
+  }
+  @media (max-width: 479px) {
+    .vv-note {
+      --gap: 1.95rem;
+      --margin-x: 2.4rem;
+      padding-right: 1rem;
+      padding-left: calc(var(--margin-x) + 0.75rem);
+    }
+    .vv-note-sig .vv-portrait {
+      left: calc(-0.75rem - var(--margin-x) + (var(--margin-x) - 1.6rem) / 2);
+      width: 1.6rem !important;
+    }
+    .vv-note-line {
+      font-size: 0.94rem;
+    }
+    .vv-note-name {
+      font-size: 0.75rem;
+    }
+  }
+
+  .vv-foot-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.25rem 1.5rem;
+  }
+  @media (min-width: 640px) {
+    .vv-foot-links {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .vv-foot-links {
+      padding-top: 0.5rem;
+    }
+  }
+  .vv-foot-head {
+    color: var(--color-paper-mut);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  .vv-foot-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    color: var(--color-paper);
+    font-size: 1.0625rem;
+    font-weight: 700;
+  }
+  @media (pointer: coarse) {
+    .vv-foot-link {
+      min-height: 2.75rem;
+    }
+  }
+
+  .vv-foot-base {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    max-width: 1360px;
+    margin: clamp(3.5rem, 6vw, 5.5rem) auto 0;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--color-line-dark);
+  }
+  @media (min-width: 1024px) {
+    .vv-foot-base {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 3rem;
+    }
+  }
+  .vv-foot-mark {
+    line-height: 0;
+  }
+  .vv-wordmark {
+    display: inline-block;
+    color: var(--color-paper);
+    font-size: clamp(2.6rem, 5vw, 4.4rem);
+    font-weight: 900;
+    font-stretch: 118%;
+    font-variation-settings:
+      'wght' 900,
+      'wdth' 118;
+    letter-spacing: -0.03em;
+    line-height: 0.82;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .vv-foot-print {
+    max-width: 38rem;
+    color: var(--color-paper-mut);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  @media (min-width: 1024px) {
+    .vv-foot-print {
+      text-align: right;
+    }
+  }
+  .vv-foot-print strong {
+    color: var(--color-paper);
+    font-weight: 700;
+  }
+  .vv-foot-legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    margin-top: 0.5rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-foot-legal {
+      justify-content: flex-end;
+    }
+  }
+  .vv-foot-mail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--color-paper);
+    font-weight: 700;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -296,6 +590,11 @@
     animation: none;
   }
   .vv-nav-toggle > span {
+    transition: none;
+  }
+  .vv-peek-head,
+  .vv-ledge[data-pleased] .vv-peek-head {
+    transform: none;
     transition: none;
   }
 }
