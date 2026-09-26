@@ -210,6 +210,11 @@
   :where(a, summary, button):focus-visible {
     border-radius: 6px;
   }
+  /* Whatever takes focus is scrolled clear of the fixed nav above and of the
+     room's pinned ruler below, never under them (WCAG 2.4.11). */
+  :where(a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])) {
+    scroll-margin-block: 5.75rem 4.75rem;
+  }
 
   a {
     color: inherit;
