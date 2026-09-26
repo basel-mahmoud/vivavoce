@@ -1205,7 +1205,7 @@
       margin-left: 8%;
     }
     .vv-int-card {
-      --card-w: min(19.5rem, 76%);
+      --card-w: min(21rem, 76%);
     }
   }
   .vv-int-caption {
