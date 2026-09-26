@@ -518,4 +518,95 @@
       transition: none;
     }
   }
+
+  /* ── Subjects: the departures board and the page's one marquee ─────── */
+
+  .vv-marquee {
+    position: relative;
+    overflow: hidden;
+    padding-block: 0.4rem;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+  }
+  .vv-marquee-track {
+    display: flex;
+    width: max-content;
+    animation: vv-marquee 70s linear infinite;
+    animation-play-state: paused;
+  }
+  .vv-marquee[data-running] .vv-marquee-track {
+    animation-play-state: running;
+  }
+  .vv-marquee:hover .vv-marquee-track,
+  .vv-marquee:focus-within .vv-marquee-track {
+    animation-play-state: paused;
+  }
+  .vv-marquee-set {
+    display: flex;
+    flex: none;
+    gap: 0.6rem;
+    padding-right: 0.6rem;
+  }
+  .vv-marquee[data-still] {
+    overflow-x: auto;
+    padding-inline: 1rem;
+    -webkit-mask-image: none;
+    mask-image: none;
+    scrollbar-width: thin;
+  }
+  .vv-marquee[data-still] .vv-marquee-track {
+    animation: none;
+  }
+  .vv-marquee[data-still] .vv-marquee-set[aria-hidden] {
+    display: none;
+  }
+  .vv-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 2.75rem;
+    padding: 0 1.15rem;
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    background: var(--color-card);
+    color: var(--color-ink);
+    font-size: 1rem;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--dur-hover) ease,
+      border-color var(--dur-hover) ease,
+      transform var(--dur-press) var(--ease-out);
+  }
+  .vv-chip:active {
+    transform: scale(0.97);
+  }
+  .vv-chip[data-on] {
+    border-color: var(--color-butter);
+    background: var(--color-butter);
+    color: var(--color-coal);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-chip:hover:not([data-on]) {
+      border-color: color-mix(in oklab, var(--color-ink) 45%, var(--color-line));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-marquee {
+      overflow-x: auto;
+      padding-inline: 1rem;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+    .vv-marquee-track {
+      animation: none;
+    }
+    .vv-marquee-set[aria-hidden] {
+      display: none;
+    }
+    .vv-chip:active {
+      transform: none;
+    }
+  }
 }
