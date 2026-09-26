@@ -103,7 +103,6 @@ export function Nav({ markCurrent = true }: { markCurrent?: boolean }) {
                 key={item.href}
                 href={item.href}
                 aria-current={current ? 'page' : undefined}
-                data-app={item.href === '/dashboard' ? '' : undefined}
                 className="vv-nav-link"
                 onPointerEnter={(e) => {
                   if (e.pointerType === 'mouse') setHovered(item.href);
@@ -154,8 +153,8 @@ export function Nav({ markCurrent = true }: { markCurrent?: boolean }) {
             className="vv-sheet-scrim"
             aria-hidden="true"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } }}
-            exit={{ opacity: 0, transition: { duration: 0.2, ease: 'easeOut' } }}
+            animate={{ opacity: 1, transition: { duration: 0.3, ease: EASE.out } }}
+            exit={{ opacity: 0, transition: { duration: 0.2, ease: EASE.out } }}
             onClick={() => close(true)}
           />
         )}
@@ -171,12 +170,12 @@ export function Nav({ markCurrent = true }: { markCurrent?: boolean }) {
             initial={reduce ? { opacity: 0 } : { transform: 'translateY(-100%)' }}
             animate={
               reduce
-                ? { opacity: 1, transition: { duration: 0.2, ease: 'easeOut' } }
+                ? { opacity: 1, transition: { duration: 0.2, ease: EASE.out } }
                 : { transform: 'translateY(0%)', transition: { duration: SHEET_S, ease: EASE.drawer } }
             }
             exit={
               reduce
-                ? { opacity: 0, transition: { duration: 0.15, ease: 'easeOut' } }
+                ? { opacity: 0, transition: { duration: 0.15, ease: EASE.out } }
                 : { transform: 'translateY(-100%)', transition: { duration: exitDuration(SHEET_S), ease: EASE.drawer } }
             }
           >

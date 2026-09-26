@@ -27,7 +27,6 @@ export const site = {
     { label: 'How it works', href: '/how-it-works' },
     { label: 'Use cases', href: '/use-cases' },
     { label: 'FAQ', href: '/faq' },
-    { label: 'Dashboard', href: '/dashboard' },
   ],
   footer: {
     Product: [
@@ -35,6 +34,7 @@ export const site = {
       { label: 'How it works', href: '/how-it-works' },
       { label: 'Use cases', href: '/use-cases' },
       { label: 'Get early access', href: '/waitlist' },
+      { label: 'Dashboard', href: '/dashboard' },
     ],
     Company: [
       { label: 'Contact', href: '/contact' },

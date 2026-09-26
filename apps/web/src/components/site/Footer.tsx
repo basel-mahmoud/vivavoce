@@ -66,7 +66,8 @@ export function Footer() {
                           <span className="link-quiet">{l.label}</span>
                         </a>
                       ) : (
-                        <Link href={l.href} className="vv-foot-link group">
+                        // The dashboard is rendered per request: never prefetched from every page.
+                        <Link href={l.href} prefetch={l.href === '/dashboard' ? false : undefined} className="vv-foot-link group">
                           <span className="link-quiet">{l.label}</span>
                         </Link>
                       )}

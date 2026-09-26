@@ -93,19 +93,6 @@
       color: var(--color-ink);
     }
   }
-  /* The dashboard is the app itself, not a page about it: a hairline sets it apart. */
-  .vv-nav-link[data-app] {
-    margin-left: 0.75rem;
-  }
-  .vv-nav-link[data-app]::before {
-    content: '';
-    position: absolute;
-    left: -0.4375rem;
-    top: 30%;
-    bottom: 30%;
-    width: 1px;
-    background: var(--color-line);
-  }
   .vv-nav-pill {
     position: absolute;
     inset: 0;
@@ -166,6 +153,20 @@
     .vv-nav-cta.btn {
       display: none;
     }
+  }
+  /* Phones: at the top of a page the page's own keys lead, so the capsule's
+     key steps back to a hairline until the page moves under it. With the
+     sheet open, the sheet carries the key and the capsule's goes away. */
+  @media (max-width: 959px) {
+    .vv-nav:not([data-solid]) .vv-nav-cta.btn-primary {
+      --btn-lip-color: color-mix(in oklab, currentColor 26%, transparent);
+      --btn-edge: color-mix(in oklab, currentColor 30%, transparent);
+      background-color: transparent;
+      color: var(--color-ink);
+    }
+  }
+  .vv-nav[data-open] .vv-nav-cta.btn {
+    visibility: hidden;
   }
 
   .vv-nav-toggle {
