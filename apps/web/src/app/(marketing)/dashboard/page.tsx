@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SignInButton } from '@clerk/nextjs';
 import { Smartphone } from 'lucide-react';
+import { HeroMark } from '@/components/site/HeroMark';
 import { PageHero } from '@/components/site/PageHero';
 import { ProgressBoard } from '@/components/site/Progress';
 import { exampleStats } from '@/components/site/progress-data';
-import { RedPen } from '@/components/ui/RedPen';
 import { getAuthContext } from '@/lib/auth/context';
 import { getUserStats } from '@/lib/db/practice.repo';
 
@@ -22,9 +22,9 @@ const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
 const title = (
   <>
     Your practice,{' '}
-    <RedPen mark="circle" play="mount" delay={450}>
+    <HeroMark>
       marked
-    </RedPen>
+    </HeroMark>
     .
   </>
 );

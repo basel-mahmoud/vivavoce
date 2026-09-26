@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Smartphone } from 'lucide-react';
+import { HeroMark } from '@/components/site/HeroMark';
 import { WaitlistForm } from '@/components/site/WaitlistForm';
-import { RedPen } from '@/components/ui/RedPen';
 
 export const metadata: Metadata = {
   title: 'Get early access',
@@ -22,9 +22,9 @@ export default function WaitlistPage() {
         <div className="vv-wl-copy">
           <h1 id="wl-title" className="vv-hero-title display">
             Get in before the exam{' '}
-            <RedPen mark="circle" play="mount" delay={450}>
+            <HeroMark>
               does
-            </RedPen>
+            </HeroMark>
             .
           </h1>
           <p className="vv-hero-intro">

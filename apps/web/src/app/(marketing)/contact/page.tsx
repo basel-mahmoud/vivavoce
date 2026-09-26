@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { HeroMark } from '@/components/site/HeroMark';
 import { PageHero } from '@/components/site/PageHero';
-import { RedPen } from '@/components/ui/RedPen';
 import { site } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -23,9 +23,9 @@ export default function ContactPage() {
         title={
           <>
             We read{' '}
-            <RedPen mark="underline" play="mount" delay={450}>
+            <HeroMark mark="underline">
               everything
-            </RedPen>
+            </HeroMark>
             .
           </>
         }

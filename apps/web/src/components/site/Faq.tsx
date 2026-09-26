@@ -4,6 +4,7 @@ import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import { Plus } from 'lucide-react';
 import { RedPen } from '@/components/ui/RedPen';
 import { splitAnswer } from './text';
+import { useFontsReady } from './useFontsReady';
 
 export interface FaqEntry {
   q: string;
@@ -22,6 +23,7 @@ export interface FaqEntry {
 export function Faq({ items, defaultOpen = [0] }: { items: readonly FaqEntry[]; defaultOpen?: readonly number[] }) {
   const uid = useId();
   const [open, setOpen] = useState<ReadonlySet<number>>(() => new Set(defaultOpen));
+  const fontsReady = useFontsReady();
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
 
   const toggle = (i: number) =>
@@ -83,7 +85,7 @@ export function Faq({ items, defaultOpen = [0] }: { items: readonly FaqEntry[]; 
                   {parts ? (
                     <>
                       {parts[0]}
-                      <RedPen mark="highlight" play="manual" show={isOpen} delay={300}>
+                      <RedPen mark="highlight" play="manual" show={isOpen && fontsReady} delay={300}>
                         {parts[1]}
                       </RedPen>
                       {parts[2]}

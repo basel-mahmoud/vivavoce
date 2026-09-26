@@ -5,7 +5,7 @@ import { cn } from '@/lib/cn';
  * An inner page's opener, set like the top of an exam script: one heading,
  * then a short intro. The heading is two-tone (the claim in ink, the rest in
  * grey, with <Muted>) or has one word marked by the examiner's red pen
- * (wrap it in <RedPen play="mount">). No eyebrow, no number, no chip.
+ * (wrap it in <HeroMark>). No eyebrow, no number, no chip.
  */
 export function PageHero({
   title,

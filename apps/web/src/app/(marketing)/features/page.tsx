@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
+import { HeroMark } from '@/components/site/HeroMark';
 import { PageHero } from '@/components/site/PageHero';
-import { RedPen } from '@/components/ui/RedPen';
 import { AxesIndex } from '@/components/home/AxesIndex';
 import { Interrupts } from '@/components/home/Interrupts';
 import { Modes } from '@/components/home/Modes';
@@ -20,9 +20,9 @@ export default function FeaturesPage() {
         title={
           <>
             Everything between knowing it and{' '}
-            <RedPen mark="underline" play="mount" delay={450}>
+            <HeroMark mark="underline">
               saying it well
-            </RedPen>
+            </HeroMark>
             .
           </>
         }

@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { HeroMark } from '@/components/site/HeroMark';
 import { PageHero } from '@/components/site/PageHero';
 import { Rooms } from '@/components/home/Rooms';
 import { Close } from '@/components/home/Closing';
 import { Portrait, type ExaminerAxis, type ExaminerState } from '@/components/ui/Portrait';
-import { RedPen } from '@/components/ui/RedPen';
 
 export const metadata: Metadata = {
   title: 'Use cases',
@@ -63,9 +63,9 @@ export default function UseCasesPage() {
         title={
           <>
             Anywhere the answer is{' '}
-            <RedPen mark="circle" play="mount" delay={450}>
+            <HeroMark>
               spoken
-            </RedPen>
+            </HeroMark>
             .
           </>
         }
