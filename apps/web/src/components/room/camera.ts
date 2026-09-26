@@ -155,13 +155,17 @@ export function loupeCentre(out = new THREE.Vector3()) {
 
 type Coins = readonly (readonly [number, number, number])[];
 
-/** Hero: a low-high-mid-high-low skyline of marks that clears every face. */
+/**
+ * Hero and outro: a crown of marks that clears every face, the weakest held low beside its
+ * speaker. The outer two raise theirs inboard, so the panel can bleed off the frame's right edge
+ * while every mark stays in it.
+ */
 export const HERO_COINS: Coins = [
-  [-2.4, 1.24, -0.42],
-  [-1.42, 1.8, -0.55],
+  [-1.98, 1.84, -0.34],
+  [-1.36, 2.02, -0.55],
   [0.6, 0.98, -0.42],
-  [1.32, 1.82, -0.6],
-  [2.16, 1.46, -0.42],
+  [1.3, 1.98, -0.6],
+  [1.76, 1.58, -0.32],
 ];
 /** Phones frame the middle three large; the outer two raise their marks inboard and high. */
 export const HERO_COINS_COMPACT: Coins = [
@@ -189,6 +193,8 @@ export interface Insets {
   hero: number;
   beat: number;
   outro: number;
+  /** Where the transcript slip begins under the room on compact layouts (1: not there). */
+  floor: number;
 }
 
 export interface ShotSet {
@@ -210,18 +216,28 @@ function withKind(name: ShotName, p: Omit<Pose, 'kind' | 'focus'>, focus: THREE.
  */
 export function makeShots(aspect: number, insets: Insets, width = Infinity): ShotSet {
   const compact = aspect < 1.05 || width < 768;
+  // compact: every stop between the captions and the slip (and so above the ruler under it); the
+  // outro keeps a slot above the panel for the weakest examiner's follow-up (about 125 px), and so
+  // does the hero on short phones, where the panel would otherwise fill the space the notes need
+  const floor = Math.min(1, insets.floor);
+  const stageH = Number.isFinite(width) ? width / aspect : 900;
+  const tagRoom = 125 / stageH;
   const R = compact
     ? {
-        hero: { x0: 0.03, x1: 0.97, y0: insets.hero + 0.05, y1: 0.93 },
-        beat: { x0: 0.06, x1: 0.94, y0: insets.beat + 0.04, y1: 0.86 },
-        close: { x0: 0.1, x1: 0.9, y0: insets.beat + 0.05, y1: 0.84 },
-        outro: { x0: 0.04, x1: 0.96, y0: insets.outro + 0.04, y1: 0.88 },
+        hero: { x0: 0.03, x1: 0.97, y0: insets.hero + (stageH < 760 ? 104 / stageH : 0.05), y1: 0.93 },
+        beat: { x0: 0.06, x1: 0.94, y0: insets.beat + 0.04, y1: Math.min(0.86, floor - 0.025) },
+        close: { x0: 0.1, x1: 0.9, y0: insets.beat + 0.05, y1: Math.min(0.84, floor - 0.03) },
+        outro: { x0: 0.04, x1: 0.96, y0: insets.outro + tagRoom, y1: Math.min(0.9, floor - 0.02) },
+        handoff: { x0: 0.04, x1: 0.96, y0: insets.outro + 0.05, y1: Math.min(0.9, floor - 0.02) },
       }
     : {
-        hero: { x0: 0.475, x1: 0.99, y0: 0.2, y1: 0.8 },
+        // the panel bleeds off the right edge (the lamp, the bench end, Confidence's headset)
+        hero: { x0: 0.465, x1: 1.02, y0: 0.22, y1: 0.74 },
+        // right of the exam sheet's edge (46%)
         beat: { x0: 0.52, x1: 0.94, y0: 0.15, y1: 0.85 },
         close: { x0: 0.52, x1: 0.93, y0: 0.16, y1: 0.84 },
-        outro: { x0: 0.47, x1: 0.985, y0: 0.2, y1: 0.86 },
+        outro: { x0: 0.5, x1: 0.99, y0: 0.25, y1: 0.76 },
+        handoff: { x0: 0.5, x1: 0.97, y0: 0.2, y1: 0.86 },
       };
 
   const coinsHero = (compact ? HERO_COINS_COMPACT : HERO_COINS).map(coinVec);
@@ -241,7 +257,7 @@ export function makeShots(aspect: number, insets: Insets, width = Infinity): Sho
     : [...cast(), ...coinsHero.flatMap((c) => coinPoints(c))];
   const hero = compact
     ? frame(heroPts, V(0, 1.0, -0.6), V(0, 0.14, 1), aspect, R.hero, 26, 'bottom')
-    : frame(heroPts, V(0, 1.05, -0.5), V(0.03, 0.1, 1), aspect, R.hero, 22);
+    : frame(heroPts, V(0, 1.05, -0.5), V(0.03, 0.12, 1), aspect, R.hero, 22, 'bottom');
 
   // Beats: longer lenses from where nothing stands between the lens and the face, so a close-up
   // is a face and not a neighbour's shoulder. Beat 0, Correctness, a medium from the front left.
@@ -274,9 +290,15 @@ export function makeShots(aspect: number, insets: Insets, width = Infinity): Sho
     R.beat,
     compact ? 24 : 18,
   );
-  // Beat 3, Conciseness, a close-up from below and to the right: the metronome over the face.
+  // Beat 3, Conciseness, a close-up from below and to the right: the metronome over the face, its
+  // needle's tip in frame at either end of the swing.
   const b3 = frame(
-    [...headPoints('conciseness', 1.7, 2.4, 1.5), seatToWorld('conciseness', 0, 1.95, 0.1), ...coinPoints(coinsBeat[3]!, 0.23)],
+    [
+      ...headPoints('conciseness', 1.7, 2.4, 1.5),
+      seatToWorld('conciseness', -0.12, 2.44, -0.1),
+      seatToWorld('conciseness', 0.12, 2.44, -0.1),
+      ...coinPoints(coinsBeat[3]!, 0.23),
+    ],
     visor[3]!.clone().add(V(0, 0.2, 0)),
     V(0.22, -0.12, 1),
     aspect,
@@ -292,16 +314,19 @@ export function makeShots(aspect: number, insets: Insets, width = Infinity): Sho
     R.beat,
     compact ? 22 : 16,
   );
+  // The bench's front edge at the floor: compact layouts keep the whole bench above the slip, so
+  // no inlay is ever cut mid-word by the paper.
+  const bench = compact ? [V(0, -0.5, 0.18), V(-1.84, -0.5, 0.71), V(1.84, -0.5, 0.71)] : [];
   // Outro: the marked panel, a little higher, the bench top in view.
-  const outroPts = [...cast(-0.1), ...HERO_COINS.map(coinVec).flatMap((c) => coinPoints(c))];
-  const outro = frame(outroPts, V(0, 0.9, -0.5), V(0.02, 0.3, 1), aspect, R.outro, compact ? 30 : 23);
+  const outroPts = [...cast(-0.1), ...coinsHero.flatMap((c) => coinPoints(c)), ...bench];
+  const outro = frame(outroPts, V(0, 0.95, -0.5), V(0.02, 0.2, 1), aspect, R.outro, compact ? 30 : 23, compact ? 'center' : 'bottom');
   // Hand-off: paddles down, the five turn to you; the camera settles in closer on the faces.
   const handoff = frame(
-    [...EXAMINERS.flatMap((k) => headPoints(k, 1.3, 2.6, 2.2)), ...cast(0.2)],
+    [...EXAMINERS.flatMap((k) => headPoints(k, 1.3, 2.6, 2.2)), ...cast(0.2), ...bench],
     V(0, 1.0, -0.6),
     V(0, 0.14, 1),
     aspect,
-    R.outro,
+    R.handoff,
     compact ? 26 : 20,
   );
 

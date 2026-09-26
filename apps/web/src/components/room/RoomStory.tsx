@@ -2,11 +2,12 @@
 
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { motion, useMotionValueEvent, useScroll, useTransform } from 'motion/react';
+import { motion, useMotionValueEvent, useScroll, useTransform, type MotionValue } from 'motion/react';
 import { cn } from '@/lib/cn';
-import { AXES } from './data';
-import { HERO_END, OUTRO, beatAt, ramp } from './story';
+import { AXES, ROUNDS, weakestIndex } from './data';
+import { HERO_END, OUTRO, beatAt, marksAt, ramp } from './story';
 import { HeroCopy, MarginNote, OutroCaption } from './RoomCaptions';
+import { ScriptSlip } from './ScriptSlip';
 import { Ruler } from './Ruler';
 import { RoomTags } from './RoomTags';
 import { RoomPoster } from './RoomPoster';
@@ -14,6 +15,8 @@ import type { Insets, RoomOverlays, RoundState } from './Scene';
 import styles from './room.module.css';
 
 const Scene = dynamic(() => import('./Scene'), { ssr: false });
+
+const WEAKEST = weakestIndex(ROUNDS[0]!.scores);
 
 /* ── Environment probes (server snapshots keep hydration identical) ──── */
 
@@ -70,6 +73,25 @@ function usePageVisible(): boolean {
 }
 
 /**
+ * The exam sheet the notes are written on. Once the marking starts it slides in over the room, a
+ * straight paper edge with a soft shadow, so an examiner that reaches behind it is covered by paper
+ * rather than fogged: down the left side on wide layouts, across the top on compact ones (its edge
+ * just under the note). Under reduced motion it fades in place.
+ */
+function Sheet({ progress, depth }: { progress: MotionValue<number>; depth: number }) {
+  const k = useTransform(progress, (v) => ramp(v, [HERO_END - 0.005, HERO_END + 0.055], [0, 1]));
+  const opacity = useTransform(k, (t) => Math.min(1, t * 3));
+  const visibility = useTransform(k, (t) => (t > 0.001 ? 'visible' : 'hidden'));
+  return (
+    <motion.div
+      aria-hidden
+      style={{ '--k': k, '--sheet-depth': `${(depth * 100).toFixed(2)}%`, opacity, visibility } as never}
+      className={styles.sheet}
+    />
+  );
+}
+
+/**
  * The home page's first act: the viva room, pinned, while the scroll cuts from the wide hero to
  * each examiner and out to the marked panel. The markup is the same for every preference: reduced
  * motion changes behaviour (cuts instead of flights, a still panel), never the tree, so the server
@@ -86,10 +108,12 @@ export function RoomStory() {
   const [active, setActive] = useState(true);
   const [inHero, setInHero] = useState(true);
   const [beat, setBeat] = useState(-1);
-  const [round, setRound] = useState<RoundState>({ index: 0, phase: 'follow' });
+  const [reached, setReached] = useState(0);
+  const [outro, setOutro] = useState(false);
+  const [round, setRound] = useState<RoundState>({ index: 0, phase: 'follow', mode: 'round' });
   const captions = useRef<HTMLDivElement>(null);
-  const [insets, setInsets] = useState<Insets>({ hero: 0.42, beat: 0.36, outro: 0.36 });
-  const overlaysRef = useRef<RoomOverlays>({ tag: null, leader: null, answer: null, fade: null });
+  const [insets, setInsets] = useState<Insets>({ hero: 0.42, beat: 0.36, outro: 0.36, floor: 1 });
+  const overlaysRef = useRef<RoomOverlays>({ tag: null, leader: null, answer: null, guide: null, fade: null });
 
   const { scrollYProgress } = useScroll({ target: section, offset: ['start start', 'end end'] });
 
@@ -98,6 +122,10 @@ export function RoomStory() {
     setInHero((prev) => (prev === hero ? prev : hero));
     const b = beatAt(v);
     setBeat((prev) => (prev === b ? prev : b));
+    const n = marksAt(v);
+    setReached((prev) => (prev === n ? prev : n));
+    const o = v >= OUTRO - 0.07;
+    setOutro((prev) => (prev === o ? prev : o));
   });
 
   useEffect(() => {
@@ -110,35 +138,55 @@ export function RoomStory() {
     return () => io.disconnect();
   }, []);
 
-  // Where each caption ends, so the camera frames the room below it on compact layouts. Layout
-  // boxes only (offsets), so scroll transforms never skew the measure.
+  // Where each caption ends and, on compact layouts, where the slip under the room begins, so
+  // the camera frames the room in the space between. Layout boxes only (offsets), so scroll
+  // transforms never skew the measure. Re-measured when the outro moves the slip down.
   useEffect(() => {
     const box = captions.current;
     const stageEl = box?.parentElement;
     if (!box || !stageEl) return;
     const measure = () => {
       const h = stageEl.clientHeight || window.innerHeight;
-      const bottomOf = (name: string, fallback: number) => {
-        const el = box.querySelector<HTMLElement>(`[data-cap="${name}"]`);
-        if (!el) return fallback;
-        return Math.min(0.62, (box.offsetTop + el.offsetTop + el.offsetHeight) / h);
+      const topOf = (el: HTMLElement) => {
+        let y = 0;
+        for (let n: HTMLElement | null = el; n && n !== stageEl; n = n.offsetParent as HTMLElement | null) y += n.offsetTop;
+        return y;
       };
-      const next = { hero: bottomOf('hero', 0.42), beat: bottomOf('beat', 0.36), outro: bottomOf('outro', 0.36) };
+      // the lowest of every caption of that kind (the notes differ in length)
+      const bottomOf = (name: string, fallback: number) => {
+        let bottom = 0;
+        box.querySelectorAll<HTMLElement>(`[data-cap="${name}"]`).forEach((el) => {
+          bottom = Math.max(bottom, topOf(el) + el.offsetHeight);
+        });
+        return bottom ? Math.min(0.62, bottom / h) : fallback;
+      };
+      // on compact layouts the slip lies under the room, pinned above the ruler
+      const slip = box.querySelector<HTMLElement>('[data-cap="slip"]');
+      const under = slip !== null && getComputedStyle(slip).position === 'absolute';
+      const next: Insets = {
+        hero: bottomOf('hero', 0.42),
+        beat: bottomOf('beat', 0.36),
+        outro: bottomOf('outro', 0.36),
+        floor: under && slip ? Math.max(0.5, topOf(slip) / h) : 1,
+      };
       setInsets((prev) =>
-        Math.abs(prev.hero - next.hero) + Math.abs(prev.beat - next.beat) + Math.abs(prev.outro - next.outro) < 0.004 ? prev : next,
+        Math.abs(prev.hero - next.hero) + Math.abs(prev.beat - next.beat) + Math.abs(prev.outro - next.outro) + Math.abs(prev.floor - next.floor) < 0.004
+          ? prev
+          : next,
       );
     };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(box);
     ro.observe(stageEl);
+    box.querySelectorAll('[data-cap]').forEach((el) => ro.observe(el));
     return () => ro.disconnect();
-  }, []);
+  }, [outro]);
 
   const playing = ready && active && inHero && pageVisible && !reduce;
   const onReady = useCallback(() => setReady(true), []);
   const onRound = useCallback((r: RoundState) => {
-    setRound((prev) => (prev.index === r.index && prev.phase === r.phase ? prev : r));
+    setRound((prev) => (prev.index === r.index && prev.phase === r.phase && prev.mode === r.mode ? prev : r));
   }, []);
 
   const jump = useCallback(
@@ -161,6 +209,9 @@ export function RoomStory() {
 
   // the guidance line shows wherever the whole panel's marks do: the hero and the outro
   const guidance = useTransform(scrollYProgress, (v) => ramp(v, [0, HERO_END, OUTRO - 0.07, OUTRO - 0.025], [1, 0, 0, 1]));
+  // the slip's newest mark: the examiner on stage, the last one reached between beats, and the
+  // one to fix first once the whole panel has marked
+  const current = outro ? WEAKEST : beat >= 0 ? beat : reached - 1;
 
   return (
     <section ref={section} aria-label="VivaVoce, the viva room" data-ready={ready ? 'true' : undefined} className="relative h-[520svh]">
@@ -191,26 +242,38 @@ export function RoomStory() {
         <div className={cn('transition-opacity duration-700 ease-out', ready ? 'opacity-100' : 'opacity-0')}>
           <RoomTags round={round} reduce={reduce} overlaysRef={overlaysRef} />
         </div>
-        <div aria-hidden className={styles.scrim} />
+        <Sheet progress={scrollYProgress} depth={outro ? insets.outro : insets.beat} />
         <div ref={captions} className={styles.captions}>
-          <div data-cap="hero">
+          <div data-cap="hero" className={styles.heroCap}>
             <HeroCopy progress={scrollYProgress} onFocusBack={toHero} />
           </div>
-          {AXES.map((a, i) => (
-            <div key={a.key} data-cap={i === 0 ? 'beat' : undefined}>
-              <MarginNote index={i} progress={scrollYProgress} active={beat === i} />
+          <div className={styles.script}>
+            <div className={styles.notes}>
+              {AXES.map((a, i) => (
+                <div key={a.key} data-cap="beat">
+                  <MarginNote index={i} progress={scrollYProgress} active={beat === i} />
+                </div>
+              ))}
+              <div data-cap="outro">
+                <OutroCaption progress={scrollYProgress} onFocusBack={toOutro} />
+              </div>
             </div>
-          ))}
-          <div data-cap="outro">
-            <OutroCaption progress={scrollYProgress} onFocusBack={toOutro} />
+            <div data-cap="slip" data-outro={outro ? 'true' : undefined} className={styles.slipSlot}>
+              <ScriptSlip progress={scrollYProgress} reached={reached} current={current} outro={outro} />
+            </div>
           </div>
         </div>
         <Ruler progress={scrollYProgress} current={beat} onJump={jump} />
-        <motion.p style={{ opacity: guidance }} className={cn(styles.note, 'pointer-events-none text-[0.78rem] font-semibold text-ink-mut')}>
+        <motion.p
+          ref={(el) => {
+            overlaysRef.current.guide = el;
+          }}
+          style={{ opacity: guidance }}
+          className={cn(styles.guide, 'pointer-events-none text-[0.78rem] font-semibold text-ink-mut')}
+        >
           Example round. Scores are guidance, not grades.
         </motion.p>
       </div>
     </section>
   );
 }
-

@@ -51,7 +51,7 @@ export interface ExampleRound {
 export const ROUNDS: readonly ExampleRound[] = [
   {
     question: 'Why do candidates who know the material still fail the viva?',
-    answer: 'Um, there are lots of reasons, like nerves, and also they sort of know it but…',
+    answer: 'Um, there are basically lots of reasons, like nerves. The marking is unfair anyway…',
     scores: [71, 66, 48, 62, 54],
     followUp: 'You buried your claim. What is the one-line answer?',
     asker: 1,
@@ -71,6 +71,27 @@ export const ROUNDS: readonly ExampleRound[] = [
     asker: 2,
   },
 ];
+
+/**
+ * The first round's whole answer as the transcript slip shows it, in the pieces the examiners
+ * mark: fillers (Conciseness), the clause that answers another question (Correctness), jargon
+ * (Clarity), hedges (Confidence) and the claim buried at the end (Structure, the weakest).
+ * The hero's typed answer is its opening.
+ */
+export const SLIP_ANSWER = [
+  'Um,',
+  'basically',
+  'lots of reasons,',
+  'like',
+  'nerves.',
+  'The marking is unfair anyway.',
+  'It’s',
+  'encoding specificity',
+  ',',
+  'I think',
+  'sort of?',
+  'So really, they never practise saying it out loud.',
+] as const;
 
 export function weakestIndex(scores: readonly number[]): number {
   let lo = 0;

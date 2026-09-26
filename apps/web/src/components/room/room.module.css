@@ -1,11 +1,12 @@
 /*
  * The room's DOM layout. Two arrangements, switched by media queries (never by
  * script), so the server and the client always render the same markup:
- *   compact (phones, portrait tablets): captions on top, the room below;
- *   wide (landscape, 768px and up): captions in a left column, the room right.
+ *   compact (phones, portrait tablets): the note on top, the room in the middle,
+ *     the transcript slip under it above the ruler;
+ *   wide (landscape, 768px and up): the exam sheet down the left side carrying
+ *     the note and the slip, the room right.
  * The 3D camera uses the same test (aspect below 1.05 or narrower than 768px).
- * Colours come from Tailwind classes in the markup; this file is layout only,
- * except the scrims, which paint the page colour itself.
+ * Colours are theme tokens only.
  */
 
 .stage {
@@ -13,6 +14,7 @@
   top: 0;
   height: 100svh;
   overflow: hidden;
+  --ruler-h: 3.35rem;
 }
 
 /* Full-bleed layers: poster, canvas, the reduced-motion crossfade. */
@@ -31,28 +33,269 @@
   transition: opacity 700ms var(--ease-out);
 }
 
-/* A guaranteed backing for text over the room: the page colour itself. */
-.scrim {
+/* The exam sheet the notes are written on: across the top on compact layouts, its straight edge
+   just under the note (--sheet-depth), sliding down into place as the marking starts (--k). */
+.sheet {
   position: absolute;
-  pointer-events: none;
   inset-inline: 0;
   top: 0;
-  height: var(--scrim-h, 46%);
-  background: linear-gradient(to bottom, var(--vv-canvas) 0%, var(--vv-canvas) 72%, transparent 100%);
+  z-index: 8;
+  height: calc(var(--sheet-depth, 36%) + 0.7rem);
+  background: var(--color-canvas);
+  box-shadow:
+    0 1px 0 var(--color-line),
+    0 16px 30px -16px rgb(var(--vv-shadow) / 0.28);
+  transform: translate3d(0, calc((var(--k, 0) - 1) * 104%), 0);
+  transition: height 400ms var(--ease-out);
 }
+
+/* ── Captions ─────────────────────────────────────────────────────────── */
 
 .captions {
   position: absolute;
-  inset-inline: 0;
-  top: 0;
+  inset: 0;
   z-index: 10;
   display: grid;
+  align-content: start;
   padding: 5rem 1rem 0;
+  pointer-events: none;
 }
 .captions > * {
   grid-area: 1 / 1;
+}
+.heroCap > *,
+.note,
+.outro,
+.slip {
+  pointer-events: auto;
+}
+.notes {
+  display: grid;
+}
+.notes > * {
+  grid-area: 1 / 1;
   align-self: start;
 }
+/* Under the room, above the ruler: the candidate's own paper in the foreground. At the outro
+   the ruler has gone, so it settles just above the guidance line. */
+.slipSlot {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: calc(0.75rem + var(--ruler-h) + 0.45rem);
+}
+.slipSlot[data-outro] {
+  bottom: 2.7rem;
+}
+
+/* ── One examiner's note: the mark in the margin, the words right of the rule ── */
+
+.note {
+  --mark-w: 3.3rem;
+  --gutter: 1rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--mark-w) minmax(0, 1fr);
+  grid-template-areas:
+    'mark head'
+    'mark ask'
+    'mark line';
+  column-gap: var(--gutter);
+  width: 100%;
+  max-width: 34rem;
+}
+/* the red margin rule, printed on the script between the mark and the words */
+.note::before {
+  content: '';
+  position: absolute;
+  top: 0.1rem;
+  bottom: 0.15rem;
+  left: calc(var(--mark-w) + var(--gutter) / 2);
+  width: 1px;
+  background: var(--color-margin);
+}
+.noteHead {
+  grid-area: head;
+  font-size: clamp(1.85rem, 7.4vw, 2.4rem);
+  line-height: 1.02;
+}
+.noteAsk {
+  grid-area: ask;
+  margin-top: 0.45rem;
+  font-size: 1.04rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+.noteLine {
+  grid-area: line;
+  margin-top: 0.3rem;
+  color: var(--color-ink-mut);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.55;
+}
+.noteMark {
+  --mk: 1.8rem;
+  grid-area: mark;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0.2rem;
+  font-size: var(--mk);
+}
+/* clears the red circle's lower stroke: the mark's descent and the circle's padding (0.2em of the
+   mark) plus the hand's wobble, so it scales with the mark */
+.noteExample {
+  margin-top: calc(var(--mk) * 0.62);
+  color: var(--color-ink-mut);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.outro {
+  position: relative;
+  max-width: 36rem;
+}
+.outroLine {
+  margin-top: 1rem;
+  max-width: 27rem;
+  color: var(--color-ink-mut);
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.625;
+}
+
+/* ── The transcript slip ─────────────────────────────────────────────── */
+
+.slip {
+  --lh: 1.4rem;
+  --pad-l: 2.45rem;
+  position: relative;
+  margin: 0;
+  padding: 0.45rem 0.85rem 0.6rem var(--pad-l);
+  border: 1px solid var(--color-line);
+  border-radius: 0.55rem;
+  background: var(--color-card);
+  box-shadow: var(--shadow-float);
+  color: var(--color-ink);
+  font-size: 0.86rem;
+}
+/* its own red margin rule, with the speaker's letter in the margin */
+.slip::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  left: calc(var(--pad-l) - 0.45rem);
+  width: 1px;
+  background: var(--color-margin);
+}
+.slipHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--color-ink-mut);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  line-height: var(--lh);
+  text-transform: uppercase;
+}
+/* Blue rules under every line: one pitch for every line of the body, each rule just below the
+   descenders (Archivo's baseline sits at half the line box plus 0.33em), never through a letter. */
+.slipBody {
+  position: relative;
+  isolation: isolate;
+  line-height: var(--lh);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 calc(var(--lh) - 1px),
+    var(--color-rule) calc(var(--lh) - 1px) var(--lh)
+  );
+  background-position: 0 calc(0.56em + 1px - var(--lh) / 2);
+}
+.slipLine {
+  position: relative;
+}
+.slipAsk {
+  font-weight: 700;
+}
+.slipLine + .slipLine {
+  margin-top: 0;
+}
+/* the speaker's letter at the paper's left edge, leaving the margin by the rule for the pen */
+.slipWho {
+  position: absolute;
+  margin-left: calc(0.55rem - var(--pad-l));
+  color: var(--color-ink-mut);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.slipLine:not(.slipAsk) {
+  font-weight: 600;
+}
+/* the buried claim is one box, so the bracket closes around it alone */
+.slipClaim {
+  display: inline-block;
+  max-width: 100%;
+}
+.slipArrow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  color: var(--color-verm-text);
+  transition: opacity 300ms ease;
+}
+.slipArrow path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0s;
+}
+.slipArrow[data-drawn] path {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 640ms var(--ease-out) 820ms;
+}
+.slipArrow[data-rest] {
+  opacity: 0.4;
+}
+.slipFix {
+  color: var(--color-verm-text);
+  font-size: 0.86rem;
+  font-weight: 900;
+  line-height: var(--lh);
+  text-align: right;
+}
+/* Phones: the verdict line takes its room only once the panel has marked; the question and the
+   header make way for it, so the panel keeps its share of the screen. */
+.slip:not([data-outro]) .slipFix {
+  display: none;
+}
+.slip[data-outro] :is(.slipHead, .slipAsk) {
+  display: none;
+}
+/* an earlier examiner's mark rests lighter while the newest one is drawn */
+.flawRest > :global(svg.rough-annotation) {
+  opacity: 0.4;
+  transition: opacity 300ms ease;
+}
+
+/* The candidate's words over the panel, in blue ink. */
+.answer {
+  width: min(19rem, calc(100vw - 2rem));
+  font-size: 0.92rem;
+}
+
+/* ── The ruler and the figure caption ───────────────────────────────── */
 
 .ruler {
   position: absolute;
@@ -62,31 +305,31 @@
   /* a paper ruler laid over the room: on compact layouts every shot runs to the bottom edge,
      so the keys carry their own backing */
   padding: 0.55rem 0.25rem 0;
-  border: 1px solid var(--vv-line);
+  border: 1px solid var(--color-line);
   border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--vv-card) 94%, transparent);
+  background: var(--color-card);
   box-shadow: var(--shadow-paper);
 }
 
-/* The figure caption under the panel: "Example round", and that scores are guidance. */
-.note {
+/* The figure caption under the panel: "Example round", and that scores are guidance. On wide
+   layouts the director sets it just under the bench's front edge. */
+.guide {
   position: absolute;
   left: 0.6rem;
   bottom: 0.75rem;
   z-index: 10;
   padding: 0.15rem 0.4rem;
   border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--vv-canvas) 86%, transparent);
+  background: color-mix(in srgb, var(--color-canvas) 86%, transparent);
+  white-space: nowrap;
 }
 
-/* The axis name beside each ruler key: read out everywhere, shown on wide layouts. */
+/* Phones label the ruler's keys with the marks; wide layouts with the examiners' names. */
+.rulerMark {
+  font-size: 0.86rem;
+}
 .rulerName {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  display: none;
 }
 
 @media (min-width: 640px) {
@@ -95,52 +338,163 @@
   }
 }
 
+/* Phones: the outro's heading and key carry it; the slip under the room says the rest. */
+@media (max-width: 639px), (max-height: 740px) {
+  .outroLine {
+    display: none;
+  }
+}
+
+/* Short phones: the room keeps its share of the screen. */
+@media (max-height: 720px) and (max-width: 767px) {
+  .answer {
+    width: calc(100vw - 1.5rem);
+    padding-block: 0.3rem 0.4rem;
+    font-size: 0.84rem;
+  }
+  .noteLine,
+  .slipAsk,
+  .slipHead {
+    display: none;
+  }
+  .slip {
+    --lh: 1.3rem;
+    padding-top: 0.35rem;
+    font-size: 0.8rem;
+  }
+}
+
 @media (min-width: 768px) and (min-aspect-ratio: 21/20) {
   .poster {
     object-position: 100% 50%;
   }
-  .scrim {
+  .sheet {
     inset-block: 0;
     right: auto;
-    width: 50%;
+    width: 46%;
     height: auto;
-    background: linear-gradient(to right, var(--vv-canvas) 0%, var(--vv-canvas) 86%, transparent 100%);
+    box-shadow:
+      1px 0 0 var(--color-line),
+      16px 0 34px -16px rgb(var(--vv-shadow) / 0.3);
+    transform: translate3d(calc((var(--k, 0) - 1) * 104%), 0, 0);
+    transition: none;
   }
   .captions {
-    inset-block: 0;
     right: auto;
     width: 44%;
-    padding: 0 0 0 clamp(2rem, 4.4vw, 4rem);
+    padding: 5rem 1.25rem 6rem clamp(2rem, 4.4vw, 4rem);
     align-content: center;
   }
-  .captions > * {
+  /* the promise keeps its two lines down to 1280 wide (the panel starts at 46.5%) */
+  .heroCap {
+    margin-right: -1rem;
+  }
+  .heroCap,
+  .script {
     align-self: center;
+  }
+  .script {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .notes > * {
+    align-self: end;
+  }
+  .slipSlot {
+    position: static;
+    max-width: 34rem;
+  }
+  .note {
+    --mark-w: 4.3rem;
+    --gutter: 1.25rem;
+  }
+  .noteHead {
+    font-size: clamp(2rem, 3.3vw, 2.9rem);
+  }
+  .noteAsk {
+    margin-top: 0.55rem;
+    font-size: clamp(1.08rem, 1.45vw, 1.28rem);
+  }
+  .noteLine {
+    margin-top: 0.35rem;
+    font-size: 1rem;
+  }
+  .noteMark {
+    --mk: clamp(2rem, 2.9vw, 2.45rem);
+    padding-top: 0.25rem;
+  }
+  .slip {
+    --lh: 1.6rem;
+    --pad-l: 2.9rem;
+    padding: 0.55rem 1.1rem 0.7rem var(--pad-l);
+    font-size: 0.98rem;
+  }
+  /* on the sheet there is room for the question, the header and the verdict at every stop */
+  .slip[data-outro] .slipHead {
+    display: flex;
+  }
+  .slip[data-outro] .slipAsk {
+    display: block;
+  }
+  .slip:not([data-outro]) .slipFix {
+    display: block;
+    visibility: hidden;
+  }
+  .slipWho {
+    font-size: 0.76rem;
+  }
+  .slipHead {
+    font-size: 0.68rem;
+  }
+  .slipFix {
+    font-size: 0.98rem;
   }
   .ruler {
     left: clamp(2rem, 4.4vw, 4rem);
     right: auto;
     width: min(33rem, calc(44% - clamp(2rem, 4.4vw, 4rem) - 1rem));
-    bottom: 1.75rem;
-    /* over the scrim here: the page itself is the backing */
+    bottom: 1.5rem;
+    /* on the sheet: the page itself is the backing */
     padding: 0;
     border: 0;
     border-radius: 0;
     background: none;
     box-shadow: none;
   }
-  /* centred under the panel's frame (the camera's region runs from 47.5% to 99%) */
-  .note {
-    left: 47.5%;
-    right: 1%;
-    bottom: 1.5rem;
-    width: fit-content;
-    margin-inline: auto;
+  .guide {
+    left: 0;
+    top: 0;
+    bottom: auto;
+  }
+  .rulerMark {
+    display: none;
   }
   .rulerName {
-    position: static;
-    width: auto;
-    height: auto;
-    overflow: visible;
-    clip-path: none;
+    display: inline;
+  }
+}
+
+/* Short wide screens: the note and the slip share the height. */
+@media (min-width: 768px) and (min-aspect-ratio: 21/20) and (max-height: 820px) {
+  .captions {
+    padding-block: 4.75rem 5rem;
+  }
+  .script {
+    gap: 1.1rem;
+  }
+  .slip {
+    --lh: 1.5rem;
+    font-size: 0.94rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slipArrow[data-drawn] path {
+    transition: none;
+  }
+  .sheet {
+    transform: none;
+    transition: none;
   }
 }

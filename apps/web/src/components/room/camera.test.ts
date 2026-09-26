@@ -35,7 +35,7 @@ describe('room shots', () => {
       [390, 844, HERO_COINS_COMPACT],
     ] as const) {
       const aspect = w / h;
-      const { poses } = makeShots(aspect, { hero: 0.4, beat: 0.34, outro: 0.34 }, w);
+      const { poses } = makeShots(aspect, { hero: 0.4, beat: 0.34, outro: 0.34, floor: 0.78 }, w);
       const faces = w > 768 ? EXAMINERS : (['clarity', 'structure', 'conciseness'] as const);
       for (const c of coins) for (const p of coinPoints(coinVec(c), 0.21)) {
         const q = project(p, poses.hero, aspect);

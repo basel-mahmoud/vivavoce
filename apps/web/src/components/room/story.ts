@@ -6,6 +6,8 @@
 export const BEATS = [0.22, 0.36, 0.5, 0.64, 0.78] as const;
 export const HERO_END = 0.08;
 export const OUTRO = 0.9;
+/** From here the marks go down and the whole panel turns to listen to you. */
+export const HANDOFF = 0.95;
 
 /**
  * The edit: every stop is a composed shot. Wide on the hero and the outro,
@@ -41,6 +43,13 @@ export function beatAt(p: number): number {
   return -1;
 }
 
+/** How many examiners have marked the answer by p: 0 before the first beat, 5 from the last on. */
+export function marksAt(p: number): number {
+  let n = 0;
+  for (const b of BEATS) if (p >= b - BEAT_WINDOW) n++;
+  return n;
+}
+
 /** The stop pair around p and the eased blend between them (stops hold). */
 export function stopBlend(p: number): { a: number; b: number; t: number } {
   let k = 0;
@@ -49,15 +58,17 @@ export function stopBlend(p: number): { a: number; b: number; t: number } {
   return { a: k, b: k + 1, t };
 }
 
+const STILLS = [0, ...BEATS, OUTRO] as const;
+
 /**
  * Reduced motion: the still frame the scroll is nearest to (a cut, never a
- * flight). 0 is the hero, 1..5 the beats, 6 the marked panel.
+ * flight). 0 is the hero, 1..5 the beats, 6 the marked panel, 7 the hand-off.
  */
 export function stillAt(p: number): number {
-  const marks = [0, ...BEATS, OUTRO];
+  if (p >= HANDOFF) return STILLS.length;
   let best = 0;
-  for (let i = 1; i < marks.length; i++) {
-    const mid = (marks[i - 1]! + marks[i]!) / 2;
+  for (let i = 1; i < STILLS.length; i++) {
+    const mid = (STILLS[i - 1]! + STILLS[i]!) / 2;
     if (p >= mid) best = i;
   }
   return best;
