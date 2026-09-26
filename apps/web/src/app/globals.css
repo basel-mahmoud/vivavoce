@@ -1,49 +1,85 @@
 @import 'tailwindcss';
+@import '../components/ui/ui.css';
 
 /*
- * "The Viva Room" — VivaVoce web theme v5.
+ * "The exam script": VivaVoce web theme v6.
  *
- * The site is the viva room seen from the hot seat: a porcelain floor, a
- * cobalt table, a panel of five examiners, one per scoring axis. Flat colour
- * fields, clay-matte 3D, soft tinted shadows. No glow, no glass, no gradient
- * text. Lights off (prefers-color-scheme: dark) is the same room at night.
+ * The page is the viva room plus the paper it is marked on. Colour is
+ * motivated by marking, never decoration:
+ *   - Blue ink (cobalt) is the candidate: your voice, your answer, your
+ *     transcript and every action you take (primary buttons, links, caret).
+ *   - Red pen (vermilion) is the examiner, and only the examiner's marks:
+ *     paddles, circles, strikes, the weakest score, "Fix first".
+ *   - Butter is the highlighter: the one phrase that matters, and selection.
+ *   - Coal is print; paper is the sheet. A cool exam-paper ground carries
+ *     faint blue rules and a red margin rule, used as a motif, not wallpaper.
+ * Night (prefers-color-scheme: dark) is the night before the exam: blue-black
+ * paper with the desk lamp on.
  *
- * Themed tokens flip with the scheme; brand tokens (coal, paper, verm, cobalt,
- * butter) never do, so a vermilion field always carries coal text.
+ * Themed tokens (--vv-*) flip with the scheme; brand tokens (coal, paper,
+ * verm, cobalt, butter, pass) never do, so a vermilion or butter field always
+ * carries coal text and a cobalt field always carries paper text.
  */
 
 :root {
-  --vv-canvas: #f2f1ed;
-  --vv-card: #fbfaf8;
-  --vv-card-2: #e9e7e1;
-  --vv-ink: #161412;
-  --vv-ink-mut: #625e57;
-  --vv-ink-faint: #726c64;
-  --vv-line: #dedbd3;
+  --vv-canvas: #f3f5f8;
+  --vv-card: #fdfdfe;
+  --vv-card-2: #e7ebf1;
+  --vv-ink: #10131a;
+  --vv-ink-mut: #556072;
+  /* AA on canvas and card; large text only on card-2. */
+  --vv-ink-faint: #667085;
+  --vv-line: #d8dee8;
+  /* The faint blue rule printed on exam paper. */
+  --vv-rule: #cdd6ea;
+  /* The red margin rule. Printed, softer than the examiner's pen. */
+  --vv-margin: #eda397;
+  /* Blue ink as text: cobalt that passes AA on paper in this scheme. */
+  --vv-ink-blue: #1f31c9;
+  /* Vermilion as text and thin strokes (AA on canvas and card). */
+  --vv-verm-text: #c0320f;
   --vv-focus: #2e45ff;
-  --vv-verm-text: #b8310f;
-  --vv-shadow: 22 20 18;
+  /* Shadow tint, as an rgb triplet: rgb(var(--vv-shadow) / alpha). */
+  --vv-shadow: 16 19 26;
+  --vv-scroll-thumb: #b6bfcd;
+  --vv-scroll-thumb-hover: #8f99ab;
+  /* A coal field: print by day; at night a well below the canvas. */
+  --vv-coal-field: #10131a;
+
+  /* Motion: durations. Curves live in @theme below. */
+  --dur-press: 160ms;
+  --dur-hover: 150ms;
+  --dur-ui: 220ms;
+  --dur-layout: 400ms;
+  --dur-focal: 640ms;
+
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --vv-canvas: #121110;
-    --vv-card: #1b1917;
-    --vv-card-2: #262320;
-    --vv-ink: #f2efea;
-    --vv-ink-mut: #aaa49b;
-    --vv-ink-faint: #7f796f;
-    --vv-line: rgb(242 239 234 / 0.12);
-    --vv-focus: #8391ff;
+    --vv-canvas: #0c0e14;
+    --vv-card: #141824;
+    --vv-card-2: #1c2130;
+    --vv-ink: #eef1f6;
+    --vv-ink-mut: #a4abbb;
+    --vv-ink-faint: #8a93a6;
+    --vv-line: rgb(238 241 246 / 0.12);
+    --vv-rule: rgb(131 145 255 / 0.16);
+    --vv-margin: rgb(255 106 69 / 0.38);
+    --vv-ink-blue: #8391ff;
     --vv-verm-text: #ff6a45;
+    --vv-focus: #8391ff;
     --vv-shadow: 0 0 0;
+    --vv-scroll-thumb: #2e3547;
+    --vv-scroll-thumb-hover: #454f66;
+    --vv-coal-field: #080a0f;
     color-scheme: dark;
   }
 }
 
 @theme inline {
-  /* themed surfaces + text */
+  /* Themed surfaces and text. */
   --color-canvas: var(--vv-canvas);
   --color-card: var(--vv-card);
   --color-card-2: var(--vv-card-2);
@@ -51,21 +87,26 @@
   --color-ink-mut: var(--vv-ink-mut);
   --color-ink-faint: var(--vv-ink-faint);
   --color-line: var(--vv-line);
-  /* vermilion as small text on the canvas (AA in both schemes) */
+  --color-rule: var(--vv-rule);
+  --color-margin: var(--vv-margin);
+  --color-ink-blue: var(--vv-ink-blue);
   --color-verm-text: var(--vv-verm-text);
+  --color-focus: var(--vv-focus);
 
-  /* brand: never flips */
-  --color-coal: #161412;
-  --color-coal-2: #24211e;
-  --color-paper: #fbfaf8;
-  --color-paper-mut: #c9c4bb;
+  /* Brand: never flips. */
+  --color-coal: #10131a;
+  --color-coal-2: #1c2130;
+  --color-paper: #fdfdfe;
+  --color-paper-mut: #a4abbb;
   --color-verm: #ff4d26;
   --color-cobalt: #2e45ff;
   --color-cobalt-deep: #1f31c9;
+  /* Blue ink under the desk lamp: cobalt lifted for text on coal fields. */
+  --color-cobalt-lift: #8391ff;
   --color-butter: #ffc838;
-  --color-line-dark: rgb(251 250 248 / 0.16);
+  --color-line-dark: rgb(253 253 254 / 0.16);
 
-  /* semantics */
+  /* Semantics. */
   --color-pass: #2c7a4b;
 
   --font-sans: var(--font-archivo), system-ui, -apple-system, sans-serif;
@@ -73,20 +114,51 @@
 
   --radius-tile: 1.5rem;
   --radius-field: 2rem;
+  --radius-key: 0.875rem;
 
-  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+  /* Paper resting on the desk, and paper lifted off it. Tinted, offset. */
+  --shadow-paper: 0 1px 1px rgb(var(--vv-shadow) / 0.05), 0 3px 8px -3px rgb(var(--vv-shadow) / 0.12);
+  --shadow-float: 0 2px 4px -1px rgb(var(--vv-shadow) / 0.08), 0 22px 40px -22px rgb(var(--vv-shadow) / 0.36);
+}
+
+/* Motion curves (Emil Kowalski's set). These replace Tailwind's defaults, so
+ * `ease-out`, `ease-in-out` and `ease-drawer` utilities use them too. Static:
+ * always emitted, so inline styles and scripts can read var(--ease-*). */
+@theme static {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --default-transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
-    scrollbar-color: var(--color-ink-faint) var(--color-canvas);
+    background-color: var(--color-canvas);
+    accent-color: var(--color-cobalt);
+    scrollbar-color: var(--vv-scroll-thumb) var(--color-canvas);
   }
   @media (prefers-reduced-motion: no-preference) {
     html {
       scroll-behavior: smooth;
     }
+  }
+
+  /* Safari still reads the legacy scrollbar pseudo-elements. */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-canvas);
+  }
+  ::-webkit-scrollbar-thumb {
+    border: 3px solid var(--color-canvas);
+    border-radius: 999px;
+    background: var(--vv-scroll-thumb);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--vv-scroll-thumb-hover);
   }
 
   body {
@@ -95,13 +167,16 @@
     font-family: var(--font-sans);
     letter-spacing: -0.008em;
     -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeLegibility;
     overflow-x: clip;
-    caret-color: var(--color-verm);
+    /* The candidate writes in blue ink. */
+    caret-color: var(--color-ink-blue);
   }
 
+  /* The highlighter. Brand butter never flips, so the text on it is coal. */
   ::selection {
-    background: var(--color-verm);
+    background-color: var(--color-butter);
     color: var(--color-coal);
   }
 
@@ -114,22 +189,43 @@
     text-wrap: pretty;
   }
 
+  /* Visible, 3:1 against its ground in both schemes, offset off the element.
+   * Coloured fields retune --vv-focus below so the ring keeps its contrast. */
   :focus-visible {
-    outline: 3px solid var(--vv-focus);
+    outline: 2px solid var(--vv-focus);
     outline-offset: 3px;
-    border-radius: 8px;
+  }
+  :where(a, summary, button):focus-visible {
+    border-radius: 6px;
   }
 
   a {
     color: inherit;
     text-decoration: none;
+    text-decoration-thickness: 1.5px;
     text-underline-offset: 0.22em;
-    text-decoration-thickness: 2px;
+    text-decoration-skip-ink: auto;
   }
 
   input,
-  textarea {
-    caret-color: var(--color-verm);
+  textarea,
+  select {
+    caret-color: var(--color-ink-blue);
+  }
+  ::placeholder {
+    color: var(--color-ink-faint);
+    opacity: 1;
+  }
+
+  button,
+  a,
+  summary,
+  label,
+  input,
+  select,
+  textarea,
+  [role='button'] {
+    touch-action: manipulation;
   }
 }
 
@@ -160,114 +256,294 @@
     background: var(--color-card);
   }
   .tile-ink {
-    background: var(--color-coal);
-    border-color: var(--color-coal);
+    --vv-focus: var(--color-cobalt-lift);
+    background: var(--vv-coal-field);
+    border-color: var(--vv-coal-field);
     color: var(--color-paper);
   }
   @media (prefers-color-scheme: dark) {
     .tile-ink {
       border-color: var(--color-line);
-      background: #0b0a09;
     }
   }
   .tile-verm {
+    --vv-focus: var(--color-coal);
     background: var(--color-verm);
     border-color: var(--color-verm);
     color: var(--color-coal);
   }
   .tile-cobalt {
+    --vv-focus: var(--color-paper);
     background: var(--color-cobalt);
     border-color: var(--color-cobalt);
     color: var(--color-paper);
   }
+  .tile-butter {
+    --vv-focus: var(--color-coal);
+    background: var(--color-butter);
+    border-color: var(--color-butter);
+    color: var(--color-coal);
+  }
+
+  /* ── Exam paper motif (sparingly) ─────────────────────────────────────── */
+
+  /* Faint blue rules. --rule-gap is the line pitch; --rule-offset nudges the
+   * rules onto the text baseline (set it to the line box minus the descent). */
+  .paper-ruled {
+    --rule-gap: 2rem;
+    --rule-offset: 0px;
+    background-image:
+      var(--paper-margin-layer, linear-gradient(transparent, transparent)),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 calc(var(--rule-gap) - 1px),
+        var(--color-rule) calc(var(--rule-gap) - 1px) var(--rule-gap)
+      );
+    background-position:
+      0 0,
+      0 var(--rule-offset);
+  }
+  /* The red margin rule, --margin-x in from the left edge. Pairs with
+   * .paper-ruled or stands alone. */
+  .paper-margin {
+    --margin-x: 3.25rem;
+    --paper-margin-layer: linear-gradient(
+      to right,
+      transparent calc(var(--margin-x) - 1px),
+      var(--color-margin) calc(var(--margin-x) - 1px) var(--margin-x),
+      transparent var(--margin-x)
+    );
+  }
+  .paper-margin:not(.paper-ruled) {
+    background-image: var(--paper-margin-layer);
+  }
+
+  /* A perforated edge: small punched half-holes along the top or bottom.
+   * Masks, so whatever is behind shows through the holes. */
+  .perf-top,
+  .perf-bottom {
+    --perf-r: 4px;
+    --perf-pitch: 14px;
+    --perf-strip: calc(var(--perf-r) + 1px);
+    -webkit-mask-repeat: repeat-x, no-repeat;
+    mask-repeat: repeat-x, no-repeat;
+  }
+  .perf-bottom {
+    -webkit-mask-image:
+      radial-gradient(circle at 50% 100%, transparent var(--perf-r), #000 calc(var(--perf-r) + 0.5px)),
+      linear-gradient(#000, #000);
+    mask-image:
+      radial-gradient(circle at 50% 100%, transparent var(--perf-r), #000 calc(var(--perf-r) + 0.5px)),
+      linear-gradient(#000, #000);
+    -webkit-mask-size:
+      var(--perf-pitch) var(--perf-strip),
+      100% calc(100% - var(--perf-strip));
+    mask-size:
+      var(--perf-pitch) var(--perf-strip),
+      100% calc(100% - var(--perf-strip));
+    -webkit-mask-position:
+      50% 100%,
+      0 0;
+    mask-position:
+      50% 100%,
+      0 0;
+  }
+  .perf-top {
+    -webkit-mask-image:
+      radial-gradient(circle at 50% 0, transparent var(--perf-r), #000 calc(var(--perf-r) + 0.5px)),
+      linear-gradient(#000, #000);
+    mask-image:
+      radial-gradient(circle at 50% 0, transparent var(--perf-r), #000 calc(var(--perf-r) + 0.5px)),
+      linear-gradient(#000, #000);
+    -webkit-mask-size:
+      var(--perf-pitch) var(--perf-strip),
+      100% calc(100% - var(--perf-strip));
+    mask-size:
+      var(--perf-pitch) var(--perf-strip),
+      100% calc(100% - var(--perf-strip));
+    -webkit-mask-position:
+      50% 0,
+      0 100%;
+    mask-position:
+      50% 0,
+      0 100%;
+  }
+  /* A tear line printed across a sheet: a row of punched dots. */
+  .perf-rule {
+    height: 6px;
+    border: 0;
+    background: radial-gradient(circle, var(--color-line) 1.5px, transparent 2px) 50% 50% / 9px 6px repeat-x;
+  }
 
   /* ── Buttons ──────────────────────────────────────────────────────────── */
-
+  /*
+   * Every button is a key: a flat face with a lip along its bottom edge. The
+   * lip compresses on press while the key scales to .97, so the press lands
+   * on pointer-down. Hover only exists on fine pointers.
+   *   .btn-primary    blue ink: the candidate's action (one per view)
+   *   .btn-secondary  a hairline key in the current text colour, any ground
+   *   .btn-paper      a paper key for coal, cobalt and vermilion fields
+   *   .btn-ghost      no face until hovered
+   *   .link-quiet / .link-inline (below): text links drawn in blue ink
+   * Sizes: .btn-sm (40px), default (48px), .btn-lg (56px).
+   */
   .btn {
+    --btn-lip: 3px;
+    --btn-lip-color: transparent;
+    --btn-edge: transparent;
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     height: 3rem;
-    padding-inline: 1.5rem;
-    border-radius: 9999px;
-    font-weight: 700;
+    padding-inline: 1.375rem;
+    padding-bottom: calc(var(--btn-lip) * 0.5);
+    border-radius: var(--radius-key);
     font-size: 0.975rem;
+    font-weight: 700;
+    line-height: 1;
     white-space: nowrap;
+    text-decoration: none;
     cursor: pointer;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow:
+      inset 0 0 0 1.5px var(--btn-edge),
+      inset 0 calc(var(--btn-lip) * -1) 0 0 var(--btn-lip-color);
     transition:
-      transform 160ms var(--ease-out-quint),
-      background-color 150ms ease,
-      color 150ms ease,
-      border-color 150ms ease,
-      opacity 150ms ease;
+      transform var(--dur-press) var(--ease-out),
+      box-shadow var(--dur-press) var(--ease-out),
+      background-color var(--dur-hover) ease,
+      color var(--dur-hover) ease,
+      opacity var(--dur-hover) ease;
   }
-  .btn:active {
-    transform: scale(0.97);
+  .btn:active:not(:disabled, [aria-disabled='true'], [aria-busy='true']) {
+    --btn-lip: 1px;
+    transform: translateY(1px) scale(0.97);
   }
   .btn:disabled,
   .btn[aria-disabled='true'] {
-    cursor: default;
-    opacity: 0.5;
-    transform: none;
+    cursor: not-allowed;
+    opacity: 0.45;
   }
-  .btn-verm {
-    background: var(--color-verm);
-    color: var(--color-coal);
+  .btn[aria-busy='true'] {
+    cursor: progress;
   }
-  .btn-ink {
-    background: var(--color-ink);
-    color: var(--color-canvas);
+  .btn-sm {
+    --btn-lip: 2px;
+    height: 2.5rem;
+    padding-inline: 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
   }
-  .btn-paper {
-    background: var(--color-paper);
-    color: var(--color-coal);
+  .btn-lg {
+    --btn-lip: 4px;
+    height: 3.5rem;
+    padding-inline: 1.75rem;
+    border-radius: 1rem;
+    font-size: 1.0625rem;
   }
-  .btn-line {
-    border: 1.5px solid var(--color-line);
-    color: var(--color-ink);
+  .btn-icon {
+    padding-inline: 0;
+    aspect-ratio: 1;
   }
-  .btn-line-dark {
-    border: 1.5px solid rgb(251 250 248 / 0.28);
+
+  .btn-primary {
+    --btn-lip-color: var(--color-cobalt-deep);
+    background-color: var(--color-cobalt);
     color: var(--color-paper);
   }
+  .btn-secondary {
+    --btn-edge: color-mix(in oklab, currentColor 26%, transparent);
+    --btn-lip-color: color-mix(in oklab, currentColor 26%, transparent);
+    background-color: transparent;
+    color: inherit;
+  }
+  .btn-paper {
+    --btn-lip-color: color-mix(in oklab, var(--color-paper) 76%, var(--color-coal-2));
+    background-color: var(--color-paper);
+    color: var(--color-coal);
+  }
+  .btn-ghost {
+    --btn-lip: 0px;
+    background-color: transparent;
+    color: inherit;
+  }
+
   @media (hover: hover) and (pointer: fine) {
-    .btn-verm:hover:not(:disabled) {
-      background: #ff6a45;
+    .btn-primary:hover:not(:disabled, [aria-disabled='true']) {
+      background-color: color-mix(in oklab, var(--color-cobalt) 88%, var(--color-coal));
     }
-    .btn-ink:hover:not(:disabled) {
-      background: color-mix(in oklab, var(--color-ink) 86%, var(--color-canvas));
+    .btn-secondary:hover:not(:disabled, [aria-disabled='true']) {
+      --btn-edge: color-mix(in oklab, currentColor 55%, transparent);
+      --btn-lip-color: color-mix(in oklab, currentColor 55%, transparent);
+      background-color: color-mix(in oklab, currentColor 5%, transparent);
     }
-    .btn-paper:hover:not(:disabled) {
-      background: var(--color-butter);
+    /* Hovering a paper key runs the highlighter over it. */
+    .btn-paper:hover:not(:disabled, [aria-disabled='true']) {
+      --btn-lip-color: color-mix(in oklab, var(--color-butter) 80%, var(--color-coal));
+      background-color: var(--color-butter);
     }
-    .btn-line:hover:not(:disabled) {
-      border-color: var(--color-ink);
-    }
-    .btn-line-dark:hover:not(:disabled) {
-      border-color: var(--color-paper);
+    .btn-ghost:hover:not(:disabled, [aria-disabled='true']) {
+      background-color: color-mix(in oklab, currentColor 8%, transparent);
     }
   }
 
-  /* Legacy pressables. */
+  /* Anything else that presses: the logo, icon toggles. */
   .pressable {
-    transition: transform 160ms var(--ease-out-quint);
+    transition: transform var(--dur-press) var(--ease-out);
   }
   .pressable:active {
     transform: scale(0.97);
   }
 
-  /* An inline link that underlines itself on hover. */
-  .link-draw {
-    text-decoration-line: underline;
-    text-decoration-color: transparent;
-    transition: text-decoration-color 150ms ease;
+  /* Text links. The stroke is drawn in blue ink on hover, like the candidate
+   * underlining their own answer; on brand fields it is the field's text colour.
+   *   .link-quiet   standalone links (nav lists, footers, "Read the FAQ"):
+   *                 nothing at rest, the stroke draws in on hover or press.
+   *   .link-inline  links inside running text: a faint rule at rest, so the
+   *                 link never depends on colour alone, then the stroke. */
+  .link-quiet,
+  .link-inline {
+    --link-rest: transparent;
+    --link-ink: var(--color-ink-blue);
+    padding-bottom: 0.08em;
+    background-image:
+      linear-gradient(var(--link-ink), var(--link-ink)),
+      linear-gradient(var(--link-rest), var(--link-rest));
+    background-position:
+      0 100%,
+      0 100%;
+    background-repeat: no-repeat;
+    background-size:
+      0% 2px,
+      100% 1.5px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    text-decoration: none;
+    transition: background-size 320ms var(--ease-out);
+  }
+  .link-inline {
+    --link-rest: color-mix(in oklab, currentColor 32%, transparent);
   }
   @media (hover: hover) and (pointer: fine) {
-    .link-draw:hover {
-      text-decoration-color: var(--color-verm);
+    .link-quiet:hover,
+    .link-inline:hover,
+    :is(a, button):hover > .link-quiet {
+      background-size:
+        100% 2px,
+        100% 1.5px;
     }
+  }
+  .link-quiet:active,
+  .link-inline:active {
+    background-size:
+      100% 2px,
+      100% 1.5px;
+  }
+  :is(.tile-ink, .tile-verm, .tile-cobalt, .tile-butter) :is(.link-quiet, .link-inline) {
+    --link-ink: currentColor;
   }
 
   /* ── Signature motion ─────────────────────────────────────────────────── */
@@ -289,7 +565,7 @@
     height: 1.05em;
     margin-left: 2px;
     vertical-align: -0.16em;
-    background: var(--color-verm);
+    background: var(--color-cobalt);
     animation: vv-caret 900ms steps(1) infinite;
   }
 
@@ -305,7 +581,7 @@
     }
   }
   .stamp {
-    animation: vv-stamp 300ms var(--ease-out-quint) both;
+    animation: vv-stamp 300ms var(--ease-out) both;
   }
 
   /* Headline words rising into focus. CSS, so it plays before hydration. */
@@ -323,12 +599,12 @@
   }
   .rise {
     display: inline-block;
-    animation: vv-rise 760ms var(--ease-out-quint) both;
+    animation: vv-rise 760ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 70ms + 80ms);
   }
   .rise-chip {
     display: inline-block;
-    animation: vv-stamp 420ms var(--ease-out-quint) both;
+    animation: vv-stamp 420ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 70ms + 160ms);
   }
 
@@ -356,21 +632,21 @@
     }
   }
   .seq {
-    animation: vv-in 520ms var(--ease-out-quint) both;
+    animation: vv-in 520ms var(--ease-out) both;
     animation-delay: var(--d, 0ms);
   }
   .seq-out {
-    animation: vv-hide 260ms var(--ease-out-quint) both;
+    animation: vv-hide 260ms var(--ease-out) both;
     animation-delay: var(--d, 0ms);
   }
   .grow-x {
     transform-origin: left center;
-    animation: vv-grow-x 700ms var(--ease-out-quint) both;
+    animation: vv-grow-x 700ms var(--ease-out) both;
     animation-delay: var(--d, 0ms);
   }
   .grow-y {
     transform-origin: center top;
-    animation: vv-grow-y 700ms var(--ease-out-quint) both;
+    animation: vv-grow-y 700ms var(--ease-out) both;
     animation-delay: var(--d, 0ms);
   }
 
@@ -432,7 +708,13 @@
   .prose-vv a {
     color: var(--color-ink);
     text-decoration: underline;
-    text-decoration-color: var(--color-verm);
+    text-decoration-color: color-mix(in oklab, var(--color-ink-blue) 55%, transparent);
+    transition: text-decoration-color var(--dur-hover) ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .prose-vv a:hover {
+      text-decoration-color: var(--color-ink-blue);
+    }
   }
   .prose-vv strong {
     color: var(--color-ink);
@@ -446,8 +728,16 @@
     margin-top: 0.45rem;
   }
   .prose-vv li::marker {
-    color: var(--color-verm);
+    color: var(--color-ink-faint);
   }
+}
+
+/* Tabular figures in the current face, for counts that are not marks. */
+@utility tnum {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings:
+    'tnum' 1,
+    'lnum' 1;
 }
 
 /* Scroll-driven reveals: progressive enhancement, visible by default. */
@@ -461,15 +751,11 @@
   @media (prefers-reduced-motion: no-preference) {
     .reveal {
       animation: vv-reveal linear both;
-      animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+      animation-timing-function: var(--ease-out);
       animation-timeline: view();
       animation-range: entry var(--rs, 0%) entry calc(var(--rs, 0%) + 55%);
     }
   }
-}
-
-.tile-verm .link-draw:hover {
-  text-decoration-color: var(--color-coal);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -497,6 +783,15 @@
     opacity: 1;
     transform: rotate(-2deg);
   }
+  /* The press stays (the lip still compresses); the key just stops moving. */
+  .btn:active:not(:disabled, [aria-disabled='true'], [aria-busy='true']),
+  .pressable:active {
+    transform: none;
+  }
+  .link-quiet,
+  .link-inline {
+    transition: none;
+  }
 }
 
 /* FAQ disclosure: animate to auto height where the browser supports it. */
@@ -507,7 +802,7 @@
   block-size: 0;
   overflow: hidden;
   transition:
-    block-size 320ms var(--ease-out-quint),
+    block-size 320ms var(--ease-out),
     content-visibility 320ms allow-discrete;
 }
 .faq details[open]::details-content {

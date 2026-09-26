@@ -17,7 +17,7 @@ export default function HowItWorksPage() {
         title="Speak. Get *marked.* Come back sharper."
         intro="No setup and no scheduling another person. The whole loop takes about a minute, and you can run it below right now."
       >
-        <a href="#live" className="btn btn-verm h-13 px-6 text-base">
+        <a href="#live" className="btn btn-primary h-13 px-6 text-base">
           Answer a question
         </a>
       </PageHero>

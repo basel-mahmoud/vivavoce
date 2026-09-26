@@ -281,7 +281,7 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
                 type="button"
                 onClick={() => reset(true)}
                 disabled={phase === 'scoring'}
-                className="btn btn-line-dark mt-1 h-10 shrink-0 px-4 text-sm"
+                className="btn btn-secondary mt-1 h-10 shrink-0 px-4 text-sm"
               >
                 <RefreshCcw size={14} aria-hidden /> New question
               </button>
@@ -346,7 +346,7 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
                   onClick={listening ? stopListening : startListening}
                   disabled={phase === 'scoring'}
                   aria-pressed={listening}
-                  className={cn('btn h-13 gap-2.5 pl-2 pr-6', listening ? 'btn-paper' : 'btn-verm')}
+                  className={cn('btn h-13 gap-2.5 pl-2 pr-6', listening ? 'btn-paper' : 'btn-primary')}
                 >
                   <span className="relative grid h-9 w-9 place-items-center rounded-full bg-coal text-paper">
                     <span
@@ -413,10 +413,10 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
                     </p>
                   )}
                   <div className="mt-auto flex flex-wrap gap-3 pt-6">
-                    <button type="button" onClick={() => reset(false)} className="btn btn-line-dark h-11 px-5 text-sm">
+                    <button type="button" onClick={() => reset(false)} className="btn btn-secondary h-11 px-5 text-sm">
                       Answer again
                     </button>
-                    <Link href="/waitlist" className="btn btn-verm h-11 px-5 text-sm">
+                    <Link href="/waitlist" className="btn btn-primary h-11 px-5 text-sm">
                       Get early access <ArrowRight size={15} aria-hidden />
                     </Link>
                   </div>

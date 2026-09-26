@@ -94,7 +94,7 @@ export function WaitlistForm({ tone = 'verm' }: { tone?: 'verm' | 'card' }) {
             <button
               type="submit"
               disabled={status === 'loading'}
-              className={cn('btn h-13 px-7 text-base', onVerm ? 'bg-coal text-paper hover:bg-coal-2' : 'btn-verm')}
+              className={cn('btn h-13 px-7 text-base', onVerm ? 'bg-coal text-paper hover:bg-coal-2' : 'btn-primary')}
             >
               {status === 'loading' ? 'Joining…' : 'Join'}
               {status !== 'loading' && <ArrowRight size={16} aria-hidden />}

@@ -29,7 +29,7 @@ export function AxesIndex() {
               <p className="mt-2 max-w-md leading-relaxed text-ink-mut">{a.line}</p>
             </div>
             <div className="hidden [perspective:500px] md:block" aria-hidden>
-              <div className="relative h-20 w-20 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] [transform-style:preserve-3d] [transform:rotateY(180deg)] group-hover:[transform:rotateY(0deg)] motion-reduce:transition-none">
+              <div className="relative h-20 w-20 transition-transform duration-500 ease-out [transform-style:preserve-3d] [transform:rotateY(180deg)] group-hover:[transform:rotateY(0deg)] motion-reduce:transition-none">
                 <span className="marks absolute inset-0 grid place-items-center rounded-full bg-coal text-2xl font-bold text-paper [backface-visibility:hidden] dark:bg-paper dark:text-coal">
                   {scores[i]}
                 </span>

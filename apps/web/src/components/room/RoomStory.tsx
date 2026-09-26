@@ -99,11 +99,11 @@ function HeroCopy({ progress, still }: { progress: MotionValue<number>; still: b
         marks it in seconds.
       </p>
       <div className="rise mt-6 flex flex-wrap items-center gap-3 sm:mt-8" style={{ '--i': 8 } as React.CSSProperties}>
-        <a href="#live" className="btn btn-verm h-13 px-6 text-base">
+        <a href="#live" className="btn btn-primary h-13 px-6 text-base">
           <Mic size={18} aria-hidden />
           Answer a question
         </a>
-        <Link href="/waitlist" className="btn btn-line hidden h-13 px-6 text-base sm:inline-flex">
+        <Link href="/waitlist" className="btn btn-secondary hidden h-13 px-6 text-base sm:inline-flex">
           Get early access
         </Link>
       </div>
@@ -156,7 +156,7 @@ function OutroCaption({ progress }: { progress: MotionValue<number> }) {
         Every answer ends with your weakest axis named, a stronger answer to
         steal from, and a follow-up aimed straight at it.
       </p>
-      <a href="#live" className="btn btn-ink mt-7 h-13 px-6 text-base">
+      <a href="#live" className="btn btn-primary mt-7 h-13 px-6 text-base">
         Answer a question <ArrowRight size={17} aria-hidden />
       </a>
     </motion.div>
