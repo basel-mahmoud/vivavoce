@@ -139,6 +139,23 @@ export function RedPen({
     const wrap = wrapper.current;
     if (!el || !wrap || !wants) return;
 
+    // The highlighter is a real band of butter behind the words (ui.css): it
+    // runs past both ends of the phrase and follows it across line breaks, so
+    // every glyph sits on butter, in both schemes.
+    if (mark === 'highlight') {
+      const t = window.setTimeout(
+        () => {
+          wrap.dataset.drawn = 'true';
+          window.setTimeout(() => drawn.current?.(), reduce ? 0 : (duration ?? DURATION.highlight));
+        },
+        reduce ? 0 : delay,
+      );
+      return () => {
+        window.clearTimeout(t);
+        delete wrap.dataset.drawn;
+      };
+    }
+
     // globals.css defines @keyframes rough-notation-dash; skip the injected <style>.
     window.__rno_kf_s = true;
 

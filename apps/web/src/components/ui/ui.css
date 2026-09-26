@@ -23,14 +23,30 @@
   .vv-redpen > svg.rough-annotation {
     color: var(--rp-color);
   }
-  /* Butter never flips, so highlighted words take a brand ink that reads on
-   * it in both schemes: coal, or cobalt-deep for the candidate's blue ink
-   * (set --rp-on-highlight on an ancestor). */
+  /* The highlighter: a band of butter swept behind the words, overshooting
+   * both ends (padding, taken back by a negative margin so nothing moves)
+   * and repeated on every line the phrase wraps to. Butter never flips, so
+   * the words on it take a brand ink that reads in both schemes: coal, or
+   * cobalt-deep for the candidate's blue ink (set --rp-on-highlight on an
+   * ancestor). The ink turns once the band is mostly under it. */
   .vv-redpen[data-mark='highlight'] > .vv-redpen-words {
-    transition: color var(--rp-ms, 600ms) linear;
+    margin-inline: -0.16em;
+    padding-inline: 0.16em;
+    border-radius: 0.14em;
+    background-image: linear-gradient(var(--color-butter), var(--color-butter));
+    background-position: 0 55%;
+    background-repeat: no-repeat;
+    background-size: 0% 86%;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    transition:
+      background-size var(--rp-ms, 600ms) var(--ease-out),
+      color 160ms linear;
   }
   .vv-redpen[data-mark='highlight'][data-drawn] > .vv-redpen-words {
+    background-size: 100% 86%;
     color: var(--rp-on-highlight, var(--color-coal));
+    transition-delay: 0ms, calc(var(--rp-ms, 600ms) * 0.3);
   }
 
   /* ── Marks ──────────────────────────────────────────────────────────── */
