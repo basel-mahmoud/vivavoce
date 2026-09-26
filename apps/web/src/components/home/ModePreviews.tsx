@@ -57,15 +57,16 @@ const CHAIN = [
   { who: 'exam', axis: 'Correctness', text: 'You skipped the differential. What else could it be?' },
   { who: 'you', text: 'Dissection, PE, pericarditis, reflux.' },
   { who: 'exam', axis: 'Structure', text: 'Better. Now say it again, in order.' },
+  { who: 'you', text: 'ECG first, then history, exam and bloods, ruling out the deadly causes.' },
 ] as const;
-const CHAIN_STEPS = [900, 1100, 1700, 1100, 2800] as const;
+const CHAIN_STEPS = [900, 1100, 1700, 1100, 1700, 3000] as const;
 
 /** Hand-drawn marginal notes: a scribbled line or two, then a mark. */
 function Scribble({ variant }: { variant: 0 | 1 }) {
   return (
     <svg
       viewBox="0 0 96 56"
-      className="vv-scribble pointer-events-none absolute -right-1 top-0 h-14 w-24 text-verm-text"
+      className="vv-scribble pointer-events-none absolute -right-1 top-0 h-10 w-[4.25rem] text-verm-text sm:h-14 sm:w-24"
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"
@@ -124,9 +125,9 @@ export function MockVivaPreview({ running }: PreviewProps) {
 
   return (
     <div ref={host} className="flex h-full flex-col justify-start">
-      <ol className="space-y-2.5 text-[0.98rem] leading-snug sm:text-[1.02rem]">
+      <ol className="space-y-2.5 text-[0.92rem] leading-snug min-[360px]:text-[0.98rem] sm:text-[1.02rem]">
         {CHAIN.map((line, i) => (
-          <li key={line.text} className={cn('relative', beatClass(beat >= i), line.who === 'exam' && 'pr-24 pl-6')}>
+          <li key={line.text} className={cn('relative', beatClass(beat >= i), line.who === 'exam' && 'pr-[4.5rem] pl-6 sm:pr-24')}>
             {line.who === 'q' ? (
               <p className="font-bold">
                 <span className="mr-2 text-ink-mut">Q.</span>
@@ -249,9 +250,10 @@ export function QuickPreview({ running }: PreviewProps) {
         <span className="mr-2 text-sm font-bold">You</span>I think weather is the day to day, and climate is
         the long-run average.
       </p>
-      <ul className="grid grid-cols-5 gap-1 pt-1" aria-label="Example marks">
+      {/* Five across; on the narrowest phones, three over two so every name fits. */}
+      <ul className="flex flex-wrap justify-center gap-y-3 pt-1" aria-label="Example marks">
         {QUICK_AXES.map((axis, i) => (
-          <li key={axis} className="flex min-w-0 flex-col items-center">
+          <li key={axis} className="flex w-1/3 min-w-0 flex-col items-center min-[380px]:w-1/5">
             <Paddle
               value={QUICK_MARKS[i]!}
               label={axis}
@@ -346,7 +348,7 @@ export function FlashPreview({ running }: PreviewProps) {
               onClick={() => rate(r.id)}
               aria-pressed={on}
               className={cn(
-                'btn btn-sm h-9 px-3 text-[0.82rem]',
+                'btn btn-sm h-9 px-3 text-[0.82rem] pointer-coarse:h-11',
                 on ? 'btn-primary' : 'btn-secondary',
               )}
             >
@@ -359,7 +361,7 @@ export function FlashPreview({ running }: PreviewProps) {
           <button
             type="button"
             onClick={() => setOwn(null)}
-            className="btn btn-ghost btn-sm ml-auto h-9 px-2.5 text-[0.82rem] text-ink-mut"
+            className="btn btn-ghost btn-sm ml-auto h-9 px-2.5 text-[0.82rem] text-ink-mut pointer-coarse:h-11"
           >
             <RotateCcw size={14} aria-hidden />
             Replay
@@ -491,9 +493,9 @@ export function RapidPreview({ running }: PreviewProps) {
       >
         {RAPID[q]}
       </p>
-      <div className="flex items-center gap-5 rounded-2xl bg-coal px-5 py-5 text-paper sm:gap-6 sm:px-6">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl bg-coal px-5 py-5 text-paper sm:gap-x-6 sm:px-6">
         <DotClock seconds={left} className={cn('h-14 w-auto shrink-0 sm:h-[4.5rem]', time && 'vv-dotclock-out')} />
-        <p className="text-sm font-bold leading-snug text-paper-mut">
+        <p className="min-w-[5.5rem] flex-1 text-sm font-bold leading-snug text-paper-mut">
           <span className="sr-only">{left} seconds left. </span>
           {time ? 'Time. Next question.' : 'Answer before it hits zero.'}
         </p>

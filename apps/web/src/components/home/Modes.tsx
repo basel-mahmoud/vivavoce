@@ -175,7 +175,11 @@ function DeckCard({
       ease: EASE.inOut,
       delay: 0.5,
     });
-    return () => ctrl.stop();
+    // Cut short (the card was dealt away mid-tug): let it settle back, never stay offset.
+    return () => {
+      ctrl.stop();
+      if (pull.get() !== 0) void animate(pull, 0, SPRING.ui);
+    };
   }, [nudge, front, reduce, pull]);
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -376,7 +380,7 @@ export function Modes({ className }: { className?: string }) {
                 tabIndex={i === front ? 0 : -1}
                 onClick={() => go(i, { kind: 'jump', dir: 1, velocity: 0 })}
                 onKeyDown={onTabKey}
-                className="vv-mode-tab"
+                className="vv-mode-tab pointer-coarse:min-h-11"
               >
                 {m.name}
               </button>
