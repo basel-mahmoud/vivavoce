@@ -777,3 +777,44 @@
   content-visibility: auto;
   contain-intrinsic-size: auto var(--defer-h, 900px);
 }
+
+/* Windows High Contrast and other forced palettes: keys keep an outline,
+   marks keep their strokes, and nothing important hides in a background. */
+@media (forced-colors: active) {
+  .btn,
+  .vv-chip,
+  .vv-faq-toggle,
+  .vv-room-sign,
+  .vv-ticket-stub,
+  .vv-mode-tab[aria-selected='true'] {
+    border: 1px solid ButtonText;
+  }
+  .vv-ticket-stub {
+    forced-color-adjust: none;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+  .vv-redpen > svg.rough-annotation,
+  .vv-tick path,
+  .vv-ink path {
+    forced-color-adjust: none;
+    color: Highlight;
+    stroke: Highlight;
+  }
+  .vv-redpen[data-mark='highlight'] > .vv-redpen-words {
+    forced-color-adjust: none;
+    background: Mark;
+    color: MarkText;
+  }
+  .vv-flap {
+    forced-color-adjust: none;
+  }
+}
+
+/* Asked for more contrast: grey text steps up to the ink. */
+@media (prefers-contrast: more) {
+  :root {
+    --vv-ink-mut: var(--vv-ink);
+    --vv-line: color-mix(in oklab, var(--vv-ink) 45%, var(--vv-canvas));
+  }
+}
