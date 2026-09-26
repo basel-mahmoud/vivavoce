@@ -229,6 +229,13 @@
   select {
     caret-color: var(--color-ink-blue);
   }
+  /* The browser resets spacing on controls: keys and fields keep the page's. */
+  button,
+  input,
+  select,
+  textarea {
+    word-spacing: inherit;
+  }
   ::placeholder {
     color: var(--color-ink-faint);
     opacity: 1;
@@ -816,5 +823,12 @@
   :root {
     --vv-ink-mut: var(--vv-ink);
     --vv-line: color-mix(in oklab, var(--vv-ink) 45%, var(--vv-canvas));
+  }
+}
+
+/* Paper is paper: every deferred section prints. */
+@media print {
+  .vv-defer {
+    content-visibility: visible;
   }
 }
