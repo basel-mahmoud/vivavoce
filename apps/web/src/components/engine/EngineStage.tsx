@@ -74,6 +74,9 @@ function guessTier(): Tier {
   return coarse || narrow || cores <= 2 ? 1 : 2;
 }
 
+/** The examiner's note at its tallest (a label and three lines of 0.94rem type), in px. */
+const TAG_ROOM = 104;
+
 const damp = THREE.MathUtils.damp;
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 const _v = new THREE.Vector3();
@@ -139,11 +142,14 @@ function StageDirector({
 }) {
   const size = useThree((s) => s.size);
   const gl = useThree((s) => s.gl);
-  const [tagH, setTagH] = useState(96);
+  // Headroom for the examiner's note above the panel: room for a three-line note from the start,
+  // growing only if a note ever needs more. Were it to follow each note's height, the frame would
+  // refit (and the lens jump) the moment an examiner began to speak.
+  const [tagH, setTagH] = useState(TAG_ROOM);
   useEffect(() => {
     const tag = overlaysRef.current?.tag;
     if (!tag) return;
-    const ro = new ResizeObserver(() => setTagH(Math.max(72, tag.offsetHeight)));
+    const ro = new ResizeObserver(() => setTagH((h) => Math.max(h, tag.offsetHeight)));
     ro.observe(tag);
     return () => ro.disconnect();
   }, [overlaysRef]);
