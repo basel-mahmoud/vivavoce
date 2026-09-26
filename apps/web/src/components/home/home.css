@@ -399,16 +399,13 @@
     font-weight: 600;
     line-height: 1.5;
   }
+  /* Asleep, the words are printed grey; the signal writes them in blue ink. */
   .vv-word {
-    color: var(--color-ink-faint);
-    opacity: 0.42;
-    transition:
-      color 220ms ease,
-      opacity 220ms ease;
+    color: var(--color-ink-mut);
+    transition: color 220ms ease;
   }
   .vv-stop[data-awake] .vv-word {
     color: var(--color-ink-blue);
-    opacity: 1;
     transition-delay: calc(var(--i) * 70ms);
   }
 
@@ -428,13 +425,13 @@
   }
   .vv-panel-mark {
     margin-top: 0.55rem;
+    color: var(--color-ink-mut);
     font-size: 0.95rem;
     font-weight: 700;
-    opacity: 0.25;
-    transition: opacity 240ms ease;
+    transition: color 240ms ease;
   }
   .vv-panel-mark[data-on] {
-    opacity: 1;
+    color: var(--color-ink);
     transition-delay: calc(var(--i) * 60ms);
   }
   .vv-panel-mark[data-weak][data-on] {
@@ -442,18 +439,29 @@
   }
 
   /* The verdict and the next question: faint until reached. */
-  .vv-verdict,
-  .vv-next {
-    transition: opacity 260ms ease;
-  }
-  .vv-stop:not([data-awake]) .vv-verdict,
-  .vv-stop:not([data-awake]) .vv-next {
-    opacity: 0.4;
-  }
+  /* Not yet reached: printed grey. Reached: the examiner's red pen. */
   .vv-verdict {
     padding: 0.35rem 0.6rem;
     border-radius: 0.5rem;
     background: var(--color-canvas);
+    color: var(--color-ink-mut);
+    transition: color 260ms ease;
+  }
+  .vv-stop[data-awake] .vv-verdict {
+    color: var(--color-verm-text);
+  }
+  .vv-next {
+    color: var(--color-ink-mut);
+    transition: color 260ms ease;
+  }
+  .vv-stop[data-awake] .vv-next {
+    color: var(--color-ink);
+  }
+  .vv-next-label {
+    color: var(--color-ink-mut);
+    transition: color 260ms ease;
+  }
+  .vv-stop[data-awake] .vv-next-label {
     color: var(--color-verm-text);
   }
   .vv-next {

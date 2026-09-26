@@ -92,6 +92,9 @@ export function Loop({ showHeading = true, className }: { showHeading?: boolean;
   const red = useTransform(scrollYProgress, (v) =>
     reduce ? 1 : layout ? Math.min(1, Math.max(0, (v - layout.split) / Math.max(1 - layout.split, 0.001))) : 0,
   );
+  // A zero-length stroke with round caps still paints a dot: hide a segment until it has length.
+  const blueShown = useTransform(blue, (v) => (v > 0.002 ? 1 : 0));
+  const redShown = useTransform(red, (v) => (v > 0.002 ? 1 : 0));
   // The signal itself: a bead of ink at the tip of the wire.
   const along = useTransform(scrollYProgress, (v) =>
     layout ? layout.start + Math.min(1, Math.max(0, reduce ? 1 : v)) * (layout.end - layout.start) : 0,
@@ -131,8 +134,8 @@ export function Loop({ showHeading = true, className }: { showHeading?: boolean;
             aria-hidden="true"
           >
             <path d={layout.full} className="vv-signal-rest" />
-            <motion.path d={layout.bluePath} className="vv-signal-blue" style={{ pathLength: blue }} />
-            <motion.path d={layout.redPath} className="vv-signal-red" style={{ pathLength: red }} />
+            <motion.path d={layout.bluePath} className="vv-signal-blue" style={{ pathLength: blue, opacity: blueShown }} />
+            <motion.path d={layout.redPath} className="vv-signal-red" style={{ pathLength: red, opacity: redShown }} />
             <path d={layout.arrow} className="vv-signal-arrow" data-on={awake('next') ? '' : undefined} />
             <motion.circle r={6} cx={tipX} cy={tipY} style={{ fill: tipInk, opacity: tipShown }} />
           </svg>
@@ -216,7 +219,7 @@ export function Loop({ showHeading = true, className }: { showHeading?: boolean;
             <span className="vv-stop-rail" data-stop-v="next" aria-hidden />
             <div className="vv-stop-visual">
               <div className="vv-next" data-stop-h="next" data-edge="start">
-                <p className="text-[0.72rem] font-bold text-verm-text">Next question</p>
+                <p className="vv-next-label text-[0.72rem] font-bold">Next question</p>
                 <p className="mt-1 text-[0.98rem] font-bold leading-snug">
                   Say it again: claim first, then three reasons.
                 </p>
@@ -235,8 +238,8 @@ function Caption({ step }: { step: number }) {
   const [title, body] = STEPS[step]!;
   return (
     <div className="vv-stop-caption">
-      <h3 className="text-[1.08rem] font-black leading-tight">{title}</h3>
-      <p className="mt-1.5 max-w-[19rem] text-[0.95rem] leading-relaxed text-ink-mut">{body}</p>
+      <h3 className="text-[1.1rem] font-black leading-tight">{title}</h3>
+      <p className="mt-1.5 max-w-[19rem] text-base leading-relaxed text-ink-mut">{body}</p>
     </div>
   );
 }
