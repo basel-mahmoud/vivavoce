@@ -1,15 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Archivo, JetBrains_Mono } from 'next/font/google';
-import { ClerkProvider } from '@clerk/nextjs';
 import { Analytics } from '@vercel/analytics/next';
 import { site } from '@/lib/site';
 import './globals.css';
-
-// Clerk UI (dashboard sign-in) needs the provider; without keys (bare
-// previews) we skip it — same fallback contract as middleware.ts.
-const clerkConfigured = Boolean(
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
-);
 
 const archivo = Archivo({
   subsets: ['latin'],
@@ -17,11 +10,13 @@ const archivo = Archivo({
   axes: ['wdth'],
   display: 'swap',
 });
+// Marks only (a few digits per screen): not worth a preload on every page.
 const jetbrains = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-jetbrains',
   weight: ['500', '700'],
   display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -64,8 +59,12 @@ export const viewport: Viewport = {
   ],
 };
 
+/**
+ * The document. Clerk is not here: only the dashboard signs anyone in, so
+ * its provider (and its scripts) load there and nowhere else.
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const shell = (
+  return (
     <html lang="en" className={`${archivo.variable} ${jetbrains.variable}`}>
       <body className="antialiased">
         <a
@@ -79,5 +78,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </body>
     </html>
   );
-  return clerkConfigured ? <ClerkProvider>{shell}</ClerkProvider> : shell;
 }

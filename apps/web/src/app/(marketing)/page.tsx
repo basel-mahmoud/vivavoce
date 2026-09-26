@@ -5,6 +5,7 @@ import { Loop } from '@/components/home/Loop';
 import { Subjects } from '@/components/home/Subjects';
 import { Rooms } from '@/components/home/Rooms';
 import { Close, Privacy } from '@/components/home/Closing';
+import { Deferred } from '@/components/home/Deferred';
 import { EnginePlaceholder } from '@/components/home/EnginePlaceholder';
 import { SectionBoundary } from '@/components/home/SectionBoundary';
 import { StaticHero } from '@/components/home/StaticHero';
@@ -31,15 +32,29 @@ export default function HomePage() {
       <SectionBoundary name="room" fallback={<StaticHero />}>
         <RoomStory />
       </SectionBoundary>
-      <SectionBoundary name="live engine" fallback={<EnginePlaceholder />}>
-        <LiveEngine />
-      </SectionBoundary>
-      <Loop />
-      <Modes />
-      <Subjects />
-      <Rooms />
-      <Privacy />
-      <Close />
+      <Deferred height="820px">
+        <SectionBoundary name="live engine" fallback={<EnginePlaceholder />}>
+          <LiveEngine />
+        </SectionBoundary>
+      </Deferred>
+      <Deferred height="700px">
+        <Loop />
+      </Deferred>
+      <Deferred height="1000px">
+        <Modes />
+      </Deferred>
+      <Deferred height="1000px">
+        <Subjects />
+      </Deferred>
+      <Deferred height="1000px">
+        <Rooms />
+      </Deferred>
+      <Deferred height="900px">
+        <Privacy />
+      </Deferred>
+      <Deferred height="1000px">
+        <Close />
+      </Deferred>
     </>
   );
 }

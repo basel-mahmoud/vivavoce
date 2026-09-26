@@ -593,12 +593,13 @@
     animation: vv-stamp 300ms var(--ease-out) both;
   }
 
-  /* Headline words rising into focus. CSS, so it plays before hydration. */
+  /* Headline words rising into focus. CSS, so it plays before hydration.
+     The words are on the page from the first frame (only focus and height
+     move), so the headline paints, and counts as painted, at once. */
   @keyframes vv-rise {
     from {
-      opacity: 0;
-      transform: translate3d(0, 0.42em, 0);
-      filter: blur(8px);
+      transform: translate3d(0, 0.3em, 0);
+      filter: blur(7px);
     }
   }
   @keyframes vv-fade {
@@ -608,8 +609,8 @@
   }
   .rise {
     display: inline-block;
-    animation: vv-rise 760ms var(--ease-out) both;
-    animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+    animation: vv-rise 700ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 55ms);
   }
   .rise-chip {
     display: inline-block;
@@ -726,7 +727,7 @@
     display: none;
   }
   .rise {
-    animation: vv-fade 400ms ease both;
+    animation: none;
   }
   .rise-chip {
     animation: vv-fade 400ms ease both;
@@ -754,4 +755,15 @@
 /* Animate to and from auto sizes where the browser supports it. */
 :root {
   interpolate-size: allow-keywords;
+}
+
+/*
+ * Sections below the first screen are laid out and painted only as they
+ * come near the viewport. The browser remembers each one's real height once
+ * seen; --defer-h is the first guess. Paint containment clips at the
+ * padding box, so a deferred section keeps its props inside its padding.
+ */
+.vv-defer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--defer-h, 900px);
 }
