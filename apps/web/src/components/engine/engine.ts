@@ -78,6 +78,7 @@ export type EngineEvent =
   | { type: 'resolved'; request: number; result: Verdict }
   | { type: 'failed'; request: number; notice: 'rate-limited' | 'server' | 'offline' | 'invalid'; retryAfter?: number | null }
   | { type: 'reset' }
+  | { type: 'edit' }
   | { type: 'next' }
   | { type: 'mode'; mode: Mode };
 
@@ -211,6 +212,10 @@ export function reduce(s: EngineState, e: EngineEvent): EngineState {
       return { ...s, phase: 'idle', notice: e.notice, retryAfter: e.retryAfter ?? null };
     case 'reset':
       return { ...fresh(s), phase: 'idle' };
+    case 'edit':
+      // a marked answer back on the page as words to improve, then mark again
+      if (s.phase !== 'marked' || !s.answered) return s;
+      return { ...fresh(s), phase: 'idle', mode: 'text', text: s.answered };
     case 'next':
       return { ...fresh(s), phase: 'idle', question: (s.question + 1) % QUESTIONS.length };
     case 'mode':

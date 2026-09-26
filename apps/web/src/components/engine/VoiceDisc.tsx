@@ -161,7 +161,7 @@ export function VoiceDisc({ phase, subscribe, reduce, overall, stamped, caption,
         {caption}
       </span>
       <span className={styles.discLoader} aria-hidden={!collapsed || stamped}>
-        {phase === 'conferring' ? <Loader kind="conferring" size="sm" showAfter={650} showLabel={false} /> : null}
+        {phase === 'conferring' ? <Loader kind="conferring" size="sm" showAfter={650} glyphOnly /> : null}
       </span>
       {inked !== null ? (
         <motion.span

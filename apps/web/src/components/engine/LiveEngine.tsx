@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
-import { ArrowRight, Keyboard, Mic, RotateCcw } from 'lucide-react';
+import { ArrowRight, Keyboard, Mic, PenLine, RotateCcw } from 'lucide-react';
 import { AXES } from '@/components/room/data';
 import { TypeLine } from '@/components/room/TypeLine';
 import { Keycap } from '@/components/ui/Keycap';
@@ -486,7 +486,7 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
                   <span className={styles.long}>Mark it again</span>
                   <span className={styles.short}>Mark again</span>
                 </button>
-              ) : !requesting ? (
+              ) : !requesting && !conferring ? (
                 <button type="button" onClick={() => dispatch({ type: 'mode', mode: 'text' })} className={cn('btn btn-ghost btn-sm gap-1.5 text-ink-mut', styles.side)}>
                   <Keyboard size={16} aria-hidden />
                   <span className={styles.long}>Type instead</span>
@@ -521,23 +521,31 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
         ) : (
           <>
           <div className={styles.keyRow}>
-            <button
-              type="button"
-              onClick={() => dispatch({ type: 'submit' })}
-              disabled={conferring}
-              aria-busy={conferring || undefined}
-              className="btn btn-primary btn-lg"
-            >
-              {conferring ? (
-                <>
-                  <Loader kind="marking" size="sm" glyphOnly /> Marking
-                </>
-              ) : (
-                <>
-                  Mark my answer <ArrowRight size={17} aria-hidden />
-                </>
-              )}
-            </button>
+            {marked ? (
+              // the marked words go back on the page to improve; marking them unchanged would only
+              // spend one of the demo's answers
+              <button type="button" onClick={() => dispatch({ type: 'edit' })} className="btn btn-primary btn-lg gap-2">
+                <PenLine size={17} aria-hidden /> Edit my answer
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => dispatch({ type: 'submit' })}
+                disabled={conferring}
+                aria-busy={conferring || undefined}
+                className="btn btn-primary btn-lg"
+              >
+                {conferring ? (
+                  <>
+                    <Loader kind="marking" size="sm" glyphOnly /> Marking
+                  </>
+                ) : (
+                  <>
+                    Mark my answer <ArrowRight size={17} aria-hidden />
+                  </>
+                )}
+              </button>
+            )}
             {marked ? <AfterMarking onReset={() => dispatch({ type: 'reset' })} /> : null}
             {!marked && hydrated && speechSupported && state.notice !== 'denied' && state.notice !== 'no-mic' ? (
               <button type="button" onClick={() => dispatch({ type: 'mode', mode: 'voice' })} className="btn btn-ghost btn-sm gap-1.5 text-ink-mut" disabled={conferring}>
@@ -546,7 +554,9 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
             ) : null}
           </div>
           <p className={styles.hint} data-quiet={marked ? '' : undefined}>
-            {hydrated && !speechSupported
+            {marked
+              ? 'Rework your words and mark them again, or start a clean sheet.'
+              : hydrated && !speechSupported
               ? 'This browser cannot turn speech into text, so type your answer. The panel marks it the same way.'
               : fine
                 ? (

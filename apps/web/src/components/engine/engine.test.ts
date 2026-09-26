@@ -121,6 +121,16 @@ describe('engine state machine: typing and results', () => {
     expect(s.request).toBe(first + 1);
   });
 
+  it('puts a marked answer back on the page to improve, without spending a request on it', () => {
+    let s = run([{ type: 'submit' }], typed(ANSWER));
+    s = reduce(s, { type: 'resolved', request: s.request, result: verdict });
+    const marked = s.request;
+    s = reduce(s, { type: 'edit' });
+    expect(s).toMatchObject({ phase: 'idle', mode: 'text', text: ANSWER, answered: null, result: null, notice: null });
+    expect(s.request).toBe(marked + 1);
+    expect(reduce(initialState(), { type: 'edit' })).toEqual(initialState());
+  });
+
   it('ignores an answer to a request it has moved on from', () => {
     let s = run([{ type: 'submit' }], typed(ANSWER));
     s = reduce(s, { type: 'reset' });
