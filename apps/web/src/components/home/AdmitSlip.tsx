@@ -8,6 +8,13 @@ import { looksLikeEmail } from './email';
 
 type Status = 'idle' | 'sending' | 'in' | 'error';
 
+/** When the list says no, the slip says why in the page's own words (API messages are for logs). */
+const REFUSED: Partial<Record<string, string>> = {
+  rate_limited: 'Too many tries at once. Give it a minute, then try again.',
+  bad_request: 'That email does not look right. Check it, then try again.',
+};
+const REFUSED_OTHER = 'That did not go through. Try again in a moment.';
+
 /**
  * The close: an ADMIT ONE slip for the early-access list. Write your email
  * on the slip, then tear the stub off (pull it, click it, or press Enter in
@@ -34,13 +41,13 @@ export function AdmitSlip() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), company, referrer: document.referrer || undefined }),
       });
-      const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: { message?: string } } | null;
+      const json = (await res.json().catch(() => null)) as { ok?: boolean; error?: { code?: string } } | null;
       if (res.ok && json?.ok) {
         setStatus('in');
         setMessage('You are in. We will write when your spot opens.');
       } else {
         setStatus('error');
-        setMessage(json?.error?.message ?? 'That did not go through. Try again.');
+        setMessage(REFUSED[json?.error?.code ?? ''] ?? REFUSED_OTHER);
       }
     } catch {
       setStatus('error');

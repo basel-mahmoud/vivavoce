@@ -4,6 +4,17 @@
  */
 
 @layer components {
+  /* Paper stays paper at night. The slips and cards lying on the desk (the
+     transcript, the admission slip, the follow-up cards) keep the daytime pen,
+     grey and focus ink, so their small text stays legible on white in the
+     dark scheme. */
+  :is(.vv-slip-face, .vv-admit-body, .vv-int-answer, .vv-int-card) {
+    --vv-verm-text: color-mix(in oklab, var(--color-verm) 72%, var(--color-coal));
+    --color-verm-text: var(--vv-verm-text);
+    --vv-ink-faint: color-mix(in oklab, var(--color-coal) 62%, var(--color-paper));
+    --vv-focus: var(--color-cobalt);
+  }
+
   /* ── Modes: the deck ────────────────────────────────────────────────── */
 
   .vv-deck {
