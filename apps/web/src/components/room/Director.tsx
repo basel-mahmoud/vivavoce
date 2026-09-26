@@ -228,7 +228,7 @@ export function Director({
     if (shots.compact) {
       const inset = p < 0.15 ? insets.hero : p > 0.85 ? insets.outro : insets.beat;
       maskRef.current.set(-2, -1, inset - 0.02, inset + 0.12);
-    } else maskRef.current.set(0.34, 0.5, -2, -1);
+    } else maskRef.current.set(0.3, 0.56, -2, -1);
 
     if (!ch) return;
 

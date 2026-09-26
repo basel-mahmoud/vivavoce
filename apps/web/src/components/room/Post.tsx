@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { DepthOfField, EffectComposer, N8AO, SMAA, ToneMapping } from '@react-three/postprocessing';
 import { ToneMappingMode, type DepthOfFieldEffect } from 'postprocessing';
 import type { DofState } from './Director';
@@ -32,7 +32,10 @@ export default function Post({ tier, dark, dofRef, onReady }: { tier: 2 | 3; dar
   // the composer tone-maps the cleared background too, so clear to the pre-compensated page colour
   const background = useMemo(() => preToneMapped(dark ? CANVAS.dark : CANVAS.light), [dark]);
 
+  // on-demand rendering (reduced motion) draws only when asked: ask for the first frames here
+  const invalidate = useThree((s) => s.invalidate);
   const frames = useRef(0);
+  useLayoutEffect(() => invalidate(), [invalidate]);
   useFrame(() => {
     const e = depth.current;
     const d = dofRef.current;
@@ -40,7 +43,11 @@ export default function Post({ tier, dark, dofRef, onReady }: { tier: 2 | 3; dar
       (e.target as THREE.Vector3 | null)?.copy(d.focus);
       e.blendMode.opacity.value = Math.min(1, Math.max(0, d.amount));
     }
-    if (frames.current < 3 && ++frames.current === 3) onReady?.();
+    if (frames.current < 3) {
+      frames.current += 1;
+      if (frames.current === 3) onReady?.();
+      else invalidate();
+    }
   });
 
   return (

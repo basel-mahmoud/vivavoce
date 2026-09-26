@@ -212,7 +212,7 @@ export function makeShots(aspect: number, insets: Insets, width = Infinity): Sho
   const compact = aspect < 1.05 || width < 768;
   const R = compact
     ? {
-        hero: { x0: 0.03, x1: 0.97, y0: insets.hero + 0.05, y1: 0.9 },
+        hero: { x0: 0.03, x1: 0.97, y0: insets.hero + 0.05, y1: 0.93 },
         beat: { x0: 0.06, x1: 0.94, y0: insets.beat + 0.04, y1: 0.86 },
         close: { x0: 0.1, x1: 0.9, y0: insets.beat + 0.05, y1: 0.84 },
         outro: { x0: 0.04, x1: 0.96, y0: insets.outro + 0.04, y1: 0.88 },
@@ -229,8 +229,15 @@ export function makeShots(aspect: number, insets: Insets, width = Infinity): Sho
   const visor = EXAMINERS.map((k) => visorCentre(k));
 
   // Hero: the whole panel from the hot seat, with headroom for the examiner's margin note.
+  // phones frame the middle three large and the apron under them, so the guidance line below
+  // the room never lands on the bench
+  const apron = [-1.2, 1.2].flatMap((x) => [V(x, -0.5, 0.45), V(x, -0.5, 0.2)]);
   const heroPts = compact
-    ? [...(['clarity', 'structure', 'conciseness'] as const).flatMap((k) => bodyPoints(k)), ...coinsHero.flatMap((c) => coinPoints(c))]
+    ? [
+        ...(['clarity', 'structure', 'conciseness'] as const).flatMap((k) => bodyPoints(k)),
+        ...coinsHero.flatMap((c) => coinPoints(c)),
+        ...apron,
+      ]
     : [...cast(), ...coinsHero.flatMap((c) => coinPoints(c))];
   const hero = compact
     ? frame(heroPts, V(0, 1.0, -0.6), V(0, 0.14, 1), aspect, R.hero, 26, 'bottom')
@@ -318,7 +325,7 @@ export function makeShots(aspect: number, insets: Insets, width = Infinity): Sho
   scratch.updateMatrixWorld();
   const at = compact ? V(-0.5, -0.84, 0.5) : V(0.16, -0.78, 0.5);
   const ray = at.unproject(scratch).sub(b2.pos).normalize();
-  const micPos = b2.pos.clone().addScaledVector(ray, compact ? 2.4 : 2.9);
+  const micPos = b2.pos.clone().addScaledVector(ray, compact ? 2.6 : 3.3);
   // tilted up at the speaker, so from behind the lens reads its profile, not its end
   const aimAt = visor[2]!.clone().sub(micPos).normalize();
   const micQuat = new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), aimAt.add(V(0.35, 1.1, 0)).normalize());
