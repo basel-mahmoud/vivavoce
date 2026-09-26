@@ -916,6 +916,114 @@
     transform: none;
     transition-delay: 60ms;
   }
+
+  /* ── Contact: index cards ───────────────────────────────────────────── */
+
+  .vv-inboxes {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 768px) {
+    .vv-inboxes {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+    .vv-inboxes > [data-main] {
+      grid-column: span 2;
+    }
+  }
+  @media (min-width: 1100px) {
+    .vv-inboxes {
+      grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .vv-inboxes > [data-main] {
+      grid-column: auto;
+    }
+  }
+  /* An index card: a red rule under the heading, faint blue rules below. */
+  .vv-inbox {
+    --head: 4.5rem;
+    --gap: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1.35rem 1.5rem 1.4rem;
+    border: 1px solid var(--color-line);
+    border-radius: 1rem;
+    background-color: var(--color-card);
+    background-image:
+      linear-gradient(var(--color-margin), var(--color-margin)),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 calc(var(--gap) - 1px),
+        var(--color-rule) calc(var(--gap) - 1px) var(--gap)
+      );
+    background-position:
+      0 var(--head),
+      0 calc(var(--head) + 1px);
+    background-size:
+      100% 1.5px,
+      100% calc(100% - var(--head) - 1px);
+    background-repeat: no-repeat;
+    box-shadow: var(--shadow-paper);
+    transition:
+      transform 300ms var(--ease-out),
+      box-shadow 300ms var(--ease-out);
+  }
+  [data-main] > .vv-inbox {
+    --head: 6rem;
+  }
+  .vv-inbox:active {
+    transform: scale(0.99);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-inbox:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-float);
+    }
+  }
+  .vv-inbox:focus-visible {
+    border-radius: 1rem;
+  }
+  .vv-inbox-title {
+    display: flex;
+    align-items: center;
+    height: calc(var(--head) - 1.35rem);
+    color: var(--color-ink);
+    font-size: 2rem;
+    font-weight: 900;
+    font-stretch: 118%;
+    letter-spacing: -0.028em;
+    line-height: 1;
+  }
+  [data-main] .vv-inbox-title {
+    font-size: clamp(2.4rem, 4.4vw, 3.4rem);
+  }
+  .vv-inbox-body {
+    display: block;
+    max-width: 26rem;
+    margin-top: 0.95rem;
+    color: var(--color-ink-mut);
+    font-size: 1.0625rem;
+    font-weight: 500;
+    line-height: var(--gap);
+  }
+  .vv-inbox-mail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: auto;
+    padding-top: calc(var(--gap) * 1);
+    color: var(--color-ink-blue);
+    font-size: 1.125rem;
+    font-weight: 800;
+    line-height: var(--gap);
+    overflow-wrap: anywhere;
+  }
+  [data-main] .vv-inbox-mail {
+    font-size: clamp(1.2rem, 1.8vw, 1.45rem);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -939,5 +1047,12 @@
   .vv-faq-item[data-open] .vv-faq-a p {
     transform: none;
     transition: opacity 150ms ease;
+  }
+  .vv-inbox {
+    transition: box-shadow 200ms ease;
+  }
+  .vv-inbox:hover,
+  .vv-inbox:active {
+    transform: none;
   }
 }
