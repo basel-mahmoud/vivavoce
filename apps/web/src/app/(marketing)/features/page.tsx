@@ -21,9 +21,7 @@ export default function FeaturesPage() {
       />
       <AxesIndex />
       <Interrupts />
-      <div className="-mt-24 sm:-mt-32">
-        <Modes />
-      </div>
+      <Modes />
       <div className="pb-24 sm:pb-32">
         <LiveEngine />
       </div>

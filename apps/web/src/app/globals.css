@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '../components/ui/ui.css';
+@import '../components/home/home.css';
 
 /*
  * "The exam script": VivaVoce web theme v6.

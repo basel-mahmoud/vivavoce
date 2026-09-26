@@ -1,0 +1,1234 @@
+/*
+ * Styles for the home sections (components/home). Imported by
+ * app/globals.css after ui.css, so they share the theme tokens. Tokens only.
+ */
+
+@layer components {
+  /* Paper stays paper at night. The slips and cards lying on the desk (the
+     transcript, the admission slip, the follow-up cards) keep the daytime pen,
+     grey and focus ink, so their small text stays legible on white in the
+     dark scheme. */
+  :is(.vv-slip-face, .vv-admit-body, .vv-int-answer, .vv-int-card) {
+    --vv-verm-text: color-mix(in oklab, var(--color-verm) 72%, var(--color-coal));
+    --color-verm-text: var(--vv-verm-text);
+    --vv-ink-faint: color-mix(in oklab, var(--color-coal) 62%, var(--color-paper));
+    --vv-focus: var(--color-cobalt);
+  }
+
+  /* ── Modes: the deck ────────────────────────────────────────────────── */
+
+  .vv-deck {
+    --card-w: min(37rem, 100%);
+    --card-h: 25.5rem;
+    position: relative;
+    height: calc(var(--card-h) + 5.5rem);
+  }
+  .vv-deck[data-narrow] {
+    --card-w: min(100%, 36rem);
+    --card-h: 28.5rem;
+    height: calc(var(--card-h) + 3.5rem);
+  }
+  @media (max-width: 420px) {
+    .vv-deck[data-narrow] {
+      --card-h: 30.5rem;
+    }
+  }
+  @media (max-width: 359px) {
+    .vv-deck[data-narrow] {
+      --card-h: 34rem;
+    }
+  }
+  .vv-deck-card {
+    position: absolute;
+    top: 0;
+    /* The fan (five cards, 6rem apart) opens to the left of the front card. */
+    left: min(calc(50% - var(--card-w) / 2 + 15rem), calc(100% - var(--card-w)));
+    width: var(--card-w);
+    height: var(--card-h);
+    border-radius: 1.4rem;
+    transform-origin: 50% 50%;
+    touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Stacked, the card keeps the page's left edge, in line with the heading and controls. */
+  .vv-deck[data-narrow] .vv-deck-card {
+    top: 3.25rem;
+    left: 0;
+  }
+  .vv-deck-card:focus-visible {
+    outline-offset: 5px;
+  }
+  .vv-deck-card-back {
+    cursor: pointer;
+  }
+  .vv-deck-grip {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
+  /* The card in front is a thing you drag, so a pull never selects its text. */
+  .vv-deck-card:not(.vv-deck-card-back) .vv-deck-grip {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .vv-deck-card:not(.vv-deck-card-back) .vv-deck-grip {
+    cursor: grab;
+  }
+  .vv-deck-card:not(.vv-deck-card-back) .vv-deck-grip:active {
+    cursor: grabbing;
+  }
+
+  /* An index card: a red rule under the heading, faint blue rules below. */
+  .vv-index-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    border-radius: inherit;
+    background: var(--color-card);
+    box-shadow: var(--shadow-float);
+    transition:
+      translate 220ms var(--ease-out),
+      box-shadow 220ms var(--ease-out);
+  }
+  .vv-deck-card-back .vv-index-card {
+    box-shadow: var(--shadow-paper);
+  }
+  .vv-index-card-head {
+    flex: none;
+    padding: 1.2rem 1.5rem 0.95rem;
+    border-bottom: 1.5px solid var(--color-margin);
+  }
+  .vv-index-card-body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    padding: 1.15rem 1.5rem 1.35rem;
+  }
+  /* Cards in the pile are there to be picked, not read. */
+  .vv-deck-card-back .vv-index-card-body > * {
+    opacity: 0.5;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-deck-card-back:hover .vv-index-card {
+      translate: 0 -10px;
+      box-shadow: var(--shadow-float);
+    }
+  }
+
+  .vv-deck-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-deck-controls {
+      flex-direction: row;
+      align-items: center;
+      gap: 2.5rem;
+      margin-top: 0.5rem;
+    }
+  }
+
+  /* The mode list: the names of the cards, the one in front underlined in blue ink. */
+  .vv-mode-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 1.25rem;
+  }
+  .vv-mode-tab {
+    position: relative;
+    padding: 0.55rem 0.1rem;
+    color: var(--color-ink-mut);
+    font-size: 0.98rem;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color var(--dur-hover) ease;
+  }
+  .vv-mode-tab::after {
+    content: '';
+    position: absolute;
+    left: 0.1rem;
+    right: 0.1rem;
+    bottom: 0.3rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--color-ink-blue);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 320ms var(--ease-out);
+  }
+  .vv-mode-tab[aria-selected='true'] {
+    color: var(--color-ink);
+  }
+  .vv-mode-tab[aria-selected='true']::after {
+    transform: scaleX(1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-mode-tab:hover {
+      color: var(--color-ink);
+    }
+  }
+
+  .vv-hint-touch {
+    display: none;
+  }
+  @media (pointer: coarse) {
+    .vv-hint-fine {
+      display: none;
+    }
+    .vv-hint-touch {
+      display: inline;
+    }
+  }
+
+  /* The flagged STAR tile: the red pen rings the whole tile. */
+  .vv-star-flag .vv-redpen-words {
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  /* Quick Question paddles, a size down on phones. The axis is printed under
+     each one, so face down they show only a question mark. */
+  .vv-paddle.vv-quick-paddle {
+    --d: 2.9rem;
+  }
+  .vv-quick-paddle .vv-paddle-axis {
+    font-size: 0;
+  }
+  .vv-quick-paddle .vv-paddle-axis::after {
+    content: '?';
+    font-size: calc(var(--d) * 0.34);
+    letter-spacing: 0;
+  }
+  @media (min-width: 640px) {
+    .vv-paddle.vv-quick-paddle {
+      --d: 3.75rem;
+    }
+  }
+
+  /* Flash Recall: a card that turns over. */
+  .vv-flashcard-inner {
+    transform-style: preserve-3d;
+    transition: transform 560ms var(--ease-in-out);
+  }
+  .vv-flashcard[data-flipped] .vv-flashcard-inner {
+    transform: rotateY(180deg);
+  }
+  .vv-flashcard-face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .vv-flashcard-back {
+    transform: rotateY(180deg);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-flashcard:hover .vv-flashcard-face:not(.vv-flashcard-back) {
+      border-color: color-mix(in oklab, var(--color-ink) 30%, var(--color-line));
+    }
+  }
+
+  /* Explain It: your answer on the left of the rule, the improved one right. */
+  .vv-compare-top {
+    clip-path: inset(0 0 0 var(--pct, 100%));
+  }
+  .vv-compare-rule {
+    left: var(--pct, 100%);
+    width: 2px;
+    margin-left: -1px;
+    background: var(--color-ink);
+  }
+  .vv-compare:has(.vv-compare-input:focus-visible) {
+    outline: 2px solid var(--vv-focus);
+    outline-offset: 3px;
+  }
+
+  /* Rapid Fire: the dot-matrix clock. */
+  .vv-dotclock circle {
+    fill: color-mix(in oklab, var(--color-paper) 7%, transparent);
+    transition: fill 140ms ease;
+  }
+  .vv-dotclock circle[data-on] {
+    fill: var(--color-paper);
+  }
+  .vv-dotclock-out circle[data-on] {
+    fill: var(--color-butter);
+  }
+
+  @keyframes vv-rise-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 6px, 0);
+    }
+  }
+  .vv-rise-in {
+    animation: vv-rise-in 420ms var(--ease-out) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-index-card {
+      transition: none;
+    }
+    .vv-flashcard-inner,
+    .vv-flashcard[data-flipped] .vv-flashcard-inner {
+      transform: none;
+      transition: none;
+    }
+    .vv-flashcard-face {
+      backface-visibility: visible;
+      transition: opacity 200ms ease;
+    }
+    .vv-flashcard-back {
+      transform: none;
+      opacity: 0;
+    }
+    .vv-flashcard[data-flipped] .vv-flashcard-back {
+      opacity: 1;
+    }
+    .vv-flashcard[data-flipped] .vv-flashcard-face:not(.vv-flashcard-back) {
+      opacity: 0;
+    }
+    .vv-dotclock circle {
+      transition: none;
+    }
+    .vv-rise-in {
+      animation: none;
+    }
+  }
+
+  /* ── Loop: the signal wire ──────────────────────────────────────────── */
+
+  .vv-signal {
+    --line-y: 5.5rem;
+    position: relative;
+  }
+  .vv-signal-wire {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .vv-signal-rest,
+  .vv-signal-blue,
+  .vv-signal-red,
+  .vv-signal-arrow {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .vv-signal-rest {
+    stroke: var(--color-line);
+    stroke-width: 2;
+  }
+  .vv-signal-blue {
+    stroke: var(--color-ink-blue);
+    stroke-width: 3.5;
+  }
+  .vv-signal-red {
+    stroke: var(--color-verm-text);
+    stroke-width: 3.5;
+  }
+  .vv-signal-arrow {
+    stroke: var(--color-line);
+    stroke-width: 2.5;
+    transition: stroke 200ms ease;
+  }
+  .vv-signal-arrow[data-on] {
+    stroke: var(--color-verm-text);
+  }
+  .vv-signal-stops {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    row-gap: 2.75rem;
+  }
+
+  .vv-stop {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    grid-template-areas:
+      'rail visual'
+      'rail caption';
+    column-gap: 1rem;
+    align-items: start;
+  }
+  .vv-stop-rail {
+    grid-area: rail;
+    justify-self: center;
+    width: 14px;
+    height: 14px;
+    margin-top: 0.35rem;
+    border: 2px solid var(--color-line);
+    border-radius: 50%;
+    background: var(--color-canvas);
+    transition:
+      border-color 200ms ease,
+      background-color 200ms ease;
+  }
+  .vv-stop[data-awake] .vv-stop-rail {
+    border-color: var(--color-ink-blue);
+    background: var(--color-ink-blue);
+  }
+  .vv-stop:nth-child(n + 4)[data-awake] .vv-stop-rail {
+    border-color: var(--color-verm-text);
+    background: var(--color-verm-text);
+  }
+  .vv-stop-visual {
+    grid-area: visual;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .vv-stop-caption {
+    grid-area: caption;
+    margin-top: 0.9rem;
+  }
+  .vv-split-v {
+    position: absolute;
+    left: 0;
+    bottom: -1.25rem;
+    width: 1px;
+    height: 1px;
+  }
+
+  /* The mic: an empty key until the signal leaves it, then blue ink. */
+  .vv-mic {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 4rem;
+    height: 4rem;
+    border: 2px solid var(--color-line);
+    border-radius: 50%;
+    background: var(--color-card);
+    color: var(--color-ink-faint);
+    transition:
+      background-color 220ms ease,
+      border-color 220ms ease,
+      color 220ms ease;
+  }
+  .vv-stop[data-awake] .vv-mic {
+    border-color: var(--color-cobalt);
+    background: var(--color-cobalt);
+    color: var(--color-paper);
+  }
+  /* The transcript slip: faint until the signal writes it in blue ink. */
+  .vv-transcript {
+    max-width: 19rem;
+    padding: 0.75rem 1rem 0.8rem;
+    border: 1px solid var(--color-line);
+    border-radius: 0.9rem;
+    background: var(--color-card);
+    box-shadow: var(--shadow-paper);
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  /* Asleep, the words are printed grey; the signal writes them in blue ink. */
+  .vv-word {
+    color: var(--color-ink-mut);
+    transition: color 220ms ease;
+  }
+  .vv-stop[data-awake] .vv-word {
+    color: var(--color-ink-blue);
+    transition-delay: calc(var(--i) * 70ms);
+  }
+
+  /* The panel, sitting on the wire, marks under each. */
+  .vv-panel {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .vv-panel-seat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 3.4rem;
+  }
+  .vv-panel-head .vv-portrait {
+    width: 3.4rem !important;
+  }
+  .vv-panel-mark {
+    margin-top: 0.55rem;
+    color: var(--color-ink-mut);
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: color 240ms ease;
+  }
+  .vv-panel-mark[data-on] {
+    color: var(--color-ink);
+    transition-delay: calc(var(--i) * 60ms);
+  }
+  .vv-panel-mark[data-weak][data-on] {
+    color: var(--color-verm-text);
+  }
+
+  /* The verdict and the next question: faint until reached. */
+  /* Not yet reached: printed grey. Reached: the examiner's red pen. */
+  .vv-verdict {
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.5rem;
+    background: var(--color-canvas);
+    color: var(--color-ink-mut);
+    transition: color 260ms ease;
+  }
+  .vv-stop[data-awake] .vv-verdict {
+    color: var(--color-verm-text);
+  }
+  .vv-next {
+    color: var(--color-ink-mut);
+    transition: color 260ms ease;
+  }
+  .vv-stop[data-awake] .vv-next {
+    color: var(--color-ink);
+  }
+  .vv-next-label {
+    color: var(--color-ink-mut);
+    transition: color 260ms ease;
+  }
+  .vv-stop[data-awake] .vv-next-label {
+    color: var(--color-verm-text);
+  }
+  .vv-next {
+    max-width: 17rem;
+    padding: 0.75rem 0.95rem 0.85rem;
+    border: 1px solid var(--color-line);
+    border-top: 2px solid var(--color-margin);
+    border-radius: 0.75rem;
+    background: var(--color-card);
+    box-shadow: var(--shadow-paper);
+  }
+
+  @media (min-width: 1024px) {
+    .vv-signal-stops {
+      grid-template-columns: 0.85fr 1.35fr 2.5fr 1.1fr 1.35fr;
+      column-gap: 2rem;
+    }
+    .vv-stop {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: calc(var(--line-y) * 2) auto;
+      grid-template-areas:
+        'visual'
+        'caption';
+    }
+    .vv-stop-rail,
+    .vv-split-v {
+      display: none;
+    }
+    .vv-stop-visual {
+      height: calc(var(--line-y) * 2);
+    }
+    .vv-stop-caption {
+      margin-top: 1.4rem;
+    }
+    /* The heads sit on the wire; their marks hang just under it. */
+    .vv-stop-panel .vv-stop-visual {
+      align-items: flex-start;
+    }
+    .vv-panel {
+      height: 100%;
+      gap: 0.55rem;
+    }
+    .vv-panel-seat {
+      width: 4.5rem;
+      padding-top: calc(var(--line-y) - 4.5rem);
+    }
+    .vv-panel-head .vv-portrait {
+      width: 4.5rem !important;
+    }
+    .vv-panel-mark {
+      margin-top: 0.7rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-word,
+    .vv-panel-mark,
+    .vv-mic,
+    .vv-stop-rail,
+    .vv-verdict,
+    .vv-next {
+      transition: none;
+    }
+  }
+
+  /* ── Subjects: the departures board and the page's one marquee ─────── */
+
+  .vv-marquee {
+    position: relative;
+    overflow: hidden;
+    padding-block: 0.4rem;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+  }
+  .vv-marquee-track {
+    display: flex;
+    width: max-content;
+    animation: vv-marquee 70s linear infinite;
+    animation-play-state: paused;
+  }
+  .vv-marquee[data-running] .vv-marquee-track {
+    animation-play-state: running;
+  }
+  .vv-marquee:hover .vv-marquee-track,
+  .vv-marquee:focus-within .vv-marquee-track {
+    animation-play-state: paused;
+  }
+  .vv-marquee-set {
+    display: flex;
+    flex: none;
+    gap: 0.6rem;
+    padding-right: 0.6rem;
+  }
+  .vv-marquee[data-still] {
+    overflow-x: auto;
+    padding-inline: 1rem;
+    -webkit-mask-image: none;
+    mask-image: none;
+    scrollbar-width: thin;
+  }
+  .vv-marquee[data-still] .vv-marquee-track {
+    animation: none;
+  }
+  .vv-marquee[data-still] .vv-marquee-set[aria-hidden] {
+    display: none;
+  }
+  .vv-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 2.75rem;
+    padding: 0 1.15rem;
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    background: var(--color-card);
+    color: var(--color-ink);
+    font-size: 1rem;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--dur-hover) ease,
+      border-color var(--dur-hover) ease,
+      transform var(--dur-press) var(--ease-out);
+  }
+  .vv-chip:active {
+    transform: scale(0.97);
+  }
+  .vv-chip[data-on] {
+    border-color: var(--color-butter);
+    background: var(--color-butter);
+    color: var(--color-coal);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-chip:hover:not([data-on]) {
+      border-color: color-mix(in oklab, var(--color-ink) 45%, var(--color-line));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-marquee {
+      overflow-x: auto;
+      padding-inline: 1rem;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+    .vv-marquee-track {
+      animation: none;
+    }
+    .vv-marquee-set[aria-hidden] {
+      display: none;
+    }
+    .vv-chip:active {
+      transform: none;
+    }
+  }
+
+  /* ── Rooms: ruled index rows that flood with their colour ───────────── */
+
+  .vv-room-list {
+    border-bottom: 1px solid var(--color-line);
+  }
+  .vv-room {
+    --field: var(--color-cobalt);
+    --field-ink: var(--color-paper);
+    --field-mut: color-mix(in oklab, var(--color-paper) 84%, var(--color-cobalt));
+    --field-focus: var(--color-paper);
+    position: relative;
+    border-top: 1px solid var(--color-line);
+  }
+  .vv-room[data-field='coal'] {
+    --field: var(--color-coal);
+    --field-mut: var(--color-paper-mut);
+    --field-focus: var(--color-cobalt-lift);
+  }
+  @media (prefers-color-scheme: dark) {
+    .vv-room[data-field='coal'] {
+      --field: var(--color-coal-2);
+    }
+  }
+  .vv-room[data-field='butter'] {
+    --field: var(--color-butter);
+    --field-ink: var(--color-coal);
+    --field-mut: color-mix(in oklab, var(--color-coal) 78%, var(--color-butter));
+    --field-focus: var(--color-coal);
+  }
+  .vv-room[data-field='paper'] {
+    --field: var(--color-paper);
+    --field-ink: var(--color-coal);
+    --field-mut: color-mix(in oklab, var(--color-coal) 72%, var(--color-paper));
+    --field-focus: var(--color-cobalt);
+  }
+  .vv-room-face {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 2.25rem;
+    grid-template-areas:
+      'title sign'
+      'body body'
+      'more more';
+    column-gap: 1rem;
+    align-items: start;
+    padding: 1.35rem 0.25rem 1.45rem;
+  }
+  .vv-room-title {
+    grid-area: title;
+    font-size: clamp(1.8rem, 3.3vw, 3rem);
+    font-weight: 900;
+    font-stretch: 118%;
+    letter-spacing: -0.028em;
+    line-height: 0.98;
+  }
+  .vv-room-toggle {
+    text-align: left;
+    cursor: pointer;
+  }
+  /* The whole row is the button's target. */
+  .vv-room-face[data-layer='base'] .vv-room-toggle::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .vv-room-body {
+    grid-area: body;
+    max-width: 30rem;
+    margin-top: 0.7rem;
+    color: var(--color-ink-mut);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.55;
+  }
+  .vv-room-more {
+    grid-area: more;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 360ms var(--ease-out);
+  }
+  .vv-room[data-open] .vv-room-more {
+    grid-template-rows: 1fr;
+  }
+  .vv-room-more-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .vv-room-visual {
+    padding-top: 1.1rem;
+  }
+  .vv-room-face[data-layer='base'] .vv-room-visual {
+    visibility: hidden;
+  }
+  .vv-room-card {
+    width: 15.5rem;
+    padding: 0.95rem 1.05rem;
+    border-radius: 1rem;
+  }
+  .vv-room-sign {
+    grid-area: sign;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-top: 0.1rem;
+    border: 1px solid color-mix(in oklab, currentColor 28%, transparent);
+    border-radius: 999px;
+    transition: transform 320ms var(--ease-out);
+  }
+  .vv-room[data-open] .vv-room-sign {
+    transform: rotate(45deg);
+  }
+  /* The flood bleeds past the text column (to the screen edge on phones). */
+  .vv-room-flood {
+    --bleed: 1rem;
+    position: absolute;
+    inset: 0 calc(var(--bleed) * -1);
+    z-index: 1;
+    padding-inline: var(--bleed);
+    background: var(--field);
+    color: var(--field-ink);
+    clip-path: inset(0% 0% 100% 0%);
+    pointer-events: none;
+  }
+  .vv-room[data-field='paper'] .vv-room-flood {
+    background-image:
+      linear-gradient(to right, transparent 0.55rem, color-mix(in oklab, var(--color-verm) 46%, var(--color-paper)) 0.55rem 0.65rem, transparent 0.65rem),
+      repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper)) calc(1.9rem - 1px) 1.9rem);
+  }
+  .vv-room-flood .vv-room-body {
+    color: var(--field-mut);
+  }
+  .vv-room-flood .vv-room-sign {
+    border-color: color-mix(in oklab, var(--field-ink) 35%, transparent);
+  }
+  /* Focus is drawn on the flooded copy, in a colour that reads on the field. */
+  .vv-room:has(.vv-room-toggle:focus-visible) .vv-room-flood .vv-room-toggle {
+    outline: 2px solid var(--field-focus);
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
+
+  @media (min-width: 1024px) {
+    .vv-room-face {
+      grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.9fr) 16.5rem 2.25rem;
+      grid-template-areas: 'title body more sign';
+      column-gap: 2.5rem;
+      align-items: center;
+      min-height: 9.75rem;
+      padding: 1.5rem 0.25rem;
+    }
+    .vv-room-body {
+      margin-top: 0;
+    }
+    .vv-room-more,
+    .vv-room[data-open] .vv-room-more {
+      grid-template-rows: 1fr;
+    }
+    .vv-room-visual {
+      padding-top: 0;
+    }
+    .vv-room-face[data-layer='flood'] .vv-room-visual > * {
+      translate: 0 10px;
+      opacity: 0;
+      transition:
+        translate 420ms var(--ease-out),
+        opacity 260ms ease;
+    }
+    .vv-room[data-open] .vv-room-face[data-layer='flood'] .vv-room-visual > * {
+      translate: 0 0;
+      opacity: 1;
+      transition-delay: 90ms;
+    }
+    .vv-room-flood {
+      --bleed: 1.5rem;
+      border-radius: 0.9rem;
+    }
+    .vv-room[data-field='paper'] .vv-room-flood {
+      background-image:
+        linear-gradient(to right, transparent 0.9rem, color-mix(in oklab, var(--color-verm) 46%, var(--color-paper)) 0.9rem 1rem, transparent 1rem),
+        repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper)) calc(1.9rem - 1px) 1.9rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-room-flood {
+      clip-path: none !important;
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+    .vv-room[data-open] .vv-room-flood {
+      opacity: 1;
+    }
+    .vv-room-more,
+    .vv-room-sign,
+    .vv-room-face[data-layer='flood'] .vv-room-visual > * {
+      transition: none !important;
+    }
+  }
+
+  /* ── Privacy: the transcript slip that is not kept ─────────────────── */
+
+  .vv-slip-desk {
+    max-width: 37rem;
+    padding-inline: 0.5rem;
+  }
+  .vv-slip {
+    position: relative;
+    rotate: -1.2deg;
+    /* On the parent, so the shadow follows the torn edges. */
+    filter: drop-shadow(0 1px 1px rgb(var(--vv-shadow) / 0.08)) drop-shadow(0 12px 20px rgb(var(--vv-shadow) / 0.16));
+  }
+  .vv-slip-piece {
+    position: relative;
+  }
+  .vv-slip-piece + .vv-slip-piece {
+    position: absolute;
+    inset: 0;
+  }
+  .vv-slip-face {
+    --perf-r: 5px;
+    --perf-pitch: 16px;
+    padding: 1.35rem 1.5rem 1.6rem 3.4rem;
+    border-radius: 0.4rem;
+    background-color: var(--color-paper);
+    background-image:
+      linear-gradient(
+        to right,
+        transparent 2.35rem,
+        color-mix(in oklab, var(--color-verm) 46%, var(--color-paper)) 2.35rem 2.45rem,
+        transparent 2.45rem
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 calc(1.9rem - 1px),
+        color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper)) calc(1.9rem - 1px) 1.9rem
+      );
+    background-position:
+      0 0,
+      0 0.95rem;
+    color: var(--color-coal);
+    -webkit-mask-repeat: repeat-x, no-repeat;
+    mask-repeat: repeat-x, no-repeat;
+    -webkit-mask-image:
+      radial-gradient(circle at 50% 0, transparent var(--perf-r), #000 calc(var(--perf-r) + 0.5px)),
+      linear-gradient(#000, #000);
+    mask-image:
+      radial-gradient(circle at 50% 0, transparent var(--perf-r), #000 calc(var(--perf-r) + 0.5px)),
+      linear-gradient(#000, #000);
+    -webkit-mask-size:
+      var(--perf-pitch) calc(var(--perf-r) + 1px),
+      100% calc(100% - var(--perf-r) - 1px);
+    mask-size:
+      var(--perf-pitch) calc(var(--perf-r) + 1px),
+      100% calc(100% - var(--perf-r) - 1px);
+    -webkit-mask-position:
+      50% 0,
+      0 100%;
+    mask-position:
+      50% 0,
+      0 100%;
+  }
+  .vv-slip-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.9rem;
+    text-transform: uppercase;
+  }
+  .vv-slip-line {
+    font-size: 1.1rem;
+    line-height: 1.9rem;
+  }
+  .vv-slip-line + .vv-slip-line {
+    margin-top: 1.9rem;
+  }
+  .vv-slip-who {
+    position: absolute;
+    margin-left: -2.9rem;
+    width: 2.2rem;
+    color: color-mix(in oklab, var(--color-coal) 55%, var(--color-paper));
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-align: right;
+  }
+  /* Redaction: a black bar runs across each word, one after another. */
+  .vv-redact {
+    position: relative;
+  }
+  .vv-redact::after {
+    content: '';
+    position: absolute;
+    left: -0.1em;
+    right: -0.1em;
+    top: 0.08em;
+    bottom: -0.02em;
+    border-radius: 1px;
+    background: var(--color-coal);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 170ms var(--ease-out);
+    transition-delay: calc(var(--i) * 26ms);
+  }
+  .vv-slip:is([data-phase='redacting'], [data-phase='redacted'], [data-phase='torn']) .vv-redact::after {
+    transform: scaleX(1);
+  }
+
+  .vv-promises > li {
+    padding-block: 1.35rem;
+    border-top: 1px solid var(--color-line);
+  }
+  .vv-promises > li:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-redact::after {
+      transition: none;
+    }
+  }
+
+  /* ── Close: the admission slip ─────────────────────────────────────── */
+
+  .vv-admit {
+    width: 100%;
+    max-width: 36rem;
+    text-align: left;
+  }
+  .vv-admit .vv-ticket {
+    max-width: none;
+  }
+  .vv-admit-body {
+    padding: 1.4rem 1.5rem 1.35rem;
+  }
+  .vv-admit-input {
+    width: 100%;
+    height: 3rem;
+    margin-top: 0.45rem;
+    padding: 0 0.1rem;
+    border: 0;
+    border-bottom: 2px solid color-mix(in oklab, var(--color-coal) 30%, var(--color-paper));
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-cobalt-deep);
+    caret-color: var(--color-cobalt);
+    font-size: 1.15rem;
+    font-weight: 700;
+    transition: border-color var(--dur-hover) ease;
+  }
+  .vv-admit-input::placeholder {
+    color: color-mix(in oklab, var(--color-coal) 45%, var(--color-paper));
+    font-weight: 600;
+  }
+  .vv-admit-input:focus {
+    outline: none;
+    border-bottom-color: var(--color-cobalt);
+  }
+  .vv-admit-input:focus-visible {
+    outline: 2px solid var(--color-cobalt);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+  .vv-admit-input[aria-invalid='true'] {
+    border-bottom-color: var(--color-verm-text);
+  }
+  .vv-admit-input:disabled {
+    opacity: 0.6;
+  }
+  .vv-admitted {
+    display: inline-block;
+    padding: 0.05em 0.25em 0.1em;
+    border: 3px solid currentColor;
+    border-radius: 0.2em;
+    color: var(--color-cobalt-deep);
+    font-size: 1.8rem;
+    font-weight: 900;
+    font-stretch: 118%;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    rotate: -3deg;
+    animation: vv-stamp-down 420ms var(--ease-out) both;
+  }
+  @keyframes vv-stamp-down {
+    from {
+      opacity: 0;
+      scale: 1.4;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-admitted {
+      animation: none;
+    }
+  }
+
+  /* ── Features: the rubric index ─────────────────────────────────────── */
+
+  .vv-axis-list {
+    border-bottom: 1px solid var(--color-line);
+  }
+  .vv-axis {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'face mark'
+      'name name'
+      'sample sample';
+    gap: 0.9rem 1.25rem;
+    align-items: start;
+    padding-block: 1.75rem 2rem;
+    border-top: 1px solid var(--color-line);
+  }
+  .vv-axis-face {
+    grid-area: face;
+  }
+  .vv-axis-face .vv-portrait {
+    width: 4.5rem !important;
+  }
+  .vv-axis-name {
+    grid-area: name;
+  }
+  .vv-axis-mark {
+    grid-area: mark;
+    align-self: end;
+  }
+  /* The axis printed on the back of the paddle, set to fit. */
+  .vv-axis-mark .vv-paddle-axis {
+    max-width: 84%;
+    letter-spacing: 0.02em;
+    text-overflow: clip;
+  }
+  .vv-axis-sample {
+    grid-area: sample;
+    display: block;
+    width: 100%;
+    padding: 1rem 1.15rem 1.1rem;
+    border: 1px solid var(--color-line);
+    border-radius: 0.9rem;
+    background: var(--color-card);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color var(--dur-hover) ease,
+      box-shadow var(--dur-hover) ease;
+  }
+  .vv-axis[data-marked] .vv-axis-sample {
+    border-color: color-mix(in oklab, var(--color-verm-text) 35%, var(--color-line));
+  }
+  .vv-axis-answer {
+    display: block;
+    color: var(--color-ink-blue);
+    font-size: 1.08rem;
+    font-weight: 600;
+    line-height: 1.7;
+  }
+  .vv-axis-note {
+    display: block;
+    margin-top: 0.55rem;
+    color: var(--color-verm-text);
+    font-size: 0.95rem;
+    font-weight: 800;
+    opacity: 0;
+    translate: 0 4px;
+    transition:
+      opacity 220ms ease,
+      translate 320ms var(--ease-out);
+  }
+  .vv-axis[data-marked] .vv-axis-note {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: 380ms;
+  }
+  @media (min-width: 1024px) {
+    .vv-axis {
+      grid-template-columns: 6rem minmax(0, 0.95fr) minmax(0, 1.25fr) 5.5rem;
+      grid-template-areas: 'face name sample mark';
+      column-gap: 2.25rem;
+      align-items: center;
+      padding-block: 2rem;
+    }
+    .vv-axis-face .vv-portrait {
+      width: 6rem !important;
+    }
+    .vv-axis-mark {
+      justify-self: end;
+      padding-top: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-axis-note {
+      transition: none;
+      translate: none;
+    }
+  }
+
+  /* ── Features: interruptions ────────────────────────────────────────── */
+
+  .vv-int-stage {
+    position: relative;
+    min-height: 25rem;
+  }
+  .vv-int-answer {
+    position: relative;
+    max-width: 31rem;
+    padding: 1.2rem 1.4rem 1.35rem;
+    border-radius: 0.6rem;
+    background: var(--color-paper);
+    box-shadow: 0 1px 1px rgb(var(--vv-shadow) / 0.2), 0 14px 26px -16px rgb(var(--vv-shadow) / 0.55);
+    rotate: -1deg;
+  }
+  .vv-hedge {
+    display: inline-block;
+  }
+  .vv-int-stage[data-wobble] .vv-hedge {
+    animation: vv-hedge 400ms steps(1, end) infinite;
+  }
+  @keyframes vv-hedge {
+    0% {
+      filter: url(#vv-hedge-0);
+    }
+    20% {
+      filter: url(#vv-hedge-1);
+    }
+    40% {
+      filter: url(#vv-hedge-2);
+    }
+    60% {
+      filter: url(#vv-hedge-3);
+    }
+    80% {
+      filter: url(#vv-hedge-4);
+    }
+  }
+  /* Each card lands below the last one's question, so every ask stays readable. */
+  .vv-int-pile {
+    --dx: 6%;
+    --dy: 5.4rem;
+    position: relative;
+    height: 17rem;
+    margin-top: -1rem;
+  }
+  .vv-int-card {
+    --card-w: min(17.5rem, 86%);
+    position: absolute;
+    top: calc(var(--i) * var(--dy));
+    left: calc(var(--i) * var(--dx));
+    width: var(--card-w);
+    padding: 0.85rem 1.1rem 1.1rem;
+    border-top: 3px solid var(--color-verm);
+    border-radius: 0.75rem;
+    background: var(--color-paper);
+    color: var(--color-coal);
+    box-shadow: 0 2px 4px rgb(var(--vv-shadow) / 0.18), 0 22px 38px -18px rgb(var(--vv-shadow) / 0.6);
+  }
+  @media (width >= 40rem) {
+    .vv-int-pile {
+      --dx: 12%;
+      --dy: 5.9rem;
+      height: 18.5rem;
+      margin-left: 8%;
+    }
+    .vv-int-card {
+      --card-w: min(21rem, 76%);
+    }
+  }
+  .vv-int-caption {
+    margin-top: 0.75rem;
+    color: var(--color-paper-mut);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vv-hedge {
+      animation: none !important;
+    }
+  }
+}

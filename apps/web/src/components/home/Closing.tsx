@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, Smartphone } from 'lucide-react';
-import { WaitlistForm } from '@/components/site/WaitlistForm';
-import { Reveal } from '@/components/ui/Reveal';
+import { WordStamp } from '@/components/ui/WordStamp';
+import { cn } from '@/lib/cn';
+import { AdmitSlip } from './AdmitSlip';
+import { TranscriptSlip } from './TranscriptSlip';
 
 const PROMISES = [
   ['You choose what is kept.', 'Decide at sign-up whether recordings are retained at all.'],
@@ -9,67 +11,68 @@ const PROMISES = [
   ['Never shared across accounts.', 'Audio is the most protected thing we hold, and it stays in yours.'],
 ] as const;
 
-/** Privacy, said plainly. Quiet on purpose after the loud sections above. */
-export function Privacy() {
+/**
+ * Privacy, said plainly beside a transcript that is not kept: the slip is
+ * blacked out word by word and torn up.
+ */
+export function Privacy({ className }: { className?: string }) {
   return (
-    <section aria-labelledby="privacy-title" className="mx-auto w-full max-w-[1360px] px-4 pb-24 sm:px-5 sm:pb-32">
-      <div className="grid gap-12 border-t border-line pt-14 lg:grid-cols-[1.1fr_1fr] lg:gap-20">
-        <Reveal>
-          <h2 id="privacy-title" className="display text-[clamp(2.6rem,6vw,5.6rem)]">
-            Your voice stays yours.
-          </h2>
-          <Link
-            href="/privacy"
-            className="link-quiet mt-6 inline-flex items-center gap-1.5 text-lg font-bold"
-          >
-            Read the privacy policy <ArrowUpRight size={18} aria-hidden className="text-verm" />
+    <section
+      aria-labelledby="privacy-title"
+      className={cn('vv-privacy mx-auto w-full max-w-[1360px] px-4 py-20 sm:px-5 sm:py-28', className)}
+    >
+      <h2 id="privacy-title" className="display max-w-[12ch] text-[clamp(2.4rem,5.4vw,4.6rem)]">
+        Your voice stays yours.
+      </h2>
+      <div className="mt-12 grid gap-14 sm:mt-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-center lg:gap-20">
+        <TranscriptSlip />
+        <div>
+          <ul className="vv-promises">
+            {PROMISES.map(([lead, body]) => (
+              <li key={lead}>
+                <p className="text-[1.35rem] font-black leading-tight sm:text-2xl">{lead}</p>
+                <p className="mt-2 max-w-md text-[1.02rem] leading-relaxed text-ink-mut">{body}</p>
+              </li>
+            ))}
+          </ul>
+          <Link href="/privacy" className="group mt-8 inline-flex items-center gap-1.5 text-lg font-bold">
+            <span className="link-quiet">Read the privacy policy</span>
+            <ArrowUpRight size={18} aria-hidden className="text-ink-blue" />
           </Link>
-        </Reveal>
-        <ul className="space-y-8 lg:pt-3">
-          {PROMISES.map(([lead, body], i) => (
-            <Reveal as="li" key={lead} delay={i * 0.06}>
-              <p className="text-2xl font-black leading-tight">{lead}</p>
-              <p className="mt-2 max-w-md text-[1.05rem] leading-relaxed text-ink-mut">{body}</p>
-            </Reveal>
-          ))}
-        </ul>
+        </div>
       </div>
     </section>
   );
 }
 
-/** The close: one loud vermilion field, one action. */
-export function Close() {
+/** The close: say it before the room does, and take a slip for early access. */
+export function Close({ className }: { className?: string }) {
   return (
-    <section aria-labelledby="close-title" className="mx-auto w-full max-w-[1360px] px-3 pb-3 sm:px-5 sm:pb-5">
-      <div className="tile tile-verm relative overflow-hidden rounded-field px-6 py-14 sm:px-12 sm:py-20 lg:px-16">
-        <div className="grid gap-12 lg:grid-cols-[1.45fr_1fr] lg:items-end">
-          <div>
-            <h2 id="close-title" className="display text-[clamp(2.8rem,5.8vw,5.4rem)]">
-              Get in before the exam does.
-            </h2>
-            <p className="mt-6 max-w-lg text-lg font-semibold leading-relaxed text-coal">
-              The app is in private beta. Spots open in small groups, and students
-              with exam dates go first.
-            </p>
-          </div>
-          <div>
-            <WaitlistForm tone="verm" />
-            <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-3 text-[0.95rem] font-bold">
-              <a href="/download/apk" className="group inline-flex items-center gap-1.5 text-coal">
-                <Smartphone size={16} aria-hidden />
-                <span className="link-quiet">Download the Android beta</span>
-              </a>
-              <Link href="/faq" className="group inline-flex items-center gap-1.5 text-coal">
-                <span className="link-quiet">Questions first? Read the FAQ</span>
-                <ArrowRight
-                  size={15}
-                  aria-hidden
-                  className="transition-transform duration-200 ease-out group-hover:translate-x-0.5"
-                />
-              </Link>
-            </div>
-          </div>
+    <section
+      aria-labelledby="close-title"
+      className={cn('vv-close mx-auto w-full max-w-[1360px] px-4 pb-24 pt-16 sm:px-5 sm:pb-32 sm:pt-24', className)}
+    >
+      <div className="flex flex-col items-center text-center">
+        <h2 id="close-title" className="display text-[clamp(2.7rem,7vw,6rem)] leading-[1.02]">
+          Say it before the
+          <br />
+          <WordStamp words={['viva', 'interview', 'pitch']} suffix="." reserve={false} />
+        </h2>
+        <p className="mt-6 max-w-lg text-lg font-medium leading-relaxed text-ink-mut">
+          The app is in private beta. Spots open in small groups, and students with exam dates go first.
+        </p>
+        <div className="mt-10 flex w-full justify-center sm:mt-12">
+          <AdmitSlip />
+        </div>
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[0.95rem] font-bold">
+          <a href="/download/apk" className="group inline-flex items-center gap-1.5">
+            <Smartphone size={16} aria-hidden className="text-ink-blue" />
+            <span className="link-quiet">Download the Android beta</span>
+          </a>
+          <Link href="/faq" className="group inline-flex items-center gap-1.5">
+            <span className="link-quiet">Questions first? Read the FAQ</span>
+            <ArrowRight size={15} aria-hidden className="text-ink-blue" />
+          </Link>
         </div>
       </div>
     </section>
