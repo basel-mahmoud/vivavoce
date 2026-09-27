@@ -396,16 +396,80 @@
   }
 }
 
-/* The figure caption under the panel: "Example round", and that scores are guidance. On wide
-   layouts the director sets it just under the bench's front edge. */
+/* The figure caption under the panel: "Example round", that scores are guidance, and the key that
+   pauses the room. On wide layouts the director sets it just under the bench's front edge; on
+   compact ones it runs along the bottom edge, the key at the right. */
 .guide {
   position: absolute;
   left: 0.6rem;
+  right: 0.6rem;
   bottom: 0.75rem;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+.guideNote {
   padding: 0.15rem 0.4rem;
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--color-canvas) 86%, transparent);
+  color: var(--color-ink-mut);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* "Pause the room": a quiet toggle, pressed while the room holds still. Phones show its glyph
+   only (the label stays its accessible name). It shows only while the live room plays: nothing
+   moves on the poster, or under reduced motion. */
+.pause {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding-inline: 0.55rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-card);
+  box-shadow: var(--shadow-paper);
+  color: var(--color-ink-mut);
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+.guide:not([data-live]) .pause {
+  display: none;
+}
+.pause[aria-pressed='true'] {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-canvas);
+}
+@media (hover: hover) and (pointer: fine) {
+  .pause:hover {
+    border-color: color-mix(in srgb, var(--color-ink) 40%, var(--color-line));
+    color: var(--color-ink);
+  }
+  .pause[aria-pressed='true']:hover {
+    color: var(--color-canvas);
+  }
+}
+.pauseLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 
@@ -570,10 +634,31 @@
     background: none;
     box-shadow: none;
   }
+  /* where the poster's bench is, until the live room places it under its own (and for good
+     without WebGL) */
   .guide {
+    left: auto;
+    right: 11.5%;
+    top: auto;
+    bottom: 12%;
+  }
+  .guide[data-placed] {
     left: 0;
+    right: auto;
     top: 0;
     bottom: auto;
+  }
+  .pause {
+    height: 1.75rem;
+    padding-inline: 0.6rem 0.7rem;
+    box-shadow: none;
+  }
+  .pauseLabel {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
   }
   /* the promise keeps its two lines at every width: the size follows the column ("before it
      counts." is about 9.6 of its own ems wide) */
@@ -694,6 +779,9 @@
   .rise,
   .riseBlock {
     animation: none;
+  }
+  .pause {
+    display: none;
   }
   .slipArrow[data-drawn] path {
     transition: none;

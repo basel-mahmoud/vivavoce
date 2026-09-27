@@ -137,6 +137,7 @@ function show(el: HTMLElement, on: boolean) {
 export function Director({
   progress,
   reduce,
+  paused,
   insets,
   playing,
   channelsRef,
@@ -153,6 +154,8 @@ export function Director({
 }: {
   progress: MotionValue<number>;
   reduce: boolean;
+  /** "Pause the room": the panel holds still (no round, no idle life), but the camera still follows the scroll. */
+  paused: boolean;
   insets: Insets;
   playing: boolean;
   channelsRef: React.RefObject<PanelChannels>;
@@ -225,7 +228,14 @@ export function Director({
     ro.observe(tag);
     ro.observe(answer);
     if (guide) ro.observe(guide);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      // without the live room the caption goes back to where the poster's bench is
+      if (guide) {
+        delete guide.dataset.placed;
+        guide.style.transform = '';
+      }
+    };
   }, [overlaysRef]);
 
   useEffect(() => {
@@ -295,7 +305,7 @@ export function Director({
     const fov = A.fov + (B.fov - A.fov) * t;
     // pointer parallax: the hero only, fine pointers only
     const heroW = 1 - smooth(HERO_END - 0.02, HERO_END + 0.05, p);
-    if (pointer.current.fine) {
+    if (pointer.current.fine && !paused) {
       _pos.x += pointer.current.x * 0.42 * heroW;
       _pos.y -= pointer.current.y * 0.2 * heroW;
     }
@@ -367,17 +377,19 @@ export function Director({
     const cue = cueRef.current;
     // the panel listens while someone reaches for "Answer a question" (hero and outro keys)
     const listening = Boolean(cue?.listen) && (inHero || atOutro);
+    // reduced motion, or the visitor paused the room: every move snaps and nothing idles
+    const hold = reduce || paused;
 
     /* ── The scripted round (hero only; it waits while the panel listens) ─ */
     const r = round.current;
-    if (playing && inHero && !reduce && !listening) {
+    if (playing && inHero && !hold && !listening) {
       r.t += dt;
       if (r.t >= ROUND_TIMELINE.next) {
         r.t -= ROUND_TIMELINE.next;
         r.index += 1;
       }
     }
-    const scripted = (playing || reviewing.current) && !reduce;
+    const scripted = (playing || reviewing.current) && !hold;
     const phaseK = scripted ? phaseAt(r.t) : 3;
     const phase = PHASES[phaseK]![0];
     const index = scripted ? r.index : 0;
@@ -399,11 +411,11 @@ export function Director({
     // the pointer, for the listeners' eyes (fine pointers, hero only; never under reduced motion)
     const pt = pointer.current;
     ch.pointer.set(pt.x, -pt.y);
-    const noticing = pt.fine && inHero && clock.current - pt.movedAt < NOTICE;
+    const noticing = pt.fine && inHero && !paused && clock.current - pt.movedAt < NOTICE;
 
     /* ── Channels ─────────────────────────────────────────────────────── */
     const coinsHero = shots.compact ? HERO_COINS_COMPACT : HERO_COINS;
-    ch.still = reduce;
+    ch.still = hold;
     ch.waveLive = false;
     ch.progress = 0;
     ch.tempo = 1;
@@ -533,7 +545,7 @@ export function Director({
       const since = clock.current - outroAt.current;
       speakText = FIRST.followUp;
       speaker = WEAKEST;
-      const typing = !reduce && since < speakText.length / TYPE_CPS + 0.35;
+      const typing = !hold && since < speakText.length / TYPE_CPS + 0.35;
       for (let i = 0; i < ch.examiners.length; i++) {
         const e = ch.examiners[i]!;
         e.paddle = 1;
@@ -546,8 +558,8 @@ export function Director({
         e.look = i === WEAKEST ? 'camera' : WEAKEST;
       }
       // the words, then a held murmur: it waits for the answer with its speaking face on
-      const lvl = reduce ? 0.7 : typing ? speechAt(speakText, since, TYPE_CPS) : 0.3 + 0.12 * Math.sin(since * 5.1);
-      speech.current = reduce ? lvl : damp(speech.current, lvl, 18, dt);
+      const lvl = hold ? 0.7 : typing ? speechAt(speakText, since, TYPE_CPS) : 0.3 + 0.12 * Math.sin(since * 5.1);
+      speech.current = hold ? lvl : damp(speech.current, lvl, 18, dt);
       focusIndex = WEAKEST;
       focusStrength = 1;
     } else {
@@ -556,7 +568,7 @@ export function Director({
     }
 
     // Someone reaches for the key: every visor turns to the listening wave and the panel leans in
-    // (a face change only under reduced motion). The marks stay where they are.
+    // (a face change only under reduced motion or a paused room). The marks stay where they are.
     if (listening) {
       speaker = -1;
       // the eyes go to the key (the heads follow a little); a still room keeps them on you
@@ -567,7 +579,7 @@ export function Director({
         e.speaking = 0;
         e.gesture = 'rest';
         e.look = pt.fine ? 'pointer' : 'camera';
-        e.focus = reduce ? e.focus : Math.max(e.focus, 0.4);
+        e.focus = hold ? e.focus : Math.max(e.focus, 0.4);
       }
       focusIndex = 2;
       focusStrength = 0.75;
@@ -589,10 +601,12 @@ export function Director({
         // phones: the caption keeps its own place along the bottom edge
         if (!Number.isNaN(pg.x)) {
           o.guide.style.transform = '';
+          delete o.guide.dataset.placed;
           pg.x = pg.y = pg.s = NaN;
         }
       } else {
         // the figure caption, just under the bench's front edge
+        if (Number.isNaN(pg.x)) o.guide.dataset.placed = '';
         const b = boxes.current;
         _v.set(0, FLOOR, BENCH.centreZ - BENCH.front).project(camera);
         const gx = (_v.x + 1) * 0.5 * w - b.guideW / 2;

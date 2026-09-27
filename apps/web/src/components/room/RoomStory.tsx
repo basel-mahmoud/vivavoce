@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { motion, useMotionValueEvent, useScroll, useTransform, type MotionValue } from 'motion/react';
+import { Pause } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { AXES, ROUNDS, weakestIndex } from './data';
 import { HERO_END, OUTRO, beatAt, marksAt, ramp } from './story';
@@ -138,6 +139,8 @@ export function RoomStory() {
   const [ready, setReady] = useState(false);
   // a live room that failed (a chunk, the model, the WebGL context) hands back to its poster for good
   const [failed, setFailed] = useState(false);
+  // "Pause the room": the example round and the panel's idle life stop (WCAG 2.2.2)
+  const [paused, setPaused] = useState(false);
   const [active, setActive] = useState(true);
   const [inHero, setInHero] = useState(true);
   const [beat, setBeat] = useState(-1);
@@ -229,12 +232,13 @@ export function RoomStory() {
     return () => ro.disconnect();
   }, [outro]);
 
-  const playing = ready && active && inHero && pageVisible && !reduce;
+  const playing = ready && active && inHero && pageVisible && !reduce && !paused;
   const onReady = useCallback(() => setReady(true), []);
   const onFail = useCallback(() => {
     setFailed(true);
     setReady(false);
   }, []);
+  const togglePause = useCallback(() => setPaused((p) => !p), []);
   const onRound = useCallback((r: RoundState) => {
     setRound((prev) => (prev.index === r.index && prev.phase === r.phase && prev.mode === r.mode ? prev : r));
   }, []);
@@ -271,6 +275,7 @@ export function RoomStory() {
 
   // the guidance line shows wherever the whole panel's marks do: the hero and the outro
   const guidance = useTransform(scrollYProgress, (v) => ramp(v, [0, HERO_END, OUTRO - 0.07, OUTRO - 0.025], [1, 0, 0, 1]));
+  const guideVisibility = useTransform(guidance, (o) => (o > 0.02 ? 'visible' : 'hidden'));
   // the slip's newest mark: the examiner on stage, the last one reached between beats, and the
   // one to fix first once the whole panel has marked
   const current = outro ? WEAKEST : beat >= 0 ? beat : reached - 1;
@@ -287,6 +292,7 @@ export function RoomStory() {
                 active={active && pageVisible}
                 playing={playing}
                 reduce={reduce}
+                paused={paused}
                 dark={dark}
                 insets={insets}
                 overlaysRef={overlaysRef}
@@ -306,7 +312,7 @@ export function RoomStory() {
           className={cn(styles.layer, 'pointer-events-none size-full opacity-0')}
         />
         <div className={cn('transition-opacity duration-700 ease-out', ready ? 'opacity-100' : 'opacity-0')}>
-          <RoomTags round={round} reduce={reduce} overlaysRef={overlaysRef} />
+          <RoomTags round={round} still={reduce || paused} overlaysRef={overlaysRef} />
         </div>
         <Sheet progress={scrollYProgress} depth={outro ? insets.outro : insets.beat} />
         <div ref={captions} className={styles.captions}>
@@ -330,15 +336,20 @@ export function RoomStory() {
           </div>
         </div>
         <Ruler progress={scrollYProgress} current={beat} onJump={jump} />
-        <motion.p
+        <motion.div
           ref={(el) => {
             overlaysRef.current.guide = el;
           }}
-          style={{ opacity: guidance }}
-          className={cn(styles.guide, 'pointer-events-none text-[0.78rem] font-semibold text-ink-mut')}
+          style={{ opacity: guidance, visibility: guideVisibility }}
+          data-live={ready ? 'true' : undefined}
+          className={styles.guide}
         >
-          Example round. Scores are guidance, not grades.
-        </motion.p>
+          <p className={styles.guideNote}>Example round. Scores are guidance, not grades.</p>
+          <button type="button" aria-pressed={paused} onClick={togglePause} className={cn(styles.pause, 'pressable')}>
+            <Pause aria-hidden size={13} strokeWidth={2.4} />
+            <span className={styles.pauseLabel}>Pause the room</span>
+          </button>
+        </motion.div>
       </div>
     </section>
   );

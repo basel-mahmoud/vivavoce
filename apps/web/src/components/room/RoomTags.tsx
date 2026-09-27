@@ -18,7 +18,16 @@ const TAG = 'absolute left-0 top-0 rounded-[0.9rem] border border-line bg-card p
  * whole panel saying it is listening. The Director positions them every frame; React only changes
  * their words when the phase does.
  */
-export function RoomTags({ round, reduce, overlaysRef }: { round: RoundState; reduce: boolean; overlaysRef: React.RefObject<RoomOverlays> }) {
+export function RoomTags({
+  round,
+  still,
+  overlaysRef,
+}: {
+  round: RoundState;
+  /** Reduced motion or a paused room: the words are simply there, never typed. */
+  still: boolean;
+  overlaysRef: React.RefObject<RoomOverlays>;
+}) {
   const outro = round.mode === 'outro';
   const cue = round.mode === 'cue';
   const script = ROUNDS[outro ? 0 : round.index % ROUNDS.length]!;
@@ -57,7 +66,7 @@ export function RoomTags({ round, reduce, overlaysRef }: { round: RoundState; re
               {cue ? 'The panel, listening' : `${AXES[speaker]!.label}${following ? ', follow-up' : ', asking'}`}
             </p>
             <p className={cn(styles.tagText, 'mt-0.5 font-bold leading-snug text-ink')}>
-              <TypeLine key={`${round.mode}-${round.index}-${round.phase}`} text={words} instant={reduce} cps={44} caret={false} />
+              <TypeLine key={`${round.mode}-${round.index}-${round.phase}`} text={words} instant={still} cps={44} caret={false} />
             </p>
           </>
         )}
@@ -75,7 +84,7 @@ export function RoomTags({ round, reduce, overlaysRef }: { round: RoundState; re
           <>
             <p className="text-[0.72rem] font-bold text-ink-blue">You, answering</p>
             <p className="mt-0.5 font-semibold leading-snug text-ink-blue">
-              <TypeLine key={`${round.index}-answer`} text={script.answer} instant={reduce} cps={40} />
+              <TypeLine key={`${round.index}-answer`} text={script.answer} instant={still} cps={40} />
             </p>
           </>
         )}

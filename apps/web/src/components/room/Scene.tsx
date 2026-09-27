@@ -67,6 +67,8 @@ export interface SceneProps {
   /** The hero's example round may play (in view, tab visible, past the intro). */
   playing: boolean;
   reduce: boolean;
+  /** "Pause the room": no example round and no idle life, as under reduced motion. */
+  paused: boolean;
   dark: boolean;
   insets: Insets;
   overlaysRef: React.RefObject<RoomOverlays>;
@@ -160,6 +162,7 @@ function DevProbe() {
 function Room({
   progress,
   reduce,
+  paused,
   dark,
   insets,
   playing,
@@ -195,6 +198,7 @@ function Room({
       <Director
         progress={progress}
         reduce={reduce}
+        paused={paused}
         insets={insets}
         playing={playing}
         channelsRef={channelsRef}
@@ -246,7 +250,7 @@ function Reveal({ ready, onReady }: { ready: boolean; onReady: () => void }) {
 }
 
 /** The viva room. Client-only; loaded lazily by RoomStory. */
-export default function Scene({ progress, active, playing, reduce, dark, insets, overlaysRef, cueRef, onReady, onRound, onLost }: SceneProps) {
+export default function Scene({ progress, active, playing, reduce, paused, dark, insets, overlaysRef, cueRef, onReady, onRound, onLost }: SceneProps) {
   const [startTier] = useState<Tier>(guessTier);
   const [tier, setTier] = useState<Tier>(startTier);
   const [locked] = useState(forcedTier);
@@ -300,6 +304,7 @@ export default function Scene({ progress, active, playing, reduce, dark, insets,
         <Room
           progress={progress}
           reduce={reduce}
+          paused={paused}
           dark={dark}
           insets={insets}
           playing={playing}
