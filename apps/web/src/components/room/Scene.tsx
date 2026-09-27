@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState, type ComponentType } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
@@ -18,8 +18,23 @@ import { stillAt } from './story';
 export type { Insets } from './camera';
 export type { RoomCue, RoomOverlays, RoundState } from './Director';
 
-/** The post chain (N8AO, SMAA, depth of field) is its own chunk, fetched only on desktop tiers. */
-const Post = lazy(() => import('./Post'));
+/**
+ * The post chain (N8AO, SMAA, depth of field) is its own chunk, fetched only on desktop tiers. If
+ * it cannot be fetched the room goes on without it, as it does on phones.
+ */
+const Post = lazy<ComponentType<PostProps>>(() => import('./Post').catch(() => ({ default: NoPost })));
+
+interface PostProps {
+  tier: 2 | 3;
+  dark: boolean;
+  dofRef: React.RefObject<DofState>;
+  onReady?: () => void;
+}
+
+function NoPost({ onReady }: PostProps) {
+  useEffect(() => onReady?.(), [onReady]);
+  return null;
+}
 
 type Tier = 1 | 2 | 3;
 
@@ -58,6 +73,8 @@ export interface SceneProps {
   cueRef: React.RefObject<RoomCue>;
   onReady: () => void;
   onRound: (r: RoundState) => void;
+  /** The WebGL context is gone: the poster takes over again. */
+  onLost: () => void;
 }
 
 /** Under reduced motion the canvas renders on demand: redraw when the scroll crosses into a new still. */
@@ -152,7 +169,7 @@ function Room({
   dofRef,
   onRound,
   onPanel,
-}: Omit<SceneProps, 'active' | 'onReady'> & {
+}: Omit<SceneProps, 'active' | 'onReady' | 'onLost'> & {
   tier: Tier;
   dofRef: React.RefObject<DofState>;
   onPanel: (cast: Cast) => void;
@@ -229,7 +246,7 @@ function Reveal({ ready, onReady }: { ready: boolean; onReady: () => void }) {
 }
 
 /** The viva room. Client-only; loaded lazily by RoomStory. */
-export default function Scene({ progress, active, playing, reduce, dark, insets, overlaysRef, cueRef, onReady, onRound }: SceneProps) {
+export default function Scene({ progress, active, playing, reduce, dark, insets, overlaysRef, cueRef, onReady, onRound, onLost }: SceneProps) {
   const [startTier] = useState<Tier>(guessTier);
   const [tier, setTier] = useState<Tier>(startTier);
   const [locked] = useState(forcedTier);
@@ -261,7 +278,11 @@ export default function Scene({ progress, active, playing, reduce, dark, insets,
         toneMapping: THREE.NeutralToneMapping,
         preserveDrawingBuffer: reduce,
       }}
-      onCreated={({ gl }) => gl.setClearColor(dark ? CANVAS.dark : CANVAS.light, 1)}
+      onCreated={({ gl }) => {
+        gl.setClearColor(dark ? CANVAS.dark : CANVAS.light, 1);
+        // a lost context (a GPU reset, a phone reclaiming memory) hands the stage back to the poster
+        gl.domElement.addEventListener('webglcontextlost', onLost, { once: true });
+      }}
       aria-hidden
       tabIndex={-1}
     >

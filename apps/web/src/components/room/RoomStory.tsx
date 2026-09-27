@@ -11,6 +11,7 @@ import { ScriptSlip } from './ScriptSlip';
 import { Ruler } from './Ruler';
 import { RoomTags } from './RoomTags';
 import { RoomPoster } from './RoomPoster';
+import { SceneBoundary } from './SceneBoundary';
 import type { Insets, RoomCue, RoomOverlays, RoundState } from './Scene';
 import styles from './room.module.css';
 
@@ -25,7 +26,10 @@ function probeWebGL(): boolean {
   if (webglCache !== null) return webglCache;
   try {
     const c = document.createElement('canvas');
-    webglCache = Boolean(c.getContext('webgl2') ?? c.getContext('webgl'));
+    const gl = (c.getContext('webgl2') ?? c.getContext('webgl')) as WebGLRenderingContext | null;
+    webglCache = Boolean(gl);
+    // hand the probe's context straight back: browsers cap live contexts, and the room needs one
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
   } catch {
     webglCache = false;
   }
@@ -105,6 +109,8 @@ export function RoomStory() {
   const webgl = useWebGL();
   const pageVisible = usePageVisible();
   const [ready, setReady] = useState(false);
+  // a live room that failed (a chunk, the model, the WebGL context) hands back to its poster for good
+  const [failed, setFailed] = useState(false);
   const [active, setActive] = useState(true);
   const [inHero, setInHero] = useState(true);
   const [beat, setBeat] = useState(-1);
@@ -191,6 +197,10 @@ export function RoomStory() {
 
   const playing = ready && active && inHero && pageVisible && !reduce;
   const onReady = useCallback(() => setReady(true), []);
+  const onFail = useCallback(() => {
+    setFailed(true);
+    setReady(false);
+  }, []);
   const onRound = useCallback((r: RoundState) => {
     setRound((prev) => (prev.index === r.index && prev.phase === r.phase && prev.mode === r.mode ? prev : r));
   }, []);
@@ -235,20 +245,23 @@ export function RoomStory() {
     <section ref={section} aria-label="VivaVoce, the viva room" data-ready={ready ? 'true' : undefined} className="relative h-[520svh]">
       <div className={styles.stage}>
         <RoomPoster hidden={ready} />
-        {webgl === true && (
+        {webgl === true && !failed && (
           <div data-room-canvas className={cn(styles.layer, 'transition-opacity duration-700 ease-out', ready ? 'opacity-100' : 'opacity-0')}>
-            <Scene
-              progress={scrollYProgress}
-              active={active && pageVisible}
-              playing={playing}
-              reduce={reduce}
-              dark={dark}
-              insets={insets}
-              overlaysRef={overlaysRef}
-              cueRef={cueRef}
-              onReady={onReady}
-              onRound={onRound}
-            />
+            <SceneBoundary onError={onFail}>
+              <Scene
+                progress={scrollYProgress}
+                active={active && pageVisible}
+                playing={playing}
+                reduce={reduce}
+                dark={dark}
+                insets={insets}
+                overlaysRef={overlaysRef}
+                cueRef={cueRef}
+                onReady={onReady}
+                onRound={onRound}
+                onLost={onFail}
+              />
+            </SceneBoundary>
           </div>
         )}
         <canvas
