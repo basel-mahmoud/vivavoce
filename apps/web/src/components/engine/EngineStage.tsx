@@ -9,7 +9,7 @@ import { createChannels, type PanelChannels } from '@/components/room/panel/chan
 import type { Cast } from '@/components/room/panel/cast';
 import { Studio, type FocusLight } from '@/components/room/set/Studio';
 import { CANVAS, Cyclorama } from '@/components/room/set/Cyclorama';
-import { ContactBlot, Lamp } from '@/components/room/set/Props';
+import { Lamp, Riser } from '@/components/room/set/Props';
 import { HERO_COINS, HERO_COINS_COMPACT, bodyPoints, coinPoints, coinVec, frame, labelPoints } from '@/components/room/camera';
 import { EXAMINERS, SEATS, VISORS } from '@/components/room/examiners/rig';
 import { verdictFace } from '@/components/room/data';
@@ -440,6 +440,8 @@ export default function EngineStage({ cueRef, meterRef, overlaysRef, dark, activ
   const castRef = useRef<Cast | null>(null);
   // where the lamp pool and the ruled wall fade out (StageDirector sets it from the layout)
   const maskRef = useRef(new THREE.Vector4(-2, -1, 0, 0.14));
+  // how far in from each frame edge the set fades to the page (the room's resting values)
+  const edgeRef = useRef(new THREE.Vector4(0.04, 0.04, 0.06, 0.06));
   const dofRef = useRef<DofState>({ focus: new THREE.Vector3(), amount: 0 });
   const [panel, setPanel] = useState(false);
   const [post, setPost] = useState(tier === 1);
@@ -488,8 +490,8 @@ export default function EngineStage({ cueRef, meterRef, overlaysRef, dark, activ
           fine={fine}
         />
         <Studio dark={dark} shadows={shadows} focusRef={focusRef} />
-        <Cyclorama dark={dark} shadows={shadows} focusRef={focusRef} maskRef={maskRef} />
-        {!shadows && <ContactBlot dark={dark} />}
+        <Cyclorama dark={dark} shadows={shadows} focusRef={focusRef} maskRef={maskRef} edgeRef={edgeRef} />
+        <Riser dark={dark} shadows={shadows} />
         <Lamp dark={dark} />
         {/* stepped frames are already on the round's (possibly slowed) clock: the cast takes them as they come */}
         <Panel channelsRef={channelsRef} dark={dark} shadows={shadows} onReady={onCast} timeScale={stepping ? 1 : undefined} />
