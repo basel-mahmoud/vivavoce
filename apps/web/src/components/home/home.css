@@ -1873,7 +1873,9 @@
     --dx: 6%;
     --dy: 5.4rem;
     position: relative;
-    height: 17rem;
+    /* Room for the last card with its question on two lines, so it never
+       covers the caption under the pile on a narrow phone. */
+    height: calc(2 * var(--dy) + 8rem);
     margin-top: -1rem;
   }
   /* An examiner's card: the red margin rule down its left, like the page it
