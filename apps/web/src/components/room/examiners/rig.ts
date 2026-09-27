@@ -10,6 +10,7 @@
  */
 import * as THREE from 'three';
 import type { FaceState } from './faceMaterial';
+import { asset } from '../../../lib/assets';
 
 /* ── Names ────────────────────────────────────────────────────────────── */
 
@@ -1040,8 +1041,8 @@ export const PORTRAIT_STATES = ['neutral', 'listening', 'pleased', 'sceptical', 
 export type PortraitState = (typeof PORTRAIT_STATES)[number];
 /** Sprite sizes in px (width, height): head and shoulders, and the half body with the paddle raised. */
 export const PORTRAIT_SIZE = { head: [360, 360], raised: [480, 600] } as const;
-export const portraitSrc = (key: ExaminerKey, state: PortraitState) => `/examiners/${key}-${state}.webp`;
-export const raisedSrc = (key: ExaminerKey) => `/examiners/${key}-raised.webp`;
+export const portraitSrc = (key: ExaminerKey, state: PortraitState) => asset(`/examiners/${key}-${state}.webp`);
+export const raisedSrc = (key: ExaminerKey) => asset(`/examiners/${key}-raised.webp`);
 
 /**
  * The raised sprites hold a blank coin square to the camera: set the live mark over it in JetBrains

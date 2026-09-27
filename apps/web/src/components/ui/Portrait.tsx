@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { asset } from '@/lib/assets';
 import { cn } from '@/lib/cn';
 
 export type ExaminerAxis = 'correctness' | 'clarity' | 'structure' | 'conciseness' | 'confidence';
@@ -24,9 +25,9 @@ const STATE_WORD: Record<ExaminerState, string> = {
   raised: 'raising a paddle',
 };
 
-/** Where the renders live: /examiners/<axis>-<state>.webp. */
+/** Where the renders live: /examiners/<axis>-<state>.webp (versioned, so they are cached for a year). */
 export function portraitSrc(axis: ExaminerAxis, state: ExaminerState) {
-  return `/examiners/${axis}-${state}.webp`;
+  return asset(`/examiners/${axis}-${state}.webp`);
 }
 
 export interface PortraitProps {
