@@ -286,10 +286,16 @@ export function Round({ className }: { className?: string }) {
                 </li>
               ))}
             </ol>
-            {/* Phones: the moment on show, written out under the row of step keys. */}
+            {/* Phones: the moment on show, written out under the row of step keys. Every
+                moment sits in the same cell, so the block keeps the height of the longest
+                and the stage never shifts as you step through. */}
             <div className="vv-round-now" aria-hidden="true">
-              <p className="vv-round-now-title">{phase.title}</p>
-              <p className="vv-round-now-line">{phase.line}</p>
+              {PHASES.map((p, i) => (
+                <div key={p.id} className="vv-round-now-item" data-on={i === at ? '' : undefined}>
+                  <p className="vv-round-now-title">{p.title}</p>
+                  <p className="vv-round-now-line">{p.line}</p>
+                </div>
+              ))}
             </div>
           </div>
 

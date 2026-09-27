@@ -506,7 +506,15 @@
     white-space: nowrap;
   }
   .vv-round-now {
+    display: grid;
     margin-top: 0.35rem;
+  }
+  .vv-round-now-item {
+    grid-area: 1 / 1;
+    visibility: hidden;
+  }
+  .vv-round-now-item[data-on] {
+    visibility: visible;
   }
   .vv-round-now-title {
     font-size: 1.3rem;
@@ -564,11 +572,12 @@
     color: var(--color-verm-text);
   }
 
-  /* The desk: whatever is on paper at this moment, lying in front of them. */
+  /* The desk: whatever is on paper at this moment, lying in front of them.
+     Tall enough for the transcript, so the stage holds still as papers change. */
   .vv-round-desk {
     position: relative;
     display: grid;
-    min-height: 13.75rem;
+    min-height: 14.5rem;
     margin-top: 0.8rem;
   }
   .vv-round-desk-item {
