@@ -1,0 +1,4 @@
+{
+  "prompt": "Rendered, not generated: the live room scene (src/components/room) at 768x1024 CSS px, 1.5x, light scheme, reduced motion (the still, marked hero), render tier 1; captured with Playwright and encoded by sharp in scripts/room/posters.mjs. Models and maps: examiners.glb and its procedural detail textures (scripts/examiners); no third-party imagery.",
+  "createdAt": "2026-09-27T16:54:23.698Z"
+}

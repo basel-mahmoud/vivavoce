@@ -3,13 +3,17 @@ import styles from './room.module.css';
 
 /** Compact: phones and portrait tablets, the same test the camera and the layout use. */
 const COMPACT = '(max-width: 599px), (max-aspect-ratio: 21/20)';
+/** Portrait tablets: compact, but wide enough that the room sits well below a shorter caption. */
+const TABLET = '(min-width: 600px) and (max-aspect-ratio: 21/20)';
 const DARK = '(prefers-color-scheme: dark)';
 const DARK_COMPACT = `${DARK} and (max-width: 599px), ${DARK} and (max-aspect-ratio: 21/20)`;
+const DARK_TABLET = `${DARK} and ${TABLET}`;
 
 /** Rendered from the live scene by scripts/room/posters.mjs (see its header for provenance). */
 export const POSTERS = {
   wide: { light: '/room/hero-light-1440', dark: '/room/hero-dark-1440', width: 1440, height: 900 },
   compact: { light: '/room/hero-light-390', dark: '/room/hero-dark-390', width: 780, height: 1688 },
+  tablet: { light: '/room/hero-light-768', dark: '/room/hero-dark-768', width: 1152, height: 1536 },
 } as const;
 
 export const POSTER_ALT =
@@ -23,9 +27,13 @@ export const POSTER_ALT =
  * scheme and layout by media queries, so no script is involved.
  */
 export function RoomPoster({ hidden }: { hidden: boolean }) {
-  const { wide, compact } = POSTERS;
+  const { wide, compact, tablet } = POSTERS;
   return (
     <picture>
+      <source media={DARK_TABLET} type="image/avif" srcSet={`${tablet.dark}.avif`} width={tablet.width} height={tablet.height} />
+      <source media={DARK_TABLET} type="image/webp" srcSet={`${tablet.dark}.webp`} width={tablet.width} height={tablet.height} />
+      <source media={TABLET} type="image/avif" srcSet={`${tablet.light}.avif`} width={tablet.width} height={tablet.height} />
+      <source media={TABLET} type="image/webp" srcSet={`${tablet.light}.webp`} width={tablet.width} height={tablet.height} />
       <source media={DARK_COMPACT} type="image/avif" srcSet={`${compact.dark}.avif`} width={compact.width} height={compact.height} />
       <source media={DARK_COMPACT} type="image/webp" srcSet={`${compact.dark}.webp`} width={compact.width} height={compact.height} />
       <source media={COMPACT} type="image/avif" srcSet={`${compact.light}.avif`} width={compact.width} height={compact.height} />

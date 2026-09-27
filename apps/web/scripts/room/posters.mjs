@@ -1,15 +1,17 @@
 /**
  * Renders the room's LCP posters from the live scene (no painting, no generation): the hero shot
- * as the page first shows it, in both colour schemes, for wide screens (1440 x 900, desktop tier)
- * and phones (390 x 844 at 2x, phone tier), then encodes AVIF and WebP with sharp into
- * public/room/. Reduced motion is emulated so the frame is the still, fully marked panel (no
+ * as the page first shows it, in both colour schemes, for wide screens (1440 x 900, desktop tier),
+ * portrait tablets (768 x 1024 at 1.5x, touch tier) and phones (390 x 844 at 2x, phone tier), then
+ * encodes AVIF and WebP with sharp into public/room/. On compact screens the camera frames the room
+ * under the hero's caption, so re-render those whenever the caption's height changes. Reduced motion is emulated so the frame is the still, fully marked panel (no
  * blink, no breathing), which is also what the live canvas cross-fades from.
  *
  * Each image gets a provenance sidecar (<file>.json, the format `impeccable embed-prompt` reads
  * for AVIF and WebP) stating what it is a render of.
  *
  * Usage (from apps/web, with `next dev` running on BASE, default http://localhost:3200; the
- * dev-only ?tier= override pins the render tier):
+ * dev-only ?tier= override pins the render tier; ONLY=390,768 renders just the posters whose names
+ * contain one of those):
  *   PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs node scripts/room/posters.mjs
  */
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -25,9 +27,11 @@ const OUT = path.resolve('public/room');
 const SHOTS = [
   { name: 'hero-light-1440', scheme: 'light', w: 1440, h: 900, dpr: 1, tier: 2 },
   { name: 'hero-dark-1440', scheme: 'dark', w: 1440, h: 900, dpr: 1, tier: 2 },
+  { name: 'hero-light-768', scheme: 'light', w: 768, h: 1024, dpr: 1.5, tier: 1 },
+  { name: 'hero-dark-768', scheme: 'dark', w: 768, h: 1024, dpr: 1.5, tier: 1 },
   { name: 'hero-light-390', scheme: 'light', w: 390, h: 844, dpr: 2, tier: 1 },
   { name: 'hero-dark-390', scheme: 'dark', w: 390, h: 844, dpr: 2, tier: 1 },
-];
+].filter((s) => !process.env.ONLY || process.env.ONLY.split(',').some((part) => s.name.includes(part)));
 // Only the canvas: no nav, captions, tags, ruler, notes or the previous poster. Opacity, not
 // display or visibility: the captions keep their boxes (phones frame the room below them) and
 // their own inline visibility cannot bring them back.
