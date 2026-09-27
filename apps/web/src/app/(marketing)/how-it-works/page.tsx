@@ -20,7 +20,7 @@ export default function HowItWorksPage() {
     <>
       <PageHero
         title="A minute in the hot seat."
-        intro="No setup and no scheduling another person. Here is one example round, moment by moment: they ask, you answer out loud, five examiners mark it, and the weakest mark comes straight back at you."
+        intro="No setup, and no one to schedule. Here is one round, moment by moment: they ask, you answer out loud, and five examiners mark it."
         flush
       >
         <a href="#live" className="btn btn-primary btn-lg">
