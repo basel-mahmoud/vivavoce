@@ -4,7 +4,8 @@
  * width, so both lines fill the column at every width, "loud" never past 6rem (--hero-max caps it
  * lower on short screens). Motion is CSS only and composited: it plays before hydration, starts
  * from a legible frame, waits for the display face (--vv-type-play and --vv-type-skip, set by the
- * font gate in the root layout) and reduced motion gets the settled frame.
+ * font gate in the root layout, or on the heading by the first-visit loader until its portal opens)
+ * and reduced motion gets the settled frame.
  */
 
 .title {

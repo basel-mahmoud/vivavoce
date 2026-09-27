@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Archivo, JetBrains_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
+import { bootScript } from '@/components/boot/script';
 import { fontGateScript } from '@/components/site/fontGate';
+import versions from '@/lib/asset-versions.json';
 import { site } from '@/lib/site';
 import './globals.css';
 
@@ -59,6 +61,9 @@ export const viewport: Viewport = {
   ],
 };
 
+/** The room's assets are cached for a year under these versions: a new one is a first visit again. */
+const BOOT = bootScript({ key: [versions.models, versions.room, versions.fonts].join('.'), face: archivo.style.fontFamily });
+
 /**
  * The document. Clerk is not here: only the dashboard signs anyone in, so
  * its provider (and its scripts) load there and nowhere else.
@@ -67,7 +72,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${archivo.variable} ${jetbrains.variable}`}>
       <body className="antialiased">
-        {/* before any content is parsed: animated type waits for Archivo (components/site/fontGate) */}
+        {/* before any content is parsed: a first visit to the room opens on its loader (components/boot) */}
+        <script dangerouslySetInnerHTML={{ __html: BOOT }} />
+        {/* animated type waits for Archivo (components/site/fontGate), or for the loader while it shows */}
         <script dangerouslySetInnerHTML={{ __html: fontGateScript(archivo.style.fontFamily) }} />
         <a
           href="#main"

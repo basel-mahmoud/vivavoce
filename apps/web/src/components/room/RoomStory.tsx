@@ -15,12 +15,16 @@ import { RoomPoster } from './RoomPoster';
 import { SceneBoundary } from './SceneBoundary';
 import { prefetchRoom } from './assets';
 import { bootMark, bootShowing, bootStill } from '@/components/boot/client';
+import { installOutro } from '@/components/boot/outro';
 import { useBootHeld, useBootQuiet } from '@/components/boot/useBootHeld';
 import { hasWebGL } from '@/lib/webgl';
 import type { Insets, RoomCue, RoomOverlays, RoundState } from './Scene';
 import styles from './room.module.css';
 
 const Scene = dynamic(() => import('./Scene'), { ssr: false });
+
+// the first-visit loader's stamp and portal come with the room's own code, before the room is ready
+installOutro();
 
 /** Desktops (the same test as the room's tier guess): enough headroom to take the room's code early. */
 function roomyDevice() {
@@ -323,7 +327,8 @@ export function RoomStory() {
 
   return (
     <section ref={section} aria-label="VivaVoce, the viva room" data-ready={ready ? 'true' : undefined} className="relative h-[520svh]">
-      <div className={styles.stage}>
+      {/* data-room-stage: what the first-visit loader's portal opens onto (components/boot/outro.ts) */}
+      <div className={styles.stage} data-room-stage="">
         <RoomPoster hidden={ready} />
         {live && !failed && (
           <div data-room-canvas className={cn(styles.layer, 'transition-opacity duration-700 ease-out', ready ? 'opacity-100' : 'opacity-0')}>
