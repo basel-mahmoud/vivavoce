@@ -54,7 +54,7 @@ const ROOMS: readonly Room[] = [
 function RoomVisual({ id }: { id: string }) {
   if (id === 'viva')
     return (
-      <div className="vv-room-card bg-paper text-coal">
+      <div className="vv-room-card bg-paper-obj text-coal">
         <p className="text-sm font-black">Cardiology viva</p>
         <div className="mt-3 flex items-end justify-between gap-4">
           <p className="text-[0.8rem] font-semibold leading-snug text-coal/70">

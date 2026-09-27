@@ -402,14 +402,15 @@
 
   /* ── Paddle ─────────────────────────────────────────────────────────── */
 
+  /* A paper coin: white by day, lamp-lit at night like the other paper on the desk. */
   .vv-paddle {
     --d: 5rem;
     --t: calc(var(--d) * 0.075);
-    --face: var(--color-paper);
-    --bevel: color-mix(in oklab, var(--color-paper) 88%, var(--color-coal-2));
-    --rim: color-mix(in oklab, var(--color-paper) 70%, var(--color-coal-2));
-    --back: color-mix(in oklab, var(--color-paper) 94%, var(--color-coal-2));
-    --back-ink: color-mix(in oklab, var(--color-coal) 72%, var(--color-paper));
+    --face: var(--color-paper-obj);
+    --bevel: color-mix(in oklab, var(--color-paper-obj) 88%, var(--color-coal-2));
+    --rim: color-mix(in oklab, var(--color-paper-obj) 70%, var(--color-coal-2));
+    --back: color-mix(in oklab, var(--color-paper-obj) 94%, var(--color-coal-2));
+    --back-ink: color-mix(in oklab, var(--color-coal) 72%, var(--color-paper-obj));
     --numeral: var(--color-coal);
     --stick: var(--color-coal);
     display: inline-flex;

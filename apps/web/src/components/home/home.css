@@ -1134,10 +1134,11 @@
     --field-mut: color-mix(in oklab, var(--color-coal) 78%, var(--color-butter));
     --field-focus: var(--color-coal);
   }
+  /* A sheet of paper: lamp-lit at night, like every paper object on the desk. */
   .vv-room[data-field='paper'] {
-    --field: var(--color-paper);
+    --field: var(--color-paper-obj);
     --field-ink: var(--color-coal);
-    --field-mut: color-mix(in oklab, var(--color-coal) 72%, var(--color-paper));
+    --field-mut: color-mix(in oklab, var(--color-coal) 72%, var(--color-paper-obj));
     --field-focus: var(--color-cobalt);
   }
   .vv-room-face {
@@ -1230,8 +1231,8 @@
   }
   .vv-room[data-field='paper'] .vv-room-flood {
     background-image:
-      linear-gradient(to right, transparent 0.55rem, color-mix(in oklab, var(--color-verm) 46%, var(--color-paper)) 0.55rem 0.65rem, transparent 0.65rem),
-      repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper)) calc(1.9rem - 1px) 1.9rem);
+      linear-gradient(to right, transparent 0.55rem, color-mix(in oklab, var(--color-verm) 46%, var(--color-paper-obj)) 0.55rem 0.65rem, transparent 0.65rem),
+      repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper-obj)) calc(1.9rem - 1px) 1.9rem);
   }
   .vv-room-flood .vv-room-body {
     color: var(--field-mut);
@@ -1283,8 +1284,8 @@
     }
     .vv-room[data-field='paper'] .vv-room-flood {
       background-image:
-        linear-gradient(to right, transparent 0.9rem, color-mix(in oklab, var(--color-verm) 46%, var(--color-paper)) 0.9rem 1rem, transparent 1rem),
-        repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper)) calc(1.9rem - 1px) 1.9rem);
+        linear-gradient(to right, transparent 0.9rem, color-mix(in oklab, var(--color-verm) 46%, var(--color-paper-obj)) 0.9rem 1rem, transparent 1rem),
+        repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper-obj)) calc(1.9rem - 1px) 1.9rem);
     }
   }
 
