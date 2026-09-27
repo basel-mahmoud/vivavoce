@@ -5,6 +5,9 @@ import { Interrupts } from '@/components/home/Interrupts';
 import { Modes } from '@/components/home/Modes';
 import { LiveEngine } from '@/components/engine/LiveEngine';
 import { Close } from '@/components/home/Closing';
+import { Deferred } from '@/components/home/Deferred';
+import { EnginePlaceholder } from '@/components/home/EnginePlaceholder';
+import { SectionBoundary } from '@/components/home/SectionBoundary';
 import { pageMeta } from '@/lib/site';
 
 export const metadata = pageMeta({
@@ -37,13 +40,24 @@ export default function FeaturesPage() {
           </figure>
         }
       />
-      <AxesIndex />
-      <Interrupts />
-      <Modes />
-      <div className="pb-24 sm:pb-32">
-        <LiveEngine />
-      </div>
-      <Close />
+      {/* Below the panel, each section renders on the server and hydrates as it comes near. */}
+      <Deferred height="2600px">
+        <AxesIndex />
+      </Deferred>
+      <Deferred height="760px">
+        <Interrupts />
+      </Deferred>
+      <Deferred height="1000px">
+        <Modes />
+      </Deferred>
+      <Deferred height="900px" className="pb-24 sm:pb-32">
+        <SectionBoundary name="live engine" fallback={<EnginePlaceholder />}>
+          <LiveEngine />
+        </SectionBoundary>
+      </Deferred>
+      <Deferred height="1000px">
+        <Close />
+      </Deferred>
     </>
   );
 }

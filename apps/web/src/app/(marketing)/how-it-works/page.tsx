@@ -3,6 +3,9 @@ import { PageHero } from '@/components/site/PageHero';
 import { Round } from '@/components/home/Round';
 import { LiveEngine } from '@/components/engine/LiveEngine';
 import { Close } from '@/components/home/Closing';
+import { Deferred } from '@/components/home/Deferred';
+import { EnginePlaceholder } from '@/components/home/EnginePlaceholder';
+import { SectionBoundary } from '@/components/home/SectionBoundary';
 import { pageMeta } from '@/lib/site';
 
 export const metadata = pageMeta({
@@ -26,10 +29,14 @@ export default function HowItWorksPage() {
         </a>
       </PageHero>
       <Round />
-      <div className="pb-24 pt-10 sm:pb-32 sm:pt-16">
-        <LiveEngine />
-      </div>
-      <Close />
+      <Deferred height="900px" className="pb-24 pt-10 sm:pb-32 sm:pt-16">
+        <SectionBoundary name="live engine" fallback={<EnginePlaceholder />}>
+          <LiveEngine />
+        </SectionBoundary>
+      </Deferred>
+      <Deferred height="1000px">
+        <Close />
+      </Deferred>
     </>
   );
 }
