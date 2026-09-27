@@ -42,6 +42,13 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    // Next 16 keeps Turbopack's cache on disk between production builds, and Vercel restores it
+    // from the previous deployment. A build restored that way shipped CSS without a stylesheet
+    // newly @imported by globals.css (the nav, footer and inner pages lost their styles), while a
+    // clean build of the same commit was correct. Production builds start clean instead.
+    turbopackFileSystemCacheForBuild: false,
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
