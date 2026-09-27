@@ -26,6 +26,8 @@ export interface RoundState {
 /** DOM that the director positions every frame (no React renders). */
 export interface RoomOverlays {
   tag: HTMLElement | null;
+  /** An unseen twin of the tag holding the longest line any note says: the room it needs. */
+  tagSizer: HTMLElement | null;
   leader: HTMLElement | null;
   answer: HTMLElement | null;
   /** "Example round. Scores are guidance, not grades.", set under the bench on wide layouts. */

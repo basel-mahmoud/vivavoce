@@ -168,7 +168,7 @@ export function OutroCaption({
   const visibility = useTransform(opacity, (o) => (o > 0.02 ? 'visible' : 'hidden'));
   return (
     <motion.div style={{ opacity, y, visibility }} onFocus={onFocusBack} className={cn(styles.outro, 'motion-reduce:!transform-none')}>
-      <h2 className="display text-[clamp(2.1rem,8.4vw,3rem)] sm:text-[clamp(2.2rem,3.6vw,3.4rem)]">
+      <h2 className={cn('display text-[clamp(2.1rem,8.4vw,3rem)] sm:text-[clamp(2.2rem,3.6vw,3.4rem)]', styles.outroTitle)}>
         Five marks.{' '}
         <span className="whitespace-nowrap">
           <RedPen mark="underline" play="inview" delay={300}>
@@ -180,7 +180,7 @@ export function OutroCaption({
         Every answer ends with your weakest axis named, a stronger answer to steal from, and a
         follow-up aimed straight at it.
       </p>
-      <a href="#live" className="btn btn-primary btn-lg mt-5 sm:mt-7" {...listenCue(onListen)}>
+      <a href="#live" className={cn('btn btn-primary btn-lg mt-5 sm:mt-7', styles.outroKey)} {...listenCue(onListen)}>
         Answer a question <ArrowRight size={17} aria-hidden />
       </a>
     </motion.div>

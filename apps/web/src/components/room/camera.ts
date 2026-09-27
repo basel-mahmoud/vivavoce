@@ -195,6 +195,8 @@ export interface Insets {
   outro: number;
   /** Where the transcript slip begins under the room on compact layouts (1: not there). */
   floor: number;
+  /** Height of the examiner's note over the panel, in px (0 or absent: not measured yet). */
+  tag?: number;
 }
 
 export interface ShotSet {
@@ -212,19 +214,27 @@ function withKind(name: ShotName, p: Omit<Pose, 'kind' | 'focus'>, focus: THREE.
 
 /**
  * Every stop of the story, fitted to the aspect ratio and the captions. Compact (captions on top)
- * is the same test the DOM layout uses: portrait-ish or narrower than 768px.
+ * is the same test the DOM layout uses: portrait-ish or narrower than 600px.
  */
 export function makeShots(aspect: number, insets: Insets, width = Infinity): ShotSet {
-  const compact = aspect < 1.05 || width < 768;
+  const compact = aspect < 1.05 || width < 600;
   // compact: every stop between the captions and the slip (and so above the ruler under it); the
-  // outro keeps a slot above the panel for the weakest examiner's follow-up (about 125 px), and so
-  // does the hero on short phones, where the panel would otherwise fill the space the notes need
+  // hero and the outro keep a slot above the panel for the examiner's note (its own height, plus
+  // the gap to the copy above and to the marks below), so the note never covers a mark
   const floor = Math.min(1, insets.floor);
   const stageH = Number.isFinite(width) ? width / aspect : 900;
-  const tagRoom = 125 / stageH;
+  const tagRoom = ((insets.tag || 80) + 44) / stageH;
+  // wide: nothing the story needs goes under the nav, however short the screen, and the hero keeps
+  // the note's room between the nav and the marks; a short screen (a phone held sideways) lets the
+  // bench come down toward the bottom edge instead of shrinking the panel further
+  const navClear = Number.isFinite(width) ? Math.min(0.3, 78 / stageH) : 0;
+  const short = stageH <= 540;
+  // where the exam sheet's edge lies on wide layouts (room.module.css .sheet)
+  const sheet = short ? 0.5 : 0.46;
+  const heroTop = Math.max(0.22, navClear + ((insets.tag || 80) + 26) / stageH);
   const R = compact
     ? {
-        hero: { x0: 0.03, x1: 0.97, y0: insets.hero + (stageH < 760 ? 104 / stageH : 0.05), y1: 0.93 },
+        hero: { x0: 0.03, x1: 0.97, y0: insets.hero + tagRoom, y1: 0.93 },
         beat: { x0: 0.06, x1: 0.94, y0: insets.beat + 0.04, y1: Math.min(0.86, floor - 0.025) },
         close: { x0: 0.1, x1: 0.9, y0: insets.beat + 0.05, y1: Math.min(0.84, floor - 0.03) },
         outro: { x0: 0.04, x1: 0.96, y0: insets.outro + tagRoom, y1: Math.min(0.9, floor - 0.02) },
@@ -232,12 +242,12 @@ export function makeShots(aspect: number, insets: Insets, width = Infinity): Sho
       }
     : {
         // the panel bleeds off the right edge (the lamp, the bench end, Confidence's headset)
-        hero: { x0: 0.465, x1: 1.02, y0: 0.22, y1: 0.74 },
-        // right of the exam sheet's edge (46%)
-        beat: { x0: 0.52, x1: 0.94, y0: 0.15, y1: 0.85 },
-        close: { x0: 0.52, x1: 0.93, y0: 0.16, y1: 0.84 },
-        outro: { x0: 0.5, x1: 0.99, y0: 0.25, y1: 0.76 },
-        handoff: { x0: 0.5, x1: 0.97, y0: 0.2, y1: 0.86 },
+        hero: { x0: 0.465, x1: 1.02, y0: heroTop, y1: short ? 0.86 : 0.74 },
+        // right of the exam sheet's edge (46%, or 50% on a short screen)
+        beat: { x0: sheet + 0.06, x1: 0.94, y0: Math.max(0.15, navClear), y1: 0.85 },
+        close: { x0: sheet + 0.06, x1: 0.93, y0: Math.max(0.16, navClear), y1: 0.84 },
+        outro: { x0: sheet + 0.04, x1: 0.99, y0: Math.max(0.25, heroTop), y1: short ? 0.86 : 0.76 },
+        handoff: { x0: sheet + 0.04, x1: 0.97, y0: Math.max(0.2, navClear), y1: 0.86 },
       };
 
   const coinsHero = (compact ? HERO_COINS_COMPACT : HERO_COINS).map(coinVec);

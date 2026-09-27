@@ -53,7 +53,7 @@ export const ROUNDS: readonly ExampleRound[] = [
     question: 'Why do candidates who know the material still fail the viva?',
     answer: 'Um, there are basically lots of reasons, like nerves. The marking is unfair anyway…',
     scores: [71, 66, 48, 62, 54],
-    followUp: 'You buried your claim. What is the one-line answer?',
+    followUp: 'You buried your claim. What is the one-\u2060line answer?',
     asker: 1,
   },
   {

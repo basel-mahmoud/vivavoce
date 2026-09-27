@@ -7,6 +7,9 @@ import type { RoomOverlays, RoundState } from './Director';
 import styles from './room.module.css';
 
 const LISTENING = 'Go on. We are listening.';
+/** The longest line any note says: an unseen twin of the note sized to it is what the camera keeps room for. */
+const LONGEST = [...ROUNDS.flatMap((r) => [r.question, r.followUp]), LISTENING].reduce((a, b) => (b.length > a.length ? b : a));
+const TAG = 'absolute left-0 top-0 rounded-[0.9rem] border border-line bg-card px-3.5 pb-2.5 pt-2 shadow-paper';
 
 /**
  * The room's words, as notes pinned above the panel (never over a face or a raised mark): the
@@ -29,6 +32,15 @@ export function RoomTags({ round, reduce, overlaysRef }: { round: RoundState; re
     <div aria-hidden className="pointer-events-none absolute inset-0 z-[6] overflow-hidden">
       <div
         ref={(el) => {
+          overlaysRef.current.tagSizer = el;
+        }}
+        className={cn(styles.tag, TAG, 'invisible')}
+      >
+        <p className="text-[0.72rem] font-bold">Structure, follow-up</p>
+        <p className={cn(styles.tagText, 'mt-0.5 font-bold leading-snug')}>{LONGEST}</p>
+      </div>
+      <div
+        ref={(el) => {
           overlaysRef.current.leader = el;
         }}
         className="absolute left-0 top-0 h-px w-[1.5px] origin-top bg-verm-text opacity-0 transition-opacity duration-200"
@@ -37,14 +49,14 @@ export function RoomTags({ round, reduce, overlaysRef }: { round: RoundState; re
         ref={(el) => {
           overlaysRef.current.tag = el;
         }}
-        className="absolute left-0 top-0 w-[min(17rem,calc(100vw-2rem))] rounded-[0.9rem] border border-line bg-card px-3.5 pb-2.5 pt-2 opacity-0 shadow-paper transition-opacity duration-200"
+        className={cn(styles.tag, TAG, 'opacity-0 transition-opacity duration-200')}
       >
         {(speaker >= 0 || cue) && (
           <>
             <p className="text-[0.72rem] font-bold text-verm-text">
               {cue ? 'The panel, listening' : `${AXES[speaker]!.label}${following ? ', follow-up' : ', asking'}`}
             </p>
-            <p className="mt-0.5 min-h-[2.5em] text-[0.94rem] font-bold leading-snug text-ink">
+            <p className={cn(styles.tagText, 'mt-0.5 font-bold leading-snug text-ink')}>
               <TypeLine key={`${round.mode}-${round.index}-${round.phase}`} text={words} instant={reduce} cps={44} caret={false} />
             </p>
           </>

@@ -145,8 +145,8 @@ export function RoomStory() {
   const [outro, setOutro] = useState(false);
   const [round, setRound] = useState<RoundState>({ index: 0, phase: 'follow', mode: 'round' });
   const captions = useRef<HTMLDivElement>(null);
-  const [insets, setInsets] = useState<Insets>({ hero: 0.42, beat: 0.36, outro: 0.36, floor: 1 });
-  const overlaysRef = useRef<RoomOverlays>({ tag: null, leader: null, answer: null, guide: null, fade: null });
+  const [insets, setInsets] = useState<Insets>({ hero: 0.42, beat: 0.36, outro: 0.36, floor: 1, tag: 0 });
+  const overlaysRef = useRef<RoomOverlays>({ tag: null, tagSizer: null, leader: null, answer: null, guide: null, fade: null });
   const cueRef = useRef<RoomCue>({ listen: false, x: 0, y: 0, wake: null });
 
   const { scrollYProgress } = useScroll({ target: section, offset: ['start start', 'end end'] });
@@ -202,14 +202,19 @@ export function RoomStory() {
       // on compact layouts the slip lies under the room, pinned above the ruler
       const slip = box.querySelector<HTMLElement>('[data-cap="slip"]');
       const under = slip !== null && getComputedStyle(slip).position === 'absolute';
+      // the examiner's note needs its own room above the panel (as tall as its longest line makes
+      // it), so it never covers a mark
+      const tag = overlaysRef.current.tagSizer?.offsetHeight ?? 0;
       const next: Insets = {
         hero: bottomOf('hero', 0.42),
         beat: bottomOf('beat', 0.36),
         outro: bottomOf('outro', 0.36),
         floor: under && slip ? Math.max(0.5, topOf(slip) / h) : 1,
+        tag,
       };
       setInsets((prev) =>
-        Math.abs(prev.hero - next.hero) + Math.abs(prev.beat - next.beat) + Math.abs(prev.outro - next.outro) + Math.abs(prev.floor - next.floor) < 0.004
+        Math.abs(prev.hero - next.hero) + Math.abs(prev.beat - next.beat) + Math.abs(prev.outro - next.outro) + Math.abs(prev.floor - next.floor) < 0.004 &&
+        Math.abs((prev.tag ?? 0) - (next.tag ?? 0)) < 2
           ? prev
           : next,
       );
@@ -219,6 +224,8 @@ export function RoomStory() {
     ro.observe(box);
     ro.observe(stageEl);
     box.querySelectorAll('[data-cap]').forEach((el) => ro.observe(el));
+    const sizer = overlaysRef.current.tagSizer;
+    if (sizer) ro.observe(sizer);
     return () => ro.disconnect();
   }, [outro]);
 

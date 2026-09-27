@@ -3,9 +3,9 @@
  * script), so the server and the client always render the same markup:
  *   compact (phones, portrait tablets): the note on top, the room in the middle,
  *     the transcript slip under it above the ruler;
- *   wide (landscape, 768px and up): the exam sheet down the left side carrying
- *     the note and the slip, the room right.
- * The 3D camera uses the same test (aspect below 1.05 or narrower than 768px).
+ *   wide (landscape, 600px and up, phones held sideways included): the exam
+ *     sheet down the left side carrying the note and the slip, the room right.
+ * The 3D camera uses the same test (aspect below 1.05 or narrower than 600px).
  * Colours are theme tokens only.
  */
 
@@ -293,10 +293,12 @@
 .slipLine:not(.slipAsk) {
   font-weight: 600;
 }
-/* the buried claim is one box, so the bracket closes around it alone */
+/* the buried claim is one box, so the bracket closes around it alone; hung from the top of its
+   line, so when it wraps it takes exactly its own lines of the ruling */
 .slipClaim {
   display: inline-block;
   max-width: 100%;
+  vertical-align: top;
 }
 .slipArrow {
   position: absolute;
@@ -347,7 +349,14 @@
   transition: opacity 300ms ease;
 }
 
-/* The candidate's words over the panel, in blue ink. */
+/* The examiner's note over the panel, and the candidate's words in blue ink. */
+.tag {
+  width: min(17rem, calc(100vw - 2rem));
+}
+.tagText {
+  min-height: 2.5em;
+  font-size: 0.94rem;
+}
 .answer {
   width: min(19rem, calc(100vw - 2rem));
   font-size: 0.92rem;
@@ -367,6 +376,24 @@
   border-radius: 0.75rem;
   background: var(--color-card);
   box-shadow: var(--shadow-paper);
+  container-type: inline-size;
+}
+
+/* A key reads as its examiner's name where five names fit (the ruler is at least 32rem long),
+   and as the mark otherwise; the accessible name always carries both. */
+.rulerMark {
+  font-size: 0.86rem;
+}
+.rulerName {
+  display: none;
+}
+@container (min-width: 32rem) {
+  .rulerMark {
+    display: none;
+  }
+  .rulerName {
+    display: inline;
+  }
 }
 
 /* The figure caption under the panel: "Example round", and that scores are guidance. On wide
@@ -382,14 +409,6 @@
   white-space: nowrap;
 }
 
-/* Phones label the ruler's keys with the marks; wide layouts with the examiners' names. */
-.rulerMark {
-  font-size: 0.86rem;
-}
-.rulerName {
-  display: none;
-}
-
 @media (min-width: 640px) {
   .captions {
     padding-inline: 1.5rem;
@@ -403,8 +422,39 @@
   }
 }
 
+/* Short phones (and phones behind Safari's toolbars): the promise in two lines and the keys on one
+   row, so the panel keeps its share of the screen with room above it for the examiner's note. */
+@media (max-width: 599px) and (max-height: 760px), (max-aspect-ratio: 21/20) and (max-height: 760px) {
+  .heroTitle {
+    font-size: clamp(1.9rem, 9.3vw, 2.45rem);
+  }
+  .heroLead {
+    margin-top: 0.6rem;
+    font-size: 0.96rem;
+    line-height: 1.5;
+  }
+  .heroKeys {
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+    margin-top: 0.9rem;
+  }
+  .heroKey {
+    gap: 0.4rem;
+    height: 2.75rem;
+    padding-inline: 0.8rem;
+    font-size: 0.86rem;
+  }
+  .tag {
+    width: calc(100vw - 1.5rem);
+    padding: 0.35rem 0.8rem 0.45rem;
+  }
+  .tagText {
+    font-size: 0.86rem;
+  }
+}
+
 /* Short phones: the room keeps its share of the screen. */
-@media (max-height: 720px) and (max-width: 767px) {
+@media (max-width: 599px) and (max-height: 720px), (max-aspect-ratio: 21/20) and (max-height: 720px) {
   .answer {
     width: calc(100vw - 1.5rem);
     padding-block: 0.3rem 0.4rem;
@@ -422,7 +472,7 @@
   }
 }
 
-@media (min-width: 768px) and (min-aspect-ratio: 21/20) {
+@media (min-width: 600px) and (min-aspect-ratio: 21/20) {
   .poster {
     object-position: 100% 50%;
   }
@@ -525,19 +575,15 @@
     top: 0;
     bottom: auto;
   }
-  .rulerMark {
-    display: none;
-  }
-  .rulerName {
-    display: inline;
-  }
+  /* the promise keeps its two lines at every width: the size follows the column ("before it
+     counts." is about 9.6 of its own ems wide) */
   .heroTitle {
-    font-size: clamp(2.4rem, 4vw, 4.6rem);
+    font-size: clamp(1.6rem, min(4vw, (44vw - clamp(2rem, 4.4vw, 4rem) - 0.25rem) / 9.7), 4.6rem);
   }
 }
 
 /* Short wide screens: the note and the slip share the height. */
-@media (min-width: 768px) and (min-aspect-ratio: 21/20) and (max-height: 820px) {
+@media (min-width: 600px) and (min-aspect-ratio: 21/20) and (max-height: 820px) {
   .captions {
     padding-block: 4.75rem 5rem;
   }
@@ -547,6 +593,100 @@
   .slip {
     --lh: 1.5rem;
     font-size: 0.94rem;
+  }
+}
+
+/* Phones held sideways and other short wide screens: the promise stays clear of the nav and
+   everything pinned fits the stage (centred while it fits, from the top when it does not). */
+@media (min-width: 600px) and (min-aspect-ratio: 21/20) and (max-height: 540px) {
+  /* the sheet takes a little more of the width, so the transcript keeps to a few lines */
+  .sheet {
+    width: 50%;
+  }
+  .captions {
+    width: 48%;
+    padding: 4.5rem 1rem 3.3rem clamp(1.25rem, 3vw, 2rem);
+    align-content: safe center;
+  }
+  .heroTitle {
+    font-size: clamp(1.5rem, min(4.1vw, (48vw - clamp(1.25rem, 3vw, 2rem)) / 9.7), 2.6rem);
+  }
+  .heroLead {
+    margin-top: 0.6rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .outroTitle {
+    font-size: clamp(1.35rem, 3.1vw, 2.1rem);
+  }
+  .outroKey {
+    height: 2.5rem;
+    margin-top: 0.6rem;
+    padding-inline: 1rem;
+    font-size: 0.88rem;
+  }
+  /* the examiner's note over the panel: wider and a size down, so it takes two lines at most */
+  .tag {
+    width: min(26rem, 48vw);
+    padding: 0.35rem 0.8rem 0.45rem;
+  }
+  .tagText {
+    font-size: 0.86rem;
+  }
+  .heroKeys {
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .heroKey {
+    gap: 0.4rem;
+    height: 2.75rem;
+    padding-inline: 0.85rem;
+    font-size: 0.88rem;
+  }
+  .script {
+    gap: 0.7rem;
+  }
+  .note {
+    --mark-w: 3.3rem;
+    --gutter: 1rem;
+  }
+  .noteHead {
+    font-size: 1.6rem;
+  }
+  .noteAsk {
+    margin-top: 0.3rem;
+    font-size: 0.95rem;
+  }
+  .noteLine,
+  .outroLine {
+    display: none;
+  }
+  .noteMark {
+    --mk: 1.6rem;
+  }
+  .slip {
+    --lh: 1.22rem;
+    --pad-l: 2.2rem;
+    padding: 0.3rem 0.7rem 0.35rem var(--pad-l);
+    font-size: 0.78rem;
+  }
+  .slip .slipHead,
+  .slip[data-outro] .slipHead,
+  .slip .slipAsk,
+  .slip[data-outro] .slipAsk {
+    display: none;
+  }
+  .slipFix {
+    font-size: 0.78rem;
+  }
+  /* the verdict line takes its room only once the panel has marked (the ruler has gone by then) */
+  .slip:not([data-outro]) .slipFix {
+    display: none;
+  }
+  .ruler {
+    left: clamp(1.25rem, 3vw, 2rem);
+    width: min(33rem, calc(48% - clamp(1.25rem, 3vw, 2rem) - 1rem));
+    bottom: 0.5rem;
   }
 }
 

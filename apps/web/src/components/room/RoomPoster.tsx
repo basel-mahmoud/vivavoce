@@ -2,9 +2,9 @@ import { cn } from '@/lib/cn';
 import styles from './room.module.css';
 
 /** Compact: phones and portrait tablets, the same test the camera and the layout use. */
-const COMPACT = '(max-width: 767px), (max-aspect-ratio: 21/20)';
+const COMPACT = '(max-width: 599px), (max-aspect-ratio: 21/20)';
 const DARK = '(prefers-color-scheme: dark)';
-const DARK_COMPACT = `${DARK} and (max-width: 767px), ${DARK} and (max-aspect-ratio: 21/20)`;
+const DARK_COMPACT = `${DARK} and (max-width: 599px), ${DARK} and (max-aspect-ratio: 21/20)`;
 
 /** Rendered from the live scene by scripts/room/posters.mjs (see its header for provenance). */
 export const POSTERS = {
