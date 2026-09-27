@@ -25,10 +25,11 @@ function Hedge({ children }: { children: string }) {
 }
 
 /**
- * Examiners do not wait for a ramble to end. While it is on screen the
- * examiners' follow-ups land on a hedged answer one after another, and the
- * hedges in it wobble. Off screen everything stops; reduced motion shows
- * the three cards already down and the words still.
+ * Examiners do not wait for a ramble to end. When it comes on screen the
+ * examiners' follow-ups land on a hedged answer one after another while the
+ * hedges in it wobble, once; then the cards stay down and the words go still.
+ * Off screen everything stops; reduced motion shows the three cards already
+ * down and the words still.
  */
 export function Interrupts({ className }: { className?: string }) {
   const uid = useId();
@@ -37,8 +38,10 @@ export function Interrupts({ className }: { className?: string }) {
   const stage = useRef<HTMLDivElement>(null);
   const onScreen = useSeen(stage, '0px 0px -15% 0px');
   const running = onScreen && visible && !reduce;
-  const { beat, round } = useBeat(running, STEPS, { rest: 700 });
+  // One round, then the three cards stay down and the words stay still.
+  const { beat, round } = useBeat(running, STEPS, { rest: 700, loop: false });
   const down = running ? beat : FOLLOW_UPS.length;
+  const wobble = running && beat < FOLLOW_UPS.length;
 
   return (
     <section
@@ -69,7 +72,7 @@ export function Interrupts({ className }: { className?: string }) {
           </p>
         </div>
 
-        <div ref={stage} className="vv-int-stage" data-wobble={running ? '' : undefined}>
+        <div ref={stage} className="vv-int-stage" data-wobble={wobble ? '' : undefined}>
           <svg className="absolute h-0 w-0" aria-hidden="true" focusable="false">
             <defs>
               {[0, 1, 2, 3, 4].map((i) => (

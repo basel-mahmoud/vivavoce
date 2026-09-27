@@ -20,7 +20,7 @@ import {
   type MotionValue,
   type Transition,
 } from 'motion/react';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 import { EASE, SPRING } from '@/lib/motion';
 import { cn } from '@/lib/cn';
 import { MODES, ModePreview } from './ModePreviews';
@@ -59,6 +59,8 @@ interface CardProps {
   onSettled: (index: number) => void;
   onKey: (e: ReactKeyboardEvent<HTMLDivElement>) => void;
   nudge: boolean;
+  /** Changes each time the card is dealt or replayed: its preview plays again from the top. */
+  play: number;
 }
 
 function DeckCard({
@@ -77,6 +79,7 @@ function DeckCard({
   onSettled,
   onKey,
   nudge,
+  play,
 }: CardProps) {
   const mode = MODES[index]!;
   const start = poseFor(slot, narrow);
@@ -233,7 +236,7 @@ function DeckCard({
             <p className="mt-0.5 text-[0.9rem] font-medium leading-snug text-ink-mut">{mode.blurb}</p>
           </header>
           <div className="vv-index-card-body">
-            <ModePreview id={mode.id} running={running} dealt={dealt} />
+            <ModePreview key={play} id={mode.id} running={running} dealt={dealt} />
           </div>
         </article>
       </motion.div>
@@ -255,6 +258,9 @@ export function Modes({ className }: { className?: string }) {
   const [settled, setSettled] = useState(0);
   const [touched, setTouched] = useState(false);
   const [said, setSaid] = useState('');
+  // Each card's preview plays once each time it is dealt, then holds; Replay plays it again.
+  const [plays, setPlays] = useState<readonly number[]>(() => MODES.map(() => 0));
+  const replay = (i: number) => setPlays((p) => p.map((n, j) => (j === i ? n + 1 : n)));
   const move = useRef<Move>({ kind: 'jump', dir: 1, velocity: 0 });
   const cards = useRef<(HTMLDivElement | null)[]>([]);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -313,7 +319,11 @@ export function Modes({ className }: { className?: string }) {
   const register = useCallback((i: number, el: HTMLDivElement | null) => {
     cards.current[i] = el;
   }, []);
-  const onSettled = useCallback((i: number) => setSettled(i), []);
+  // A card lands in front only after a deal: its preview starts from the top.
+  const onSettled = useCallback((i: number) => {
+    setSettled(i);
+    setPlays((p) => p.map((n, j) => (j === i ? n + 1 : n)));
+  }, []);
 
   return (
     <section
@@ -351,6 +361,7 @@ export function Modes({ className }: { className?: string }) {
                 onSettled={onSettled}
                 onKey={onCardKey}
                 nudge={firstLook && !touched}
+                play={plays[i] ?? 0}
               />
             );
           })}
@@ -367,6 +378,17 @@ export function Modes({ className }: { className?: string }) {
             <button type="button" onClick={() => next()} aria-label="Next mode" className="btn btn-secondary btn-icon">
               <ArrowRight size={18} aria-hidden />
             </button>
+            {reduce ? null : (
+              <button
+                type="button"
+                onClick={() => replay(front)}
+                aria-label={`Replay the ${MODES[front]!.name} preview`}
+                className="btn btn-ghost btn-sm ml-1 gap-1.5 px-3 text-ink-mut pointer-coarse:h-11"
+              >
+                <RotateCcw size={15} aria-hidden />
+                Replay
+              </button>
+            )}
           </div>
 
           <div role="tablist" aria-label="Modes" className="vv-mode-list">
