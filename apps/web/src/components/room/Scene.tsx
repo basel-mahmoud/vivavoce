@@ -14,6 +14,7 @@ import { CANVAS, Cyclorama } from './set/Cyclorama';
 import { Lamp, Mic, Riser } from './set/Props';
 import { Director, type DofState, type RoomCue, type RoomOverlays, type RoundState } from './Director';
 import { precompile } from './compile';
+import { bootMark } from '@/components/boot/client';
 import type { Insets, ShotSet } from './camera';
 import { stillAt } from './story';
 
@@ -203,7 +204,14 @@ function Room({
   const scene = useThree((s) => s.scene);
   // desktop tiers draw through the post chain (Post.tsx); phones straight to the screen
   const viaComposer = tier >= 2;
-  const prepare = useCallback((root: THREE.Object3D) => precompile(gl, root, camera, scene, viaComposer), [gl, camera, scene, viaComposer]);
+  const prepare = useCallback(
+    (root: THREE.Object3D) => {
+      // the first-visit loader counts the cast's shader programs as one of its milestones
+      bootMark('compile', 0);
+      return precompile(gl, root, camera, scene, viaComposer).finally(() => bootMark('compile'));
+    },
+    [gl, camera, scene, viaComposer],
+  );
   const onCast = useCallback(
     (c: Cast) => {
       castRef.current = c;
