@@ -43,6 +43,13 @@
     font-size: clamp(2.45rem, 10.4vw, 4.4rem);
     color: var(--color-ink);
   }
+  /* The red pen loops "before" by its ink, cap height to baseline, not by the
+     line box, so the loop stays clear of the line above and the one below
+     (as the live room's heading does). */
+  .vv-still-hero-title .vv-redpen[data-mark='circle'] > .vv-redpen-words {
+    display: inline-block;
+    line-height: 0.74em;
+  }
   .vv-still-hero-line {
     max-width: 30rem;
     margin-top: 1rem;

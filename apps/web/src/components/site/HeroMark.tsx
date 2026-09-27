@@ -7,7 +7,8 @@ import { useFontsReady } from './useFontsReady';
 /**
  * The examiner's mark on one word of a page heading, drawn shortly after
  * the page arrives, once the display face has loaded so the pen lands on
- * the real words. Reduced motion shows the finished mark.
+ * the real words. One decisive stroke, as on the live room's heading.
+ * Reduced motion shows the finished mark.
  */
 export function HeroMark({
   children,
@@ -20,7 +21,7 @@ export function HeroMark({
 }) {
   const ready = useFontsReady();
   return (
-    <RedPen mark={mark} play="manual" show={ready} delay={delay}>
+    <RedPen mark={mark} play="manual" show={ready} delay={delay} iterations={1}>
       {children}
     </RedPen>
   );
