@@ -38,7 +38,8 @@ describe('font gate', () => {
     vi.useFakeTimers();
     const p = page();
     p.run(fontGateScript("'Archivo', 'Archivo Fallback'"));
-    expect(p.load).toHaveBeenCalledWith("900 1em 'Archivo', 'Archivo Fallback'");
+    // the face itself, not its local() fallback, which fails where Arial is missing
+    expect(p.load).toHaveBeenCalledWith("900 1em 'Archivo'");
     expect(p.live()).toEqual([':root{--vv-type-play:paused}']);
     p.settle(true);
     await vi.advanceTimersByTimeAsync(0);
@@ -78,8 +79,11 @@ describe('font gate', () => {
   });
 
   it('cannot be broken out of by the family name', () => {
+    const family = 'Archivo")</script><script>alert(1)//';
+    const script = fontGateScript(family);
+    expect(script).not.toContain('</script');
     const p = page();
-    p.run(fontGateScript('Archivo"),alert(1),("'));
-    expect(p.load).toHaveBeenCalledWith('900 1em Archivo"),alert(1),("');
+    p.run(script);
+    expect(p.load).toHaveBeenCalledWith(`900 1em ${family}`);
   });
 });
