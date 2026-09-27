@@ -102,12 +102,11 @@
       --hero-col: calc(44vw - var(--edge) - 0.25rem);
       --hero-gutter: var(--edge);
     }
+    /* under the poster's bench, where the live room's own caption sits over it */
     .vv-still-hero-note {
-      left: 47.5%;
-      right: 1%;
-      bottom: 1.5rem;
-      width: fit-content;
-      margin-inline: auto;
+      left: auto;
+      right: 16.5%;
+      bottom: 12%;
     }
   }
 
