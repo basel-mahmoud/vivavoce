@@ -1,0 +1,297 @@
+/*
+ * The first-visit loader (components/boot/script.ts builds this markup and drives it). Everything
+ * here is scoped to vv-boot, an element that exists only while the loader shows. The idle motion (the pen
+ * landing, the voice rippling off the tip) is CSS on separate layers, transform and opacity only,
+ * so it keeps moving on the compositor while the room compiles its shaders on the main thread.
+ * Tokens are the themed --vv-* properties and the brand's own colours, which never flip.
+ */
+
+vv-boot {
+  display: block;
+  /* the mark's side */
+  --vvb-m: clamp(6rem, 17vmin, 10.5rem);
+  /* the mark's centre, a touch above the viewport's: the optical centre */
+  --vvb-y: 46%;
+  /* print and blue ink on the paper: the icon's own on the day's paper, lifted on the night's */
+  --vvb-ink: #161412;
+  --vvb-blue: #2e45ff;
+  /* one phrase of the voice, "Say it out loud", then a breath */
+  --vvb-cycle: 2100ms;
+  --vvb-voice: 420ms;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483600;
+  overflow: hidden;
+  background: var(--vv-canvas);
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (prefers-color-scheme: dark) {
+  vv-boot {
+    --vvb-ink: var(--vv-ink);
+    --vvb-blue: var(--vv-ink-blue);
+  }
+}
+/* The portal: the paper is the masked SVG now, and clicks reach the page as it opens. */
+vv-boot.vvb-open {
+  background: transparent;
+  pointer-events: none;
+}
+
+.vvb-mark {
+  position: absolute;
+  left: 50%;
+  top: var(--vvb-y);
+  width: var(--vvb-m);
+  height: var(--vvb-m);
+  margin: calc(var(--vvb-m) / -2) 0 0 calc(var(--vvb-m) / -2);
+}
+.vvb-mark :is(i, svg, .vvb-press, .vvb-draw, .vvb-voice) {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.vvb-mark svg {
+  overflow: visible;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Drawing: print, the tip, the voice ─────────────────────────────── */
+
+.vvb-v path {
+  stroke: var(--vvb-ink);
+  stroke-width: 15.6;
+  stroke-dasharray: 0.01 200;
+}
+.vvb-tip path {
+  stroke: var(--vvb-blue);
+  stroke-width: 15.6;
+  stroke-dasharray: 0.01 200;
+}
+.vvb-ripple path,
+.vvb-arcs path {
+  stroke: var(--vvb-blue);
+  stroke-width: 6;
+}
+
+/* Pen down: the check's first point, then its tip, land on the paper with a little give. */
+.vvb-v {
+  transform-origin: 20% 52%;
+  animation: vvb-land 620ms cubic-bezier(0.3, 1.45, 0.5, 1) 70ms both;
+}
+.vvb-tip {
+  transform-origin: 64% 42%;
+  animation:
+    vvb-land 620ms cubic-bezier(0.3, 1.45, 0.5, 1) 170ms both,
+    vvb-speak var(--vvb-cycle) linear var(--vvb-voice) infinite;
+}
+@keyframes vvb-land {
+  from {
+    transform: scale(0);
+  }
+}
+/* The tip sounds each syllable (at 0, 200, 400 and 640ms of the phrase): a small push out, bigger
+   for each louder word. */
+@keyframes vvb-speak {
+  0%,
+  100% {
+    transform: scale(1);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  1.9% {
+    transform: scale(1.045);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  7% {
+    transform: scale(1);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  11.4% {
+    transform: scale(1.055);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  16.5% {
+    transform: scale(1);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  21% {
+    transform: scale(1.07);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  27% {
+    transform: scale(1);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  33% {
+    transform: scale(1.12);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  46% {
+    transform: scale(1);
+  }
+}
+
+/* The voice: each syllable sends the icon's pair of arcs off the tip, a short quick pulse for "Say",
+   "it" and "out", each reaching a little further, and a long one for "loud" that carries past where
+   the icon's arcs sit. Short enough apart to read as four words, not one swell. */
+.vvb-ripple {
+  transform-origin: 64% 42%;
+  opacity: 0;
+  animation: vvb-ripple var(--vvb-cycle) cubic-bezier(0.16, 0.72, 0.3, 1) calc(var(--vvb-voice) + var(--at)) infinite;
+}
+.vvb-r1 {
+  --at: 0ms;
+  --to: 0.9;
+  --peak: 0.5;
+}
+.vvb-r2 {
+  --at: 200ms;
+  --to: 0.98;
+  --peak: 0.58;
+}
+.vvb-r3 {
+  --at: 400ms;
+  --to: 1.1;
+  --peak: 0.72;
+}
+.vvb-r4 {
+  --at: 640ms;
+  --to: 1.5;
+  --peak: 0.95;
+  animation-name: vvb-ripple-loud;
+}
+@keyframes vvb-ripple {
+  0% {
+    transform: scale(0.55);
+    opacity: 0;
+  }
+  3% {
+    opacity: var(--peak);
+  }
+  26%,
+  100% {
+    transform: scale(var(--to));
+    opacity: 0;
+  }
+}
+@keyframes vvb-ripple-loud {
+  0% {
+    transform: scale(0.55);
+    opacity: 0;
+  }
+  3% {
+    opacity: var(--peak);
+  }
+  12% {
+    opacity: calc(var(--peak) * 0.8);
+  }
+  44%,
+  100% {
+    transform: scale(var(--to));
+    opacity: 0;
+  }
+}
+
+.vvb-arcs {
+  transform-origin: 64% 42%;
+  opacity: 0;
+}
+
+/* ── Stamp ──────────────────────────────────────────────────────────── */
+
+.vvb-stamp,
+.vvb-shadow {
+  border-radius: 24%;
+  opacity: 0;
+}
+.vvb-stamp {
+  background: #ff4d26;
+}
+/* The square's shadow on the paper while it is still in the air: a soft blot, not an outline. */
+.vvb-shadow {
+  background: rgb(var(--vv-shadow) / 0.4);
+  filter: blur(calc(var(--vvb-m) * 0.09));
+}
+.vvb-icon {
+  opacity: 0;
+}
+.vvb-icon .c {
+  stroke: #161412;
+  stroke-width: 15.6;
+}
+.vvb-icon .b {
+  stroke: #2e45ff;
+  stroke-width: 15.6;
+}
+.vvb-icon .a {
+  stroke: #2e45ff;
+  stroke-width: 6;
+}
+
+/* ── Status ─────────────────────────────────────────────────────────── */
+
+.vvb-status {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--vvb-y) + var(--vvb-m) / 2 + 2.25rem);
+  display: grid;
+  justify-items: center;
+  margin: 0;
+  color: var(--vv-ink-mut);
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.005em;
+  word-spacing: 0.06em;
+}
+.vvb-status span {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate3d(0, 0.6em, 0);
+  transition:
+    opacity 260ms ease 110ms,
+    transform 560ms cubic-bezier(0.23, 1, 0.32, 1) 110ms;
+}
+.vvb-status span.on {
+  opacity: 1;
+  transform: none;
+}
+/* the line going out clears before the next comes in */
+.vvb-status span.off {
+  opacity: 0;
+  transform: translate3d(0, -0.45em, 0);
+  transition:
+    opacity 120ms ease,
+    transform 240ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* ── Portal ─────────────────────────────────────────────────────────── */
+
+.vvb-portal {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  visibility: hidden;
+}
+.vvb-open .vvb-portal {
+  visibility: visible;
+}
+.vvb-open .vvb-stamp {
+  visibility: hidden;
+}
+.vvb-paper {
+  fill: var(--vv-canvas);
+}
+.vvb-verm {
+  fill: #ff4d26;
+}

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Mic } from 'lucide-react';
 import { RoomPoster } from '@/components/room/RoomPoster';
 import { HeroTitle } from '@/components/room/HeroTitle';
+import { BootStill } from '@/components/boot/BootStill';
 
 /**
  * The home page's first screen without the live room: the room's own still
@@ -30,6 +31,7 @@ export function StaticHero() {
         </div>
       </div>
       <p className="vv-still-hero-note">Example round. Scores are guidance, not grades.</p>
+      <BootStill why="fallback" />
     </section>
   );
 }

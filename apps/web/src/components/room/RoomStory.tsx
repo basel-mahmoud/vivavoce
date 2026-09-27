@@ -14,11 +14,17 @@ import { RoomTags } from './RoomTags';
 import { RoomPoster } from './RoomPoster';
 import { SceneBoundary } from './SceneBoundary';
 import { prefetchRoom } from './assets';
+import { bootMark, bootShowing, bootStill } from '@/components/boot/client';
+import { installOutro } from '@/components/boot/outro';
+import { useBootHeld, useBootQuiet } from '@/components/boot/useBootHeld';
 import { hasWebGL } from '@/lib/webgl';
 import type { Insets, RoomCue, RoomOverlays, RoundState } from './Scene';
 import styles from './room.module.css';
 
 const Scene = dynamic(() => import('./Scene'), { ssr: false });
+
+// the first-visit loader's stamp and portal come with the room's own code, before the room is ready
+installOutro();
 
 /** Desktops (the same test as the room's tier guess): enough headroom to take the room's code early. */
 function roomyDevice() {
@@ -69,21 +75,32 @@ function useReduce(): boolean {
  * moment finds it ready; phones fetch it in the idle moment, keeping their main thread for the
  * reader. Whether this device really gives the page a context is asked in the idle moment itself,
  * in a task of its own (making a context is not free), never while hydrating.
+ *
+ * Under the first-visit loader (components/boot) nobody is reading yet: the code is fetched at once
+ * on every device and the context is asked for in the next task, so the room is ready sooner. The
+ * loader hears from here when the room will not go live, and waits for the poster alone instead.
  */
 function useLiveRoom(): boolean {
   const [start, setStart] = useState(false);
   useEffect(() => {
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-    if (connection?.saveData || typeof WebGLRenderingContext === 'undefined') return;
+    if (connection?.saveData) return bootStill('save-data');
+    if (typeof WebGLRenderingContext === 'undefined') return bootStill('no-webgl');
     prefetchRoom();
-    if (roomyDevice()) void import('./Scene').catch(() => {});
+    const eager = bootShowing();
+    if (eager || roomyDevice()) {
+      bootMark('code', 0);
+      void import('./Scene').then(() => bootMark('code'), () => {});
+    }
     let idle = 0;
     let timer = 0;
     const go = () => {
       if (hasWebGL()) setStart(true);
+      else bootStill('no-webgl');
     };
     const frame = requestAnimationFrame(() => {
-      if (typeof window.requestIdleCallback === 'function') idle = window.requestIdleCallback(go, { timeout: 2000 });
+      if (eager) timer = window.setTimeout(go, 0);
+      else if (typeof window.requestIdleCallback === 'function') idle = window.requestIdleCallback(go, { timeout: 2000 });
       else timer = window.setTimeout(go, 300);
     });
     return () => {
@@ -139,6 +156,10 @@ export function RoomStory() {
   const dark = useDark();
   const live = useLiveRoom();
   const pageVisible = usePageVisible();
+  // the first-visit loader holds the opening round until its overlay is gone, and lets the room
+  // rest its frames while it ends (it has already seen the room run smoothly)
+  const held = useBootHeld();
+  const quiet = useBootQuiet();
   const [ready, setReady] = useState(false);
   // a live room that failed (a chunk, the model, the WebGL context) hands back to its poster for good
   const [failed, setFailed] = useState(false);
@@ -239,11 +260,18 @@ export function RoomStory() {
 
   useEffect(() => () => window.clearTimeout(sayTimer.current), []);
 
-  const playing = ready && active && inHero && pageVisible && !reduce && !paused;
-  const onReady = useCallback(() => setReady(true), []);
+  // the page's code has run: the first-visit loader's first milestone
+  useEffect(() => bootMark('app'), []);
+
+  const playing = ready && active && inHero && pageVisible && !reduce && !paused && !held;
+  const onReady = useCallback(() => {
+    setReady(true);
+    bootMark('ready');
+  }, []);
   const onFail = useCallback(() => {
     setFailed(true);
     setReady(false);
+    bootStill('failed');
   }, []);
   const togglePause = useCallback(() => setPaused((p) => !p), []);
   const onRound = useCallback((r: RoundState) => {
@@ -299,14 +327,15 @@ export function RoomStory() {
 
   return (
     <section ref={section} aria-label="VivaVoce, the viva room" data-ready={ready ? 'true' : undefined} className="relative h-[520svh]">
-      <div className={styles.stage}>
+      {/* data-room-stage: what the first-visit loader's portal opens onto (components/boot/outro.ts) */}
+      <div className={styles.stage} data-room-stage="">
         <RoomPoster hidden={ready} />
         {live && !failed && (
           <div data-room-canvas className={cn(styles.layer, 'transition-opacity duration-700 ease-out', ready ? 'opacity-100' : 'opacity-0')}>
             <SceneBoundary onError={onFail}>
               <Scene
                 progress={scrollYProgress}
-                active={active && pageVisible}
+                active={active && pageVisible && !quiet}
                 playing={playing}
                 reduce={reduce}
                 paused={paused}

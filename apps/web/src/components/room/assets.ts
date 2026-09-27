@@ -6,6 +6,7 @@
  * scripts/examiners/render.mjs bundles rig.ts, and this with it, without the `@/` alias.)
  */
 import { asset } from '../../lib/assets';
+import { bootMark, type BootMilestone } from '../boot/client';
 
 export const MODEL_URL = asset('/models/examiners.glb');
 
@@ -46,8 +47,71 @@ async function get(url: string): Promise<Response> {
   return res;
 }
 
-/** The GLB's bytes. */
-export const modelBytes = once(() => get(MODEL_URL).then((r) => r.arrayBuffer()));
+/**
+ * The whole length of a binary glTF, read from its 12-byte header (magic `glTF`, version, length,
+ * little-endian), or 0 when these bytes are not one. The header is exact whatever the transfer: the
+ * server compresses the model (gzip here, brotli on the CDN) and then sends no usable Content-Length.
+ */
+export function glbLength(head: Uint8Array): number {
+  if (head.length < 12) return 0;
+  const view = new DataView(head.buffer, head.byteOffset, 12);
+  return view.getUint32(0, true) === 0x46546c67 ? view.getUint32(8, true) : 0;
+}
+
+/**
+ * A response's bytes, read as they stream in, reporting the share received: of the length its first
+ * bytes declare (`sized`, for a GLB), else of an uncompressed Content-Length. With neither it
+ * reports nothing until the end (the loader's other milestones carry it meanwhile).
+ */
+async function streamed(res: Response, report: (fraction: number) => void, sized?: (head: Uint8Array) => number): Promise<ArrayBuffer> {
+  const reader = res.body?.getReader();
+  if (!reader) return res.arrayBuffer();
+  const encoded = (res.headers.get('content-encoding') ?? 'identity') !== 'identity';
+  let total = encoded ? 0 : Number(res.headers.get('content-length')) || 0;
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    if (sized && chunks.length === 1 && value.length >= 12) total = sized(value) || total;
+    if (total > 0) report(Math.min(0.99, received / total));
+  }
+  const bytes = new Uint8Array(received);
+  let at = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, at);
+    at += chunk.length;
+  }
+  return bytes.buffer;
+}
+
+/** Reports a group of downloads to the first-visit loader as the share of them finished. */
+function counted<T>(name: BootMilestone, jobs: Promise<T>[]): Promise<T[]> {
+  let finished = 0;
+  bootMark(name, 0);
+  return Promise.all(
+    jobs.map((job) =>
+      job.then((value) => {
+        finished += 1;
+        bootMark(name, finished / jobs.length);
+        return value;
+      }),
+    ),
+  );
+}
+
+/** The GLB's bytes (their progress goes to the first-visit loader). */
+export const modelBytes = once(() => {
+  bootMark('model', 0);
+  return get(MODEL_URL)
+    .then((r) => streamed(r, (f) => bootMark('model', f), glbLength))
+    .then((buffer) => {
+      bootMark('model');
+      return buffer;
+    });
+});
 
 /** A detail map, decoded off the main thread where the browser can (flipped as three's TextureLoader would upload it). */
 export interface DetailImage {
@@ -78,14 +142,22 @@ async function decode(blob: Blob): Promise<DetailImage> {
 
 /** The detail maps, in DETAIL_TEXTURES order. */
 export const detailImages = once(() =>
-  Promise.all(Object.values(DETAIL_TEXTURES).map((url) => get(url).then((r) => r.blob()).then(decode))),
+  counted(
+    'textures',
+    Object.values(DETAIL_TEXTURES).map((url) => get(url).then((r) => r.blob()).then(decode)),
+  ),
 );
 
 /**
  * The label fonts, fetched into the HTTP cache (they are served with a year of caching), where the
  * text renderer, which fetches fonts by URL itself, finds them.
  */
-export const labelFonts = once(() => Promise.all([FONT_MONO, FONT_DISPLAY].map((url) => get(url).then((r) => r.arrayBuffer()))));
+export const labelFonts = once(() =>
+  counted(
+    'labels',
+    [FONT_MONO, FONT_DISPLAY].map((url) => get(url).then((r) => r.arrayBuffer())),
+  ),
+);
 
 /** Start every download the room needs. Failures surface where the room reads them (its error boundary). */
 export function prefetchRoom() {

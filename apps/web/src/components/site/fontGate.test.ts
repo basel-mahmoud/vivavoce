@@ -78,6 +78,19 @@ describe('font gate', () => {
     }
   });
 
+  it('stands aside while the first-visit loader shows (the loader holds the type itself)', () => {
+    const p = page();
+    const script = fontGateScript('Archivo');
+    const gate = new Function('document', 'matchMedia', 'setTimeout', '__vvBoot', script);
+    const doc = { fonts: { load: p.load }, createElement: () => ({ textContent: '' }), head: { appendChild: vi.fn() } };
+    gate(doc, () => ({ matches: false }), setTimeout, { showing: true });
+    expect(doc.head.appendChild).not.toHaveBeenCalled();
+    expect(p.load).not.toHaveBeenCalled();
+    // a loader that has finished (or never showed) leaves the gate to its own work
+    gate(doc, () => ({ matches: false }), setTimeout, { showing: false });
+    expect(doc.head.appendChild).toHaveBeenCalledTimes(1);
+  });
+
   it('cannot be broken out of by the family name', () => {
     const family = 'Archivo")</script><script>alert(1)//';
     const script = fontGateScript(family);
