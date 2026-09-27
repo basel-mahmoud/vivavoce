@@ -80,6 +80,17 @@
   overflow-wrap: anywhere;
   --rp-on-highlight: var(--color-cobalt-deep);
 }
+/* The red pen's loop round a buried claim. The phrase stays on one line where it fits (and wraps
+   inside its loop on a narrow phone rather than running off the paper), with room inside the loop
+   for its first and last letters and outside it for the neighbouring words. */
+.claim {
+  display: inline-block;
+  max-width: calc(100% - 0.9em);
+  margin-inline: 0.45em;
+}
+.claim > :global(.vv-redpen-words) {
+  padding-inline: 0.3em;
+}
 .placeholder {
   color: var(--color-ink-faint);
   font-weight: 500;
