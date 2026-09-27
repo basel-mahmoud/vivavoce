@@ -261,6 +261,7 @@ export function QuickPreview({ running }: PreviewProps) {
               tone={i === weakest ? 'verm' : 'paper'}
               size="sm"
               handle={false}
+              backMark="?"
               delay={i * 90}
               className="vv-quick-paddle"
             />

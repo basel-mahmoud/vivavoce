@@ -312,14 +312,6 @@
   .vv-paddle.vv-quick-paddle {
     --d: 2.9rem;
   }
-  .vv-quick-paddle .vv-paddle-axis {
-    font-size: 0;
-  }
-  .vv-quick-paddle .vv-paddle-axis::after {
-    content: '?';
-    font-size: calc(var(--d) * 0.34);
-    letter-spacing: 0;
-  }
   @media (min-width: 640px) {
     .vv-paddle.vv-quick-paddle {
       --d: 3.75rem;
@@ -1410,12 +1402,6 @@
   .vv-axis-mark {
     grid-area: mark;
     align-self: end;
-  }
-  /* The axis printed on the back of the paddle, set to fit. */
-  .vv-axis-mark .vv-paddle-axis {
-    max-width: 84%;
-    letter-spacing: 0.02em;
-    text-overflow: clip;
   }
   .vv-axis-sample {
     grid-area: sample;
