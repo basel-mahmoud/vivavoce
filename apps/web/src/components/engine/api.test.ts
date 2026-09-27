@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { z } from '@/lib/zod-client';
 import { readDemo, requestMarks } from './api';
 
 const body = { questionId: 0, answer: 'Candidates fail because they never lead with the answer.' };
@@ -94,5 +95,13 @@ describe('readDemo', () => {
       { ...data, improvements: ['Lead with the claim.', 4] },
     ];
     for (const value of bad) expect(readDemo(value)).toBeNull();
+  });
+});
+
+describe('zod in the page', () => {
+  it('never probes for eval, which the page CSP forbids', () => {
+    expect(z.core.globalConfig.jitless).toBe(true);
+    expect(z.core.util.allowsEval.value).toBe(false);
+    expect(readDemo(data)).toEqual(data);
   });
 });
