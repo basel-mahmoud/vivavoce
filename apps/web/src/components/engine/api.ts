@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { AXES, type AxisKey } from '@/components/room/data';
 import type { DemoData } from './engine';
 
 /**
@@ -7,25 +7,34 @@ import type { DemoData } from './engine';
  * way it can go wrong becomes one of four plain outcomes the page words for itself.
  */
 
-const mark = z.number().min(0).max(100);
-const axis = z.enum(['correctness', 'clarity', 'structure', 'conciseness', 'confidence']);
+const AXIS_KEYS: readonly AxisKey[] = AXES.map((a) => a.key);
 
-export const demoDataSchema = z.object({
-  source: z.enum(['model', 'heuristic']),
-  scores: z.object({
-    correctness: mark,
-    clarity: mark,
-    structure: mark,
-    conciseness: mark,
-    confidence: mark,
-  }),
-  overall: mark,
-  weakestAxis: axis,
-  summary: z.string(),
-  improvements: z.array(z.string()),
-});
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+const isMark = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 100;
+const isAxis = (v: unknown): v is AxisKey => typeof v === 'string' && (AXIS_KEYS as readonly string[]).includes(v);
 
-const envelope = z.object({ ok: z.literal(true), data: demoDataSchema });
+/**
+ * The panel's answer (demo-eval's `data`), checked field by field and copied, so nothing else in
+ * the response comes along; null if any part is missing, of the wrong kind or out of range.
+ *
+ * Written by hand rather than with a schema library: this runs in the page, whose
+ * Content-Security-Policy forbids eval, and zod probes for eval on its first parse, which the
+ * browser reports as a policy violation (and it would be zod's only use in the page's bundle).
+ */
+export function readDemo(value: unknown): DemoData | null {
+  if (!isRecord(value)) return null;
+  const { source, scores, overall, weakestAxis, summary, improvements } = value;
+  if (source !== 'model' && source !== 'heuristic') return null;
+  if (!isRecord(scores) || !isMark(overall) || !isAxis(weakestAxis) || typeof summary !== 'string') return null;
+  if (!Array.isArray(improvements) || !improvements.every((line) => typeof line === 'string')) return null;
+  const marks = {} as Record<AxisKey, number>;
+  for (const key of AXIS_KEYS) {
+    const mark = scores[key];
+    if (!isMark(mark)) return null;
+    marks[key] = mark;
+  }
+  return { source, scores: marks, overall, weakestAxis, summary, improvements: [...improvements] as string[] };
+}
 
 export type MarkFailure = 'rate-limited' | 'server' | 'offline' | 'invalid';
 export type MarkOutcome = { ok: true; data: DemoData } | { ok: false; reason: MarkFailure; retryAfter: number | null };
@@ -72,9 +81,10 @@ export async function requestMarks(
     if (res.status === 429) return { ok: false, reason: 'rate-limited', retryAfter: retryAfter(res) };
     if (res.status === 400) return { ok: false, reason: 'invalid', retryAfter: null };
     if (!res.ok) return { ok: false, reason: 'server', retryAfter: null };
-    const parsed = envelope.safeParse(await res.json().catch(() => null));
-    if (!parsed.success) return { ok: false, reason: 'server', retryAfter: null };
-    return { ok: true, data: parsed.data.data };
+    const json: unknown = await res.json().catch(() => null);
+    const data = isRecord(json) && json.ok === true ? readDemo(json.data) : null;
+    if (!data) return { ok: false, reason: 'server', retryAfter: null };
+    return { ok: true, data };
   } catch (err) {
     if (signal?.aborted) throw err;
     if (timedOut) return { ok: false, reason: 'server', retryAfter: null };

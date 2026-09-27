@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { requestMarks } from './api';
+import { readDemo, requestMarks } from './api';
 
 const body = { questionId: 0, answer: 'Candidates fail because they never lead with the answer.' };
 const data = {
@@ -66,5 +66,33 @@ describe('requestMarks', () => {
     const pending = requestMarks(body, { fetcher: fetcher as unknown as typeof fetch, signal: ctrl.signal });
     ctrl.abort();
     await expect(pending).rejects.toThrow();
+  });
+});
+
+describe('readDemo', () => {
+  it('copies only what the panel sends', () => {
+    expect(readDemo({ ...data, extra: 'dropped', scores: { ...data.scores, bonus: 3 } })).toEqual(data);
+    expect(readDemo({ ...data, source: 'heuristic', improvements: [] })).toMatchObject({ source: 'heuristic', improvements: [] });
+  });
+
+  it('refuses anything missing, of the wrong kind or out of range', () => {
+    const fourScores: Partial<typeof data.scores> = { ...data.scores };
+    delete fourScores.clarity;
+    const bad: unknown[] = [
+      null,
+      [],
+      'marks',
+      { ...data, source: 'guess' },
+      { ...data, scores: fourScores },
+      { ...data, scores: { ...data.scores, structure: -1 } },
+      { ...data, scores: { ...data.scores, structure: '48' } },
+      { ...data, overall: 101 },
+      { ...data, overall: Number.NaN },
+      { ...data, weakestAxis: 'charisma' },
+      { ...data, summary: 3 },
+      { ...data, improvements: 'Lead with the claim.' },
+      { ...data, improvements: ['Lead with the claim.', 4] },
+    ];
+    for (const value of bad) expect(readDemo(value)).toBeNull();
   });
 });
