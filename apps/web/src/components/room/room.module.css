@@ -577,6 +577,11 @@
 }
 
 @media (min-width: 600px) and (min-aspect-ratio: 21/20) {
+  /* The sheet's left edge: the page margin, and once the screen is wider than the nav, the nav's
+     own content edge, so the promise and the notes start where the wordmark does. */
+  .stage {
+    --edge: max(clamp(2rem, 4.4vw, 4rem), 2.5rem + (100vw - 87.5rem) / 2);
+  }
   .poster {
     object-position: 100% 50%;
   }
@@ -594,14 +599,14 @@
   .captions {
     right: auto;
     width: 44%;
-    padding: 5rem 1.25rem 6rem clamp(2rem, 4.4vw, 4rem);
+    padding: 5rem 1.25rem 6rem var(--edge);
     align-content: center;
   }
   /* the promise keeps its two lines down to 1280 wide (the panel starts at 46.5%) */
   .heroCap {
     margin-right: -1rem;
-    --hero-col: calc(44vw - clamp(2rem, 4.4vw, 4rem) - 0.25rem);
-    --hero-gutter: clamp(2rem, 4.4vw, 4rem);
+    --hero-col: calc(44vw - var(--edge) - 0.25rem);
+    --hero-gutter: var(--edge);
   }
   .heroCap,
   .script {
@@ -626,7 +631,7 @@
   /* the axis name never outgrows its column (Correctness and Conciseness are about 7.8 of their
      own ems wide, beside the margin mark) */
   .noteHead {
-    font-size: clamp(1.15rem, min(3.3vw, (44vw - clamp(2rem, 4.4vw, 4rem) - 1.25rem - var(--mark-w) - var(--gutter)) / 7.9), 2.9rem);
+    font-size: clamp(1.15rem, min(3.3vw, (44vw - var(--edge) - 1.25rem - var(--mark-w) - var(--gutter)) / 7.9), 2.9rem);
   }
   .noteAsk {
     margin-top: 0.55rem;
@@ -667,9 +672,9 @@
     font-size: 0.98rem;
   }
   .ruler {
-    left: clamp(2rem, 4.4vw, 4rem);
+    left: var(--edge);
     right: auto;
-    width: min(33rem, calc(44% - clamp(2rem, 4.4vw, 4rem) - 1rem));
+    width: min(33rem, calc(44% - var(--edge) - 1rem));
     bottom: 1.5rem;
     /* on the sheet: the page itself is the backing */
     padding: 0;
@@ -706,7 +711,7 @@
   }
   /* the verdict keeps "One to fix first." on one line in the column (about 8.6 of its own ems) */
   .outroTitle {
-    font-size: clamp(1.35rem, min(3.6vw, (44vw - clamp(2rem, 4.4vw, 4rem) - 1.25rem) / 8.7), 3.4rem);
+    font-size: clamp(1.35rem, min(3.6vw, (44vw - var(--edge) - 1.25rem) / 8.7), 3.4rem);
   }
 }
 
@@ -727,18 +732,21 @@
 /* Phones held sideways and other short wide screens: the promise stays clear of the nav and
    everything pinned fits the stage (centred while it fits, from the top when it does not). */
 @media (min-width: 600px) and (min-aspect-ratio: 21/20) and (max-height: 540px) {
+  .stage {
+    --edge: max(clamp(1.25rem, 3vw, 2rem), 2.5rem + (100vw - 87.5rem) / 2);
+  }
   /* the sheet takes a little more of the width, so the transcript keeps to a few lines */
   .sheet {
     width: 50%;
   }
   .captions {
     width: 48%;
-    padding: 4.5rem 1rem 3.3rem clamp(1.25rem, 3vw, 2rem);
+    padding: 4.5rem 1rem 3.3rem var(--edge);
     align-content: safe center;
   }
   .heroCap {
-    --hero-col: calc(48vw - clamp(1.25rem, 3vw, 2rem) - 0.25rem);
-    --hero-gutter: clamp(1.25rem, 3vw, 2rem);
+    --hero-col: calc(48vw - var(--edge) - 0.25rem);
+    --hero-gutter: var(--edge);
     --hero-max: 3.2rem;
   }
   .heroLead {
@@ -781,7 +789,7 @@
     --gutter: 1rem;
   }
   .noteHead {
-    font-size: clamp(1.2rem, (48vw - clamp(1.25rem, 3vw, 2rem) - 5.4rem) / 7.9, 1.6rem);
+    font-size: clamp(1.2rem, (48vw - var(--edge) - 5.4rem) / 7.9, 1.6rem);
   }
   .noteAsk {
     margin-top: 0.3rem;
@@ -814,8 +822,8 @@
     display: none;
   }
   .ruler {
-    left: clamp(1.25rem, 3vw, 2rem);
-    width: min(33rem, calc(48% - clamp(1.25rem, 3vw, 2rem) - 1rem));
+    left: var(--edge);
+    width: min(33rem, calc(48% - var(--edge) - 1rem));
     bottom: 0.5rem;
   }
 }

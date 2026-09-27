@@ -96,9 +96,11 @@
       justify-content: center;
       width: 44%;
       max-width: none;
-      padding: 0 0 0 clamp(2rem, 4.4vw, 4rem);
-      --hero-col: calc(44vw - clamp(2rem, 4.4vw, 4rem) - 0.25rem);
-      --hero-gutter: clamp(2rem, 4.4vw, 4rem);
+      /* as the live room: the nav's content edge once the screen is wider than the nav */
+      --edge: max(clamp(2rem, 4.4vw, 4rem), 2.5rem + (100vw - 87.5rem) / 2);
+      padding: 0 0 0 var(--edge);
+      --hero-col: calc(44vw - var(--edge) - 0.25rem);
+      --hero-gutter: var(--edge);
     }
     .vv-still-hero-note {
       left: 47.5%;
