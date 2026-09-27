@@ -628,11 +628,13 @@
     max-width: 34rem;
   }
   .note {
-    --mark-w: 4.3rem;
-    --gutter: 1.25rem;
+    --mark-w: clamp(3.3rem, 5vw, 4.3rem);
+    --gutter: clamp(1rem, 1.5vw, 1.25rem);
   }
+  /* the axis name never outgrows its column (Correctness and Conciseness are about 7.8 of their
+     own ems wide, beside the margin mark) */
   .noteHead {
-    font-size: clamp(2rem, 3.3vw, 2.9rem);
+    font-size: clamp(1.15rem, min(3.3vw, (44vw - clamp(2rem, 4.4vw, 4rem) - 1.25rem - var(--mark-w) - var(--gutter)) / 7.9), 2.9rem);
   }
   .noteAsk {
     margin-top: 0.55rem;
@@ -710,10 +712,14 @@
     overflow: visible;
     clip-path: none;
   }
+  /* the verdict keeps "One to fix first." on one line in the column (about 8.6 of its own ems) */
+  .outroTitle {
+    font-size: clamp(1.35rem, min(3.6vw, (44vw - clamp(2rem, 4.4vw, 4rem) - 1.25rem) / 8.7), 3.4rem);
+  }
   /* the promise keeps its two lines at every width: the size follows the column ("before it
-     counts." is about 9.6 of its own ems wide) */
+     counts." is about 9.8 of its own ems wide) */
   .heroTitle {
-    font-size: clamp(1.6rem, min(4vw, (44vw - clamp(2rem, 4.4vw, 4rem) - 0.25rem) / 9.7), 4.6rem);
+    font-size: clamp(1.35rem, min(4vw, (44vw - clamp(2rem, 4.4vw, 4rem) - 0.25rem) / 9.9), 4.6rem);
   }
 }
 
@@ -744,7 +750,7 @@
     align-content: safe center;
   }
   .heroTitle {
-    font-size: clamp(1.5rem, min(4.1vw, (48vw - clamp(1.25rem, 3vw, 2rem)) / 9.7), 2.6rem);
+    font-size: clamp(1.35rem, min(4.1vw, (48vw - clamp(1.25rem, 3vw, 2rem) - 0.25rem) / 9.9), 2.6rem);
   }
   .heroLead {
     margin-top: 0.6rem;
@@ -786,7 +792,7 @@
     --gutter: 1rem;
   }
   .noteHead {
-    font-size: 1.6rem;
+    font-size: clamp(1.2rem, (48vw - clamp(1.25rem, 3vw, 2rem) - 5.4rem) / 7.9, 1.6rem);
   }
   .noteAsk {
     margin-top: 0.3rem;
