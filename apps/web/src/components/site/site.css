@@ -419,14 +419,14 @@
   .vv-note {
     --gap: 2.125rem;
     --margin-x: 2.75rem;
-    --note-rule: color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper-obj));
-    --note-margin: color-mix(in oklab, var(--color-verm) 46%, var(--color-paper-obj));
+    --note-rule: color-mix(in oklab, var(--color-cobalt) 17%, var(--vv-paper-obj));
+    --note-margin: color-mix(in oklab, var(--color-verm) 46%, var(--vv-paper-obj));
     --vv-focus: var(--color-cobalt);
     position: relative;
     padding: var(--gap) 1.5rem calc(var(--gap) * 0.75) calc(var(--margin-x) + 1rem);
     border-radius: 0.6rem;
     /* Lamp-lit at night, so the faces above it stay the brightest thing. */
-    background-color: var(--color-paper-obj);
+    background-color: var(--vv-paper-obj);
     background-image:
       linear-gradient(
         to right,
@@ -492,7 +492,7 @@
   }
   .vv-note-name {
     margin-left: auto;
-    color: color-mix(in oklab, var(--color-coal) 62%, var(--color-paper-obj));
+    color: color-mix(in oklab, var(--color-coal) 62%, var(--vv-paper-obj));
     font-size: 0.8125rem;
     font-weight: 700;
     line-height: var(--gap);
@@ -1661,9 +1661,9 @@
     width: 2.6rem;
     height: 2.6rem;
     border-radius: 999px;
-    background: var(--color-paper-obj);
+    background: var(--vv-paper-obj);
     box-shadow:
-      inset 0 0 0 2.5px color-mix(in oklab, var(--color-paper-obj) 82%, var(--color-coal-2)),
+      inset 0 0 0 2.5px color-mix(in oklab, var(--vv-paper-obj) 82%, var(--color-coal-2)),
       0 1px 2px rgb(var(--vv-shadow) / 0.2);
     color: var(--color-coal);
     font-size: 0.95rem;

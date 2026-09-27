@@ -406,11 +406,11 @@
   .vv-paddle {
     --d: 5rem;
     --t: calc(var(--d) * 0.075);
-    --face: var(--color-paper-obj);
-    --bevel: color-mix(in oklab, var(--color-paper-obj) 88%, var(--color-coal-2));
-    --rim: color-mix(in oklab, var(--color-paper-obj) 70%, var(--color-coal-2));
-    --back: color-mix(in oklab, var(--color-paper-obj) 94%, var(--color-coal-2));
-    --back-ink: color-mix(in oklab, var(--color-coal) 72%, var(--color-paper-obj));
+    --face: var(--vv-paper-obj);
+    --bevel: color-mix(in oklab, var(--vv-paper-obj) 88%, var(--color-coal-2));
+    --rim: color-mix(in oklab, var(--vv-paper-obj) 70%, var(--color-coal-2));
+    --back: color-mix(in oklab, var(--vv-paper-obj) 94%, var(--color-coal-2));
+    --back-ink: color-mix(in oklab, var(--color-coal) 72%, var(--vv-paper-obj));
     --numeral: var(--color-coal);
     --stick: var(--color-coal);
     display: inline-flex;
@@ -605,7 +605,7 @@
     flex: 1 1 auto;
     min-width: 0;
     border-radius: var(--radius) 0 0 var(--radius);
-    background: var(--color-paper-obj);
+    background: var(--vv-paper-obj);
     -webkit-mask-image:
       radial-gradient(circle var(--notch) at 100% 0, transparent 96%, #000),
       radial-gradient(circle var(--notch) at 100% 100%, transparent 96%, #000),
@@ -708,7 +708,7 @@
     width: 1.6rem;
     height: 1.6rem;
     border-radius: 999px;
-    background: var(--color-paper-obj);
+    background: var(--vv-paper-obj);
     box-shadow: 0 0 0 1.5px var(--stub-bg);
     color: var(--stub-bg);
     opacity: 0;

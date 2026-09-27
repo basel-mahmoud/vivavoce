@@ -11,8 +11,8 @@
   :is(.vv-slip-face, .vv-admit-body, .vv-int-answer, .vv-int-card) {
     --vv-verm-text: color-mix(in oklab, var(--color-verm) 72%, var(--color-coal));
     --color-verm-text: var(--vv-verm-text);
-    --vv-ink-faint: color-mix(in oklab, var(--color-coal) 68%, var(--color-paper-obj));
-    --color-line: color-mix(in oklab, var(--color-coal) 24%, var(--color-paper-obj));
+    --vv-ink-faint: color-mix(in oklab, var(--color-coal) 68%, var(--vv-paper-obj));
+    --color-line: color-mix(in oklab, var(--color-coal) 24%, var(--vv-paper-obj));
     --vv-focus: var(--color-cobalt);
   }
 
@@ -583,7 +583,7 @@
     position: relative;
     padding: 1rem 1.1rem 1.1rem;
     border-radius: 0.5rem;
-    background-color: var(--color-paper-obj);
+    background-color: var(--vv-paper-obj);
     color: var(--color-coal);
     box-shadow:
       0 1px 1px rgb(var(--vv-shadow) / 0.08),
@@ -608,7 +608,7 @@
   }
   .vv-round-aside {
     margin-top: 0.6rem;
-    color: color-mix(in oklab, var(--color-coal) 64%, var(--color-paper-obj));
+    color: color-mix(in oklab, var(--color-coal) 64%, var(--vv-paper-obj));
     font-size: 0.85rem;
     font-weight: 700;
   }
@@ -678,13 +678,13 @@
       linear-gradient(
         to right,
         transparent calc(var(--margin-x) - 1px),
-        color-mix(in oklab, var(--color-verm) 46%, var(--color-paper-obj)) calc(var(--margin-x) - 1px) var(--margin-x),
+        color-mix(in oklab, var(--color-verm) 46%, var(--vv-paper-obj)) calc(var(--margin-x) - 1px) var(--margin-x),
         transparent var(--margin-x)
       ),
       repeating-linear-gradient(
         to bottom,
         transparent 0 calc(var(--gap) - 1px),
-        color-mix(in oklab, var(--color-cobalt) 15%, var(--color-paper-obj)) calc(var(--gap) - 1px) var(--gap)
+        color-mix(in oklab, var(--color-cobalt) 15%, var(--vv-paper-obj)) calc(var(--gap) - 1px) var(--gap)
       );
     background-position:
       0 0,
@@ -694,7 +694,7 @@
     display: flex;
     justify-content: space-between;
     gap: 1rem;
-    color: color-mix(in oklab, var(--color-coal) 64%, var(--color-paper-obj));
+    color: color-mix(in oklab, var(--color-coal) 64%, var(--vv-paper-obj));
     font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.06em;
@@ -718,7 +718,7 @@
     position: absolute;
     left: calc(-0.6rem - var(--margin-x));
     width: calc(var(--margin-x) - 0.4rem);
-    color: color-mix(in oklab, var(--color-coal) 60%, var(--color-paper-obj));
+    color: color-mix(in oklab, var(--color-coal) 60%, var(--vv-paper-obj));
     font-size: 0.72rem;
     font-weight: 800;
     text-align: right;
@@ -1136,9 +1136,9 @@
   }
   /* A sheet of paper: lamp-lit at night, like every paper object on the desk. */
   .vv-room[data-field='paper'] {
-    --field: var(--color-paper-obj);
+    --field: var(--vv-paper-obj);
     --field-ink: var(--color-coal);
-    --field-mut: color-mix(in oklab, var(--color-coal) 72%, var(--color-paper-obj));
+    --field-mut: color-mix(in oklab, var(--color-coal) 72%, var(--vv-paper-obj));
     --field-focus: var(--color-cobalt);
   }
   .vv-room-face {
@@ -1231,8 +1231,8 @@
   }
   .vv-room[data-field='paper'] .vv-room-flood {
     background-image:
-      linear-gradient(to right, transparent 0.55rem, color-mix(in oklab, var(--color-verm) 46%, var(--color-paper-obj)) 0.55rem 0.65rem, transparent 0.65rem),
-      repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper-obj)) calc(1.9rem - 1px) 1.9rem);
+      linear-gradient(to right, transparent 0.55rem, color-mix(in oklab, var(--color-verm) 46%, var(--vv-paper-obj)) 0.55rem 0.65rem, transparent 0.65rem),
+      repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--vv-paper-obj)) calc(1.9rem - 1px) 1.9rem);
   }
   .vv-room-flood .vv-room-body {
     color: var(--field-mut);
@@ -1284,8 +1284,8 @@
     }
     .vv-room[data-field='paper'] .vv-room-flood {
       background-image:
-        linear-gradient(to right, transparent 0.9rem, color-mix(in oklab, var(--color-verm) 46%, var(--color-paper-obj)) 0.9rem 1rem, transparent 1rem),
-        repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper-obj)) calc(1.9rem - 1px) 1.9rem);
+        linear-gradient(to right, transparent 0.9rem, color-mix(in oklab, var(--color-verm) 46%, var(--vv-paper-obj)) 0.9rem 1rem, transparent 1rem),
+        repeating-linear-gradient(to bottom, transparent 0 calc(1.9rem - 1px), color-mix(in oklab, var(--color-cobalt) 17%, var(--vv-paper-obj)) calc(1.9rem - 1px) 1.9rem);
     }
   }
 
@@ -1333,18 +1333,18 @@
     --perf-pitch: 16px;
     padding: 1.35rem 1.5rem 1.6rem 3.4rem;
     border-radius: 0.4rem;
-    background-color: var(--color-paper-obj);
+    background-color: var(--vv-paper-obj);
     background-image:
       linear-gradient(
         to right,
         transparent 2.35rem,
-        color-mix(in oklab, var(--color-verm) 46%, var(--color-paper-obj)) 2.35rem 2.45rem,
+        color-mix(in oklab, var(--color-verm) 46%, var(--vv-paper-obj)) 2.35rem 2.45rem,
         transparent 2.45rem
       ),
       repeating-linear-gradient(
         to bottom,
         transparent 0 calc(1.9rem - 1px),
-        color-mix(in oklab, var(--color-cobalt) 17%, var(--color-paper-obj)) calc(1.9rem - 1px) 1.9rem
+        color-mix(in oklab, var(--color-cobalt) 17%, var(--vv-paper-obj)) calc(1.9rem - 1px) 1.9rem
       );
     background-position:
       0 0,
@@ -1511,7 +1511,7 @@
   }
   .vv-admit-sub {
     margin-top: 0.45rem;
-    color: color-mix(in oklab, var(--color-coal) 74%, var(--color-paper-obj));
+    color: color-mix(in oklab, var(--color-coal) 74%, var(--vv-paper-obj));
     font-size: 0.875rem;
     font-weight: 700;
     line-height: 1.4;
@@ -1521,7 +1521,7 @@
   }
   .vv-admit-label {
     display: block;
-    color: color-mix(in oklab, var(--color-coal) 74%, var(--color-paper-obj));
+    color: color-mix(in oklab, var(--color-coal) 74%, var(--vv-paper-obj));
     font-size: 0.74rem;
     font-weight: 900;
     letter-spacing: 0.1em;
@@ -1533,7 +1533,7 @@
     align-items: center;
     gap: 0.5rem;
     margin-top: 0.45rem;
-    border-bottom: 2px solid color-mix(in oklab, var(--color-coal) 32%, var(--color-paper-obj));
+    border-bottom: 2px solid color-mix(in oklab, var(--color-coal) 32%, var(--vv-paper-obj));
     transition: border-color var(--dur-hover) ease;
   }
   .vv-admit-field:focus-within {
@@ -1606,7 +1606,7 @@
   .vv-admit-note {
     min-height: 1.4rem;
     margin-top: 0.6rem;
-    color: color-mix(in oklab, var(--color-coal) 74%, var(--color-paper-obj));
+    color: color-mix(in oklab, var(--color-coal) 74%, var(--vv-paper-obj));
     font-size: 0.85rem;
     font-weight: 700;
     line-height: 1.4;
@@ -1831,7 +1831,7 @@
     max-width: 31rem;
     padding: 1.2rem 1.4rem 1.35rem;
     border-radius: 0.6rem;
-    background: var(--color-paper-obj);
+    background: var(--vv-paper-obj);
     box-shadow: 0 1px 1px rgb(var(--vv-shadow) / 0.2), 0 14px 26px -16px rgb(var(--vv-shadow) / 0.55);
     rotate: -1deg;
   }
@@ -1876,11 +1876,11 @@
     width: var(--card-w);
     padding: 0.85rem 1.1rem 1.1rem 1.35rem;
     border-radius: 0.4rem;
-    background-color: var(--color-paper-obj);
+    background-color: var(--vv-paper-obj);
     background-image: linear-gradient(
       to right,
       transparent 0.6rem,
-      color-mix(in oklab, var(--color-verm) 46%, var(--color-paper-obj)) 0.6rem calc(0.6rem + 1.5px),
+      color-mix(in oklab, var(--color-verm) 46%, var(--vv-paper-obj)) 0.6rem calc(0.6rem + 1.5px),
       transparent calc(0.6rem + 1.5px)
     );
     color: var(--color-coal);

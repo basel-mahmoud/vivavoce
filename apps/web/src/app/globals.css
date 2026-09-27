@@ -112,7 +112,9 @@
   --color-cobalt-lift: #8391ff;
   --color-butter: #ffc838;
   --color-line-dark: rgb(253 253 254 / 0.16);
-  /* Paper objects on the desk: white by day, lamp-lit at night. */
+  /* Paper objects on the desk: white by day, lamp-lit at night. For utilities
+     (bg-paper-obj) only: a production build drops inline theme variables that
+     only the imported stylesheets read, so those read --vv-paper-obj. */
   --color-paper-obj: var(--vv-paper-obj);
 
   --font-sans: var(--font-archivo), system-ui, -apple-system, sans-serif;
