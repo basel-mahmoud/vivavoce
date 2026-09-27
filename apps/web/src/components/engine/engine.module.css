@@ -728,6 +728,44 @@
   .short {
     display: inline;
   }
+  /* the disc is at its smallest here: a larger stamp keeps "Overall" inside its ring, legibly */
+  .stamp {
+    width: 68%;
+  }
+  .stampUnit {
+    font-size: 0.52rem;
+  }
+  /* Five names do not fit five narrow seats: stagger them over two rows, the way the panel's own
+     bench is inlaid, so each name can run wider than its seat instead of being cut short. */
+  .benchFront {
+    row-gap: 0.05rem;
+    font-size: 0.7rem;
+  }
+  .benchFront > span {
+    grid-row: 1;
+    justify-self: center;
+    width: max-content;
+    overflow: visible;
+  }
+  .benchFront > span:nth-child(1) {
+    grid-column: 1;
+    justify-self: start;
+  }
+  .benchFront > span:nth-child(2) {
+    grid-row: 2;
+    grid-column: 2;
+  }
+  .benchFront > span:nth-child(3) {
+    grid-column: 3;
+  }
+  .benchFront > span:nth-child(4) {
+    grid-row: 2;
+    grid-column: 4;
+  }
+  .benchFront > span:nth-child(5) {
+    grid-column: 5;
+    justify-self: end;
+  }
 }
 
 @media (min-width: 640px) and (max-width: 1023px) {
