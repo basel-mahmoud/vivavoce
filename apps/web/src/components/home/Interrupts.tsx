@@ -47,8 +47,21 @@ export function Interrupts({ className }: { className?: string }) {
     >
       <div className="tile tile-ink grid gap-12 rounded-field px-5 py-10 sm:p-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16 lg:p-16">
         <div className="lg:pt-4">
-          <h2 id={`${uid}-title`} className="display text-[clamp(2.3rem,4.6vw,4rem)] text-paper">
-            It interrupts, <span className="text-paper-mut">like the room will.</span>
+          {/* The examiner cuts into the heading itself: a red caret between two
+              words, and the question written over it. */}
+          <h2 id={`${uid}-title`} className="display vv-int-title text-[clamp(2.3rem,4.6vw,4rem)] text-paper">
+            It interrupts,{' '}
+            <span className="whitespace-nowrap">
+              like the
+              <span className="vv-caret" aria-hidden="true">
+                <span className="vv-caret-ask">Why?</span>
+                <svg className="vv-caret-mark" viewBox="0 0 24 16" focusable="false">
+                  <path d="M2 14 L12 3 L22 14" />
+                </svg>
+              </span>{' '}
+              room
+            </span>{' '}
+            will.
           </h2>
           <p className="mt-6 max-w-md text-lg font-medium leading-relaxed text-paper-mut">
             Examiners do not wait politely for a ramble to end. Neither does VivaVoce: it stops you where the

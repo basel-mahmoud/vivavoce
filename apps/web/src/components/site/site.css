@@ -649,6 +649,30 @@
     gap: 0.75rem;
     margin-top: 2rem;
   }
+  /* The page's own exhibit under the words: on /features, the panel itself,
+     dealing its marks as the page opens. */
+  .vv-hero-figure {
+    margin-top: clamp(1.75rem, 3.2vw, 2.75rem);
+  }
+  .vv-hero-panel {
+    max-width: 50rem;
+  }
+  .vv-hero-panel .vv-seats {
+    margin-top: 0;
+  }
+  .vv-hero-panel .vv-seat > .vv-portrait {
+    width: min(100%, 8rem) !important;
+  }
+  .vv-hero-panel .vv-seat > .vv-paddle {
+    --d: clamp(2.85rem, 5.4vw, 4.25rem);
+  }
+  .vv-hero-panel-note {
+    margin-top: 0.35rem;
+    color: var(--color-ink-mut);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
   /* A heading with something in the margin: the exam script's left margin,
      its red rule, and the examiner's mark in it beside the first line. */
   .vv-hero[data-margin] {

@@ -56,18 +56,17 @@ const SAMPLES: Record<ExaminerAxis, Sample> = {
   },
 };
 
-function AxisRow({ axis, demo, onEngage }: { axis: (typeof AXES)[number]; demo: boolean; onEngage: () => void }) {
+function AxisRow({ axis }: { axis: (typeof AXES)[number] }) {
   const key = axis.key as ExaminerAxis;
   const sample = SAMPLES[key];
   const row = useRef<HTMLLIElement>(null);
   const fine = useMedia(FINE_POINTER);
+  // Every answer is marked as it comes into view, one row after another, so the
+  // index never rests on blank coins; pointing at a marked answer marks it again.
   const inView = useInView(row, { amount: 0.6, once: true });
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [pinned, setPinned] = useState(false);
-  // With a mouse, the pen marks the answer you point at (the first row shows how until you
-  // do); on touch it marks each one as you scroll to it.
-  const marked = fine ? hovered || focused || pinned || (demo && inView) : inView || pinned;
+  const [again, setAgain] = useState(0);
+  const [asked, setAsked] = useState(false);
+  const marked = inView || asked;
   // Marks land in reading order, a beat apart.
   const penAt = sample.parts.map((_, i) => sample.parts.slice(0, i).filter((p) => typeof p !== 'string').length);
 
@@ -77,11 +76,9 @@ function AxisRow({ axis, demo, onEngage }: { axis: (typeof AXES)[number]; demo: 
       className="vv-axis"
       data-marked={marked ? '' : undefined}
       onPointerEnter={(e) => {
-        if (e.pointerType !== 'mouse') return;
-        setHovered(true);
-        onEngage();
+        if (e.pointerType !== 'mouse' || !fine || !marked) return;
+        setAgain((n) => n + 1);
       }}
-      onPointerLeave={(e) => e.pointerType === 'mouse' && setHovered(false)}
     >
       <span className="vv-axis-face">
         <Portrait axis={key} state={marked ? 'marking' : 'neutral'} size={88} decorative />
@@ -94,18 +91,11 @@ function AxisRow({ axis, demo, onEngage }: { axis: (typeof AXES)[number]; demo: 
       <button
         type="button"
         className="vv-axis-sample"
-        aria-pressed={pinned}
-        aria-label={`Example answer for ${axis.label}. ${marked ? `Marked: ${sample.note}` : 'Show how it is marked.'}`}
+        aria-label={`Example answer for ${axis.label}: ${sample.parts.map((p) => (typeof p === 'string' ? p : p.text)).join('')} Marked ${sample.mark}: ${sample.note} Press to watch it marked again.`}
         onClick={() => {
-          setPinned((p) => !p);
-          onEngage();
+          setAsked(true);
+          setAgain((n) => n + 1);
         }}
-        onFocus={(e) => {
-          if (!e.currentTarget.matches(':focus-visible')) return;
-          setFocused(true);
-          onEngage();
-        }}
-        onBlur={() => setFocused(false)}
       >
         <span className="vv-axis-answer" aria-hidden="true">
           {sample.parts.map((part, i) =>
@@ -113,7 +103,7 @@ function AxisRow({ axis, demo, onEngage }: { axis: (typeof AXES)[number]; demo: 
               <Fragment key={i}>{part}</Fragment>
             ) : (
               <RedPen
-                key={i}
+                key={`${i}-${again}`}
                 mark={part.mark}
                 play="manual"
                 show={marked}
@@ -130,39 +120,43 @@ function AxisRow({ axis, demo, onEngage }: { axis: (typeof AXES)[number]; demo: 
         </span>
       </button>
       <span className="vv-axis-mark">
-        <Paddle value={sample.mark} label={axis.label} revealed={marked} handle={false} delay={120} />
+        <Paddle value={sample.mark} label={axis.label} revealed={marked} handle={false} delay={260} />
       </span>
     </li>
   );
 }
 
 /**
- * The rubric as an index: one row per examiner. Point at an answer (or tab
- * to it) and that examiner marks it in red pen and turns their paddle over;
- * the first row does it on its own until you do. Every sample answers the
- * same question, so the flaw each axis catches is easy to see.
+ * The rubric as an index: one row per examiner, each with an example answer
+ * to the same exam question and the flaw that examiner catches. Each row is
+ * marked as it comes into view: the red pen goes over the answer, the
+ * examiner's note appears and the paddle turns over. Point at a marked
+ * answer (or press it) to watch it marked again.
  */
 export function AxesIndex({ className }: { className?: string }) {
   const uid = useId();
-  const [engaged, setEngaged] = useState(false);
-  const engage = () => setEngaged(true);
   return (
     <section
       aria-labelledby={`${uid}-title`}
-      className={cn('vv-axes mx-auto w-full max-w-[1360px] px-4 py-20 sm:px-5 sm:py-28', className)}
+      className={cn('vv-axes mx-auto w-full max-w-[1360px] px-4 pb-20 pt-16 sm:px-5 sm:pb-28 sm:pt-24', className)}
     >
-      <h2 id={`${uid}-title`} className="display max-w-[15ch] text-[clamp(2.3rem,5vw,4.3rem)] lg:max-w-[22ch]">
-        Five examiners. <span className="text-ink-mut">Five marks, and one thing to fix first.</span>
-      </h2>
-      <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-ink-mut">
-        Every answer is marked from 0 to 100 on each axis. Below, five example answers to one question:{' '}
-        <span className="font-bold text-ink">why is the left ventricle wall thicker than the right?</span>{' '}
-        <span className="vv-hint-fine">Point at an answer to see it marked.</span>
-        <span className="vv-hint-touch">Each one is marked as you reach it.</span>
-      </p>
-      <ol className="vv-axis-list mt-12 sm:mt-16">
-        {AXES.map((a, i) => (
-          <AxisRow key={a.key} axis={a} demo={i === 0 && !engaged} onEngage={engage} />
+      {/* Headed like the question paper it is: one question, answered five ways. */}
+      <header className="vv-axes-head">
+        <p className="vv-axes-q" aria-hidden="true">
+          Q.
+        </p>
+        <div>
+          <h2 id={`${uid}-title`} className="vv-axes-title">
+            Why is the left ventricle wall thicker than the right?
+          </h2>
+          <p className="vv-axes-lead">
+            Five answers to that one question, each with the flaw one examiner catches, marked 0 to 100.
+          </p>
+        </div>
+      </header>
+      <ol className="vv-axis-list mt-10 sm:mt-14">
+        {AXES.map((a) => (
+          <AxisRow key={a.key} axis={a} />
         ))}
       </ol>
       <p className="mt-6 text-[0.8rem] font-semibold text-ink-mut">

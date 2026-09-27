@@ -15,6 +15,7 @@ export function PageHero({
   children,
   flush = false,
   margin,
+  figure,
   className,
 }: {
   title: ReactNode;
@@ -24,6 +25,8 @@ export function PageHero({
   flush?: boolean;
   /** Something the examiner writes in the page's margin beside the heading (a tick). */
   margin?: ReactNode;
+  /** The page's own exhibit, full width under the words (the panel on /features). */
+  figure?: ReactNode;
   className?: string;
 }) {
   return (
@@ -42,6 +45,7 @@ export function PageHero({
         {intro ? <p className="vv-hero-intro">{intro}</p> : null}
         {children ? <div className="vv-hero-actions">{children}</div> : null}
       </div>
+      {figure ? <div className="vv-hero-figure">{figure}</div> : null}
     </section>
   );
 }

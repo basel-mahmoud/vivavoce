@@ -16,25 +16,34 @@ const SEAT_NAME: Record<AxisKey, string> = {
 };
 
 /**
- * The five examiners with your average on each paddle. The paddles lie
- * face down until the panel is on screen, then turn over one after another;
- * the examiner behind the weakest mark looks sceptical and holds up the red
+ * The five examiners with a mark on each paddle. The paddles lie face down
+ * until the panel is on screen, then turn over one after another; the
+ * examiner behind the weakest mark looks sceptical and holds up the red
  * paddle, the one behind the best looks pleased. Drawn for the eye only:
  * the same marks are listed for screen readers beside it. Reduced motion
  * shows the marks from the start.
+ *
+ * `deal`: the panel opens a page, so it arrives face down (server included)
+ * and deals its marks once it is on screen, instead of being printed face
+ * up and parked while out of sight.
  */
-export function PanelOfMarks({ averages }: { averages: Readonly<Record<string, number>> }) {
+export function PanelOfMarks({ averages, deal = false }: { averages: Readonly<Record<string, number>>; deal?: boolean }) {
   const row = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion() ?? false;
-  const [shown, setShown] = useState(true);
+  const [shown, setShown] = useState(!deal);
   const values = AXIS_ORDER.map((k) => averages[k] ?? 0);
   const { lo, hi } = extremes(values);
 
-  // Server-rendered face up; park face down while off screen, turn over on arrival.
+  // Face up from the server and parked face down while off screen (or dealt face
+  // down, with `deal`); either way the paddles turn over on arrival.
   useEffect(() => {
     const el = row.current;
-    if (!el || reduce) return;
-    let parked = false;
+    if (!el) return;
+    if (reduce) {
+      const t = window.setTimeout(() => setShown(true), 0);
+      return () => window.clearTimeout(t);
+    }
+    let parked = deal;
     const io = new IntersectionObserver(
       ([entry]) => {
         if (!entry) return;
@@ -50,7 +59,7 @@ export function PanelOfMarks({ averages }: { averages: Readonly<Record<string, n
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [reduce]);
+  }, [reduce, deal]);
 
   return (
     <div ref={row} className="vv-seats" aria-hidden="true">
@@ -60,7 +69,7 @@ export function PanelOfMarks({ averages }: { averages: Readonly<Record<string, n
         const face = !shown ? 'neutral' : weak ? 'sceptical' : best ? 'pleased' : 'neutral';
         return (
           <div key={key} className="vv-seat" data-weak={weak ? '' : undefined} style={{ '--col': i + 1 } as CSSProperties}>
-            <Portrait axis={key} state={face} size={200} decorative className="vv-seat-face" />
+            <Portrait axis={key} state={face} size={200} priority={deal} decorative className="vv-seat-face" />
             <Paddle
               value={values[i]!}
               label={AXIS_LABEL[key]}
