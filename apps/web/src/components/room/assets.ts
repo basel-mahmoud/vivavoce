@@ -23,9 +23,12 @@ export const DETAIL_TEXTURES = {
   speckle: asset('/models/examiners-speckle.webp'),
 } as const;
 
-/** The marks (digits) and the axis names on the paddles and the bench. */
-export const FONT_MONO = asset('/fonts/jetbrains-mono-700.woff');
-export const FONT_DISPLAY = asset('/fonts/archivo-900.woff');
+/**
+ * The marks (digits) and the axis names on the paddles and the bench, in fonts cut down to those
+ * glyphs (scripts/examiners/label-fonts.mjs): a few KB each, and quick for the text renderer to parse.
+ */
+export const FONT_MONO = asset('/fonts/jetbrains-mono-700-digits.woff');
+export const FONT_DISPLAY = asset('/fonts/archivo-900-labels.woff');
 
 function once<T>(load: () => Promise<T>): () => Promise<T> {
   let pending: Promise<T> | null = null;

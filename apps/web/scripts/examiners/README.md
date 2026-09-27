@@ -57,6 +57,7 @@ Playwright is not an app dependency. Point `PLAYWRIGHT_MODULE` at an installed c
 
 | File | Role |
 | --- | --- |
+| `label-fonts.mjs` | Cuts the 3D labels' fonts down to the glyphs they use (fontTools); `label-fonts.test.ts` checks the cut covers every label. |
 | `compress.mjs` | Step 2b: meshopt-encodes every buffer view of the GLB (vertex data byte for byte, triangles in the same winding) and checks the round trip before writing. |
 | `build_examiners.py` | The whole cast: lathed superellipse shells split into Body and Head pivots, SDF parts (`sdf.py`), the rest-pose contact solve for the hands, merging per pivot per material, a Cycles AO bake into `COLOR_0.a`, glTF export and the quantising packer. |
 | `sdf.py` | A small numpy SDF kit: smooth unions, surface nets and Newton projection. |
@@ -93,9 +94,11 @@ Playwright is not an app dependency. Point `PLAYWRIGHT_MODULE` at an installed c
 ## Runtime notes for the scene
 
 - troika-three-text must run with `configureTextBuilder({ useWorker: false })`: the site's CSP
-  blocks its blob worker. Paddle marks use `/fonts/jetbrains-mono-700.woff` on the `PaddleFront_`
-  anchors, axis names use `/fonts/archivo-900.woff` on `PaddleBack_` and the `BenchLabel_` anchors
-  (butter `#ffc838`, `curveRadius` from `BENCH_LABELS`).
+  blocks its blob worker. Paddle marks use `/fonts/jetbrains-mono-700-digits.woff` on the
+  `PaddleFront_` anchors, axis names use `/fonts/archivo-900-labels.woff` on `PaddleBack_` and the
+  `BenchLabel_` anchors (butter `#ffc838`, `curveRadius` from `BENCH_LABELS`). Those two are subsets
+  of the full fonts beside them (digits; A to Z and a to z), cut by `label-fonts.mjs` so the page
+  fetches and parses about 7 KB instead of 46 KB; a label with any other character needs a new cut.
 - N8AO: set `configuration.transparencyAware = false`. Otherwise it renders every transparent
   object (troika glyphs, the loupe lens) twice more per frame. In the hero that is 129 draw calls
   against 115.
