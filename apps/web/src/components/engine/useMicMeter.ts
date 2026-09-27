@@ -21,6 +21,15 @@ export interface Meter {
 
 export type MicResult = 'granted' | 'denied' | 'unavailable';
 
+/**
+ * How loud a moment of the microphone looks, 0..1, from its RMS level. A soft knee rather than a
+ * clip: quiet speech still moves the drawing, and a close, loud voice (or a browser's automatic
+ * gain) never pins it flat at the top, so the syllables stay readable.
+ */
+export function loudness(rms: number): number {
+  return rms > 0 ? 1 - Math.exp(-rms * 6.5) : 0;
+}
+
 interface Live {
   stream: MediaStream | null;
   ctx: AudioContext | null;
@@ -66,14 +75,15 @@ export function useMicMeter() {
         analyser.getFloatTimeDomainData(data);
         let sum = 0;
         for (let i = 0; i < data.length; i++) sum += data[i]! * data[i]!;
-        target = Math.min(1, Math.sqrt(sum / data.length) * 5);
+        target = loudness(Math.sqrt(sum / data.length));
       } else {
-        // speech results arrive in bursts: each one kicks a syllable-ish envelope that decays
+        // speech results arrive in bursts: each one kicks a syllable-ish envelope that decays, with
+        // room between the syllables so it reads as speech rather than a solid bar
         kick.current *= Math.exp(-dt / 0.22);
-        target = kick.current * (0.5 + 0.5 * Math.abs(Math.sin(t * 15.7) * Math.sin(t * 4.9 + 1)));
+        target = kick.current * (0.22 + 0.78 * Math.abs(Math.sin(t * 15.7) * Math.sin(t * 4.9 + 1)));
       }
-      // ballistics: about 60 ms attack, 300 ms release
-      const rate = target > m.level ? 1 - Math.exp(-dt / 0.06) : 1 - Math.exp(-dt / 0.3);
+      // ballistics: about 40 ms attack, 150 ms release, quick enough to keep the gaps between syllables
+      const rate = target > m.level ? 1 - Math.exp(-dt / 0.04) : 1 - Math.exp(-dt / 0.15);
       m.level += (target - m.level) * rate;
 
       acc += dt;
