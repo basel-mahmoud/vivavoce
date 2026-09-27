@@ -228,13 +228,16 @@ export function Director({
     ro.observe(tag);
     ro.observe(answer);
     if (guide) ro.observe(guide);
+    const placedGuide = placed.current.guide;
     return () => {
       ro.disconnect();
-      // without the live room the caption goes back to where the poster's bench is
+      // without the live room the caption goes back to where the poster's bench is; a director
+      // that lives on (React remounts effects in development) places it again on its next frame
       if (guide) {
         delete guide.dataset.placed;
         guide.style.transform = '';
       }
+      placedGuide.x = placedGuide.y = placedGuide.s = NaN;
     };
   }, [overlaysRef]);
 
