@@ -2,9 +2,9 @@ import { cn } from '@/lib/cn';
 import styles from './room.module.css';
 
 /** Compact: phones and portrait tablets, the same test the camera and the layout use. */
-const COMPACT = '(max-width: 767px), (max-aspect-ratio: 21/20)';
+const COMPACT = '(max-width: 599px), (max-aspect-ratio: 21/20)';
 const DARK = '(prefers-color-scheme: dark)';
-const DARK_COMPACT = `${DARK} and (max-width: 767px), ${DARK} and (max-aspect-ratio: 21/20)`;
+const DARK_COMPACT = `${DARK} and (max-width: 599px), ${DARK} and (max-aspect-ratio: 21/20)`;
 
 /** Rendered from the live scene by scripts/room/posters.mjs (see its header for provenance). */
 export const POSTERS = {
@@ -16,9 +16,11 @@ export const POSTER_ALT =
   'An example round: five examiners at a cobalt bench hold up their marks, 71, 66, 48, 62 and 54. Structure, the weakest at 48, leans in to ask the follow-up.';
 
 /**
- * The first frame of the room as a still: the page's largest contentful paint, shown at once and
- * cross-faded to the live canvas when it is ready. Without WebGL it simply stays, under the same
- * DOM captions. Art-directed per scheme and layout by media queries, so no script is involved.
+ * The first frame of the room as a still, painted at once under the hero's words and cross-faded
+ * to the live canvas when it is ready (Chrome never counts a full-viewport image as the largest
+ * contentful paint, so the words carry that, and they paint in the first frame). Without WebGL, or
+ * when the visitor saves data, it simply stays, under the same DOM captions. Art-directed per
+ * scheme and layout by media queries, so no script is involved.
  */
 export function RoomPoster({ hidden }: { hidden: boolean }) {
   const { wide, compact } = POSTERS;

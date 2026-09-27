@@ -35,7 +35,7 @@ describe('room shots', () => {
       [390, 844, HERO_COINS_COMPACT],
     ] as const) {
       const aspect = w / h;
-      const { poses } = makeShots(aspect, { hero: 0.4, beat: 0.34, outro: 0.34 }, w);
+      const { poses } = makeShots(aspect, { hero: 0.4, beat: 0.34, outro: 0.34, floor: 0.78 }, w);
       const faces = w > 768 ? EXAMINERS : (['clarity', 'structure', 'conciseness'] as const);
       for (const c of coins) for (const p of coinPoints(coinVec(c), 0.21)) {
         const q = project(p, poses.hero, aspect);
@@ -47,6 +47,27 @@ describe('room shots', () => {
         const q = project(visorCentre(k), poses.hero, aspect);
         expect(q.x).toBeGreaterThan(0);
         expect(q.x).toBeLessThan(1);
+      }
+    }
+  });
+
+  it("keeps the examiner's note clear of every mark on short phones and phones held sideways", () => {
+    // a three-line note: the frame keeps the room the note measures, not a fixed allowance
+    const tag = 104;
+    for (const [w, h, coins] of [
+      [375, 667, HERO_COINS_COMPACT],
+      [390, 664, HERO_COINS_COMPACT],
+      [844, 390, HERO_COINS],
+      [932, 430, HERO_COINS],
+    ] as const) {
+      const aspect = w / h;
+      const insets = { hero: 0.36, beat: 0.3, outro: 0.3, floor: 0.8, tag };
+      const { poses, compact } = makeShots(aspect, insets, w);
+      // where the Director may set the note at the latest: under the copy on phones, under the nav
+      // on wide layouts, the note's own height below that
+      const noteBottom = (compact ? insets.hero * h + 22 : 76) + tag;
+      for (const c of coins) {
+        for (const p of coinPoints(coinVec(c), 0.21)) expect(project(p, poses.hero, aspect).y * h).toBeGreaterThan(noteBottom);
       }
     }
   });

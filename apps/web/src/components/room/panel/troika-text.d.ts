@@ -14,8 +14,10 @@ declare module 'troika-three-text' {
     curveRadius: number;
     sdfGlyphSize: number | null;
     color: string | number | Color | null;
+    /** 0..1, read at render time (no sync needed). */
+    fillOpacity: number;
     material: Material;
-    readonly textRenderInfo: { capHeight?: number } | null;
+    readonly textRenderInfo: { capHeight?: number; blockBounds?: readonly [number, number, number, number] } | null;
     sync(callback?: () => void): void;
     dispose(): void;
   }

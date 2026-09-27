@@ -40,6 +40,12 @@ export function Panel({ channelsRef, dark, shadows, onReady, timeScale }: PanelP
   const time = useRef(0);
   const scale = useRef(timeScale ?? devTimeScale());
 
+  // development only: the review scripts wait on the paddles through this
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+    (window as unknown as { __vvCast?: Cast }).__vvCast = cast;
+  }, [cast]);
+
   useLayoutEffect(() => cast.setScheme(dark ? 'dark' : 'light'), [cast, dark]);
   useLayoutEffect(() => cast.setShadows(shadows), [cast, shadows]);
   useEffect(() => () => cast.dispose(), [cast]);

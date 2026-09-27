@@ -53,13 +53,13 @@ export interface PanelChannels {
   still: boolean;
 }
 
-/** Hero-shot coin positions (world): a low-high-mid-high-low skyline that clears every face. */
+/** Hero-shot coin positions (world): a crown of marks that clears every face (camera.ts HERO_COINS). */
 export const DEFAULT_COINS: readonly (readonly [number, number, number])[] = [
-  [-2.4, 1.24, -0.42],
-  [-1.42, 1.8, -0.55],
+  [-1.98, 1.84, -0.34],
+  [-1.36, 2.02, -0.55],
   [0.6, 0.98, -0.42],
-  [1.32, 1.82, -0.6],
-  [2.16, 1.46, -0.42],
+  [1.3, 1.98, -0.6],
+  [1.76, 1.58, -0.32],
 ];
 
 export function createChannels(): PanelChannels {

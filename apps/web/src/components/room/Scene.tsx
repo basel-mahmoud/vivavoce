@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState, type ComponentType } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
@@ -10,16 +10,31 @@ import { createChannels, type PanelChannels } from './panel/channels';
 import type { Cast } from './panel/cast';
 import { Studio, type FocusLight } from './set/Studio';
 import { CANVAS, Cyclorama } from './set/Cyclorama';
-import { ContactBlot, Lamp, Mic } from './set/Props';
-import { Director, type DofState, type RoomOverlays, type RoundState } from './Director';
+import { Lamp, Mic, Riser } from './set/Props';
+import { Director, type DofState, type RoomCue, type RoomOverlays, type RoundState } from './Director';
 import type { Insets, ShotSet } from './camera';
 import { stillAt } from './story';
 
 export type { Insets } from './camera';
-export type { RoomOverlays, RoundState } from './Director';
+export type { RoomCue, RoomOverlays, RoundState } from './Director';
 
-/** The post chain (N8AO, SMAA, depth of field) is its own chunk, fetched only on desktop tiers. */
-const Post = lazy(() => import('./Post'));
+/**
+ * The post chain (N8AO, SMAA, depth of field) is its own chunk, fetched only on desktop tiers. If
+ * it cannot be fetched the room goes on without it, as it does on phones.
+ */
+const Post = lazy<ComponentType<PostProps>>(() => import('./Post').catch(() => ({ default: NoPost })));
+
+interface PostProps {
+  tier: 2 | 3;
+  dark: boolean;
+  dofRef: React.RefObject<DofState>;
+  onReady?: () => void;
+}
+
+function NoPost({ onReady }: PostProps) {
+  useEffect(() => onReady?.(), [onReady]);
+  return null;
+}
 
 type Tier = 1 | 2 | 3;
 
@@ -52,11 +67,16 @@ export interface SceneProps {
   /** The hero's example round may play (in view, tab visible, past the intro). */
   playing: boolean;
   reduce: boolean;
+  /** "Pause the room": no example round and no idle life, as under reduced motion. */
+  paused: boolean;
   dark: boolean;
   insets: Insets;
   overlaysRef: React.RefObject<RoomOverlays>;
+  cueRef: React.RefObject<RoomCue>;
   onReady: () => void;
   onRound: (r: RoundState) => void;
+  /** The WebGL context is gone: the poster takes over again. */
+  onLost: () => void;
 }
 
 /** Under reduced motion the canvas renders on demand: redraw when the scroll crosses into a new still. */
@@ -81,9 +101,11 @@ function StillDriver({ progress }: { progress: MotionValue<number> }) {
  * pass included), read by the perf report as window.__vvRoom.
  */
 function DrawCounter({ tier }: { tier: Tier }) {
+  const frames = useRef(0);
   useFrame((state) => {
     const info = state.gl.info;
     const w = window as unknown as { __vvRoom?: Record<string, unknown> };
+    frames.current += 1;
     if (info.autoReset) info.autoReset = false;
     else {
       const cam = state.camera as THREE.PerspectiveCamera;
@@ -92,6 +114,8 @@ function DrawCounter({ tier }: { tier: Tier }) {
         draws: info.render.calls,
         triangles: info.render.triangles,
         tier,
+        // frames drawn so far: the review scripts wait for new frames, not for a quiet clock
+        frame: frames.current,
         camera: [cam.position.x, cam.position.y, cam.position.z, cam.fov, cam.view?.offsetX ?? 0, cam.view?.offsetY ?? 0].map((v) => Math.round(v * 100) / 100),
       };
     }
@@ -138,15 +162,17 @@ function DevProbe() {
 function Room({
   progress,
   reduce,
+  paused,
   dark,
   insets,
   playing,
   overlaysRef,
+  cueRef,
   tier,
   dofRef,
   onRound,
   onPanel,
-}: Omit<SceneProps, 'active' | 'onReady'> & {
+}: Omit<SceneProps, 'active' | 'onReady' | 'onLost'> & {
   tier: Tier;
   dofRef: React.RefObject<DofState>;
   onPanel: (cast: Cast) => void;
@@ -157,6 +183,7 @@ function Room({
   const shotsRef = useRef<ShotSet | null>(null);
   const micWeightRef = useRef(0);
   const maskRef = useRef(new THREE.Vector4(-2, -1, -2, -1));
+  const edgeRef = useRef(new THREE.Vector4(0.04, 0.04, 0.06, 0.06));
   const shadows = tier >= 2;
   const onCast = useCallback(
     (c: Cast) => {
@@ -171,6 +198,7 @@ function Room({
       <Director
         progress={progress}
         reduce={reduce}
+        paused={paused}
         insets={insets}
         playing={playing}
         channelsRef={channelsRef}
@@ -180,12 +208,14 @@ function Room({
         micWeightRef={micWeightRef}
         dofRef={dofRef}
         maskRef={maskRef}
+        edgeRef={edgeRef}
         overlaysRef={overlaysRef}
+        cueRef={cueRef}
         onRound={onRound}
       />
       <Studio dark={dark} shadows={shadows} focusRef={focusRef} />
-      <Cyclorama dark={dark} shadows={shadows} focusRef={focusRef} maskRef={maskRef} />
-      {!shadows && <ContactBlot dark={dark} />}
+      <Cyclorama dark={dark} shadows={shadows} focusRef={focusRef} maskRef={maskRef} edgeRef={edgeRef} />
+      <Riser dark={dark} shadows={shadows} />
       <Lamp dark={dark} />
       <Mic shotsRef={shotsRef} weightRef={micWeightRef} />
       <Panel channelsRef={channelsRef} dark={dark} shadows={shadows} onReady={onCast} />
@@ -220,7 +250,7 @@ function Reveal({ ready, onReady }: { ready: boolean; onReady: () => void }) {
 }
 
 /** The viva room. Client-only; loaded lazily by RoomStory. */
-export default function Scene({ progress, active, playing, reduce, dark, insets, overlaysRef, onReady, onRound }: SceneProps) {
+export default function Scene({ progress, active, playing, reduce, paused, dark, insets, overlaysRef, cueRef, onReady, onRound, onLost }: SceneProps) {
   const [startTier] = useState<Tier>(guessTier);
   const [tier, setTier] = useState<Tier>(startTier);
   const [locked] = useState(forcedTier);
@@ -248,11 +278,16 @@ export default function Scene({ progress, active, playing, reduce, dark, insets,
       gl={{
         antialias: startTier === 1,
         alpha: false,
-        powerPreference: 'high-performance',
+        // a marketing page never wakes the discrete GPU of a dual-GPU laptop
+        powerPreference: 'default',
         toneMapping: THREE.NeutralToneMapping,
         preserveDrawingBuffer: reduce,
       }}
-      onCreated={({ gl }) => gl.setClearColor(dark ? CANVAS.dark : CANVAS.light, 1)}
+      onCreated={({ gl }) => {
+        gl.setClearColor(dark ? CANVAS.dark : CANVAS.light, 1);
+        // a lost context (a GPU reset, a phone reclaiming memory) hands the stage back to the poster
+        gl.domElement.addEventListener('webglcontextlost', onLost, { once: true });
+      }}
       aria-hidden
       tabIndex={-1}
     >
@@ -269,10 +304,12 @@ export default function Scene({ progress, active, playing, reduce, dark, insets,
         <Room
           progress={progress}
           reduce={reduce}
+          paused={paused}
           dark={dark}
           insets={insets}
           playing={playing}
           overlaysRef={overlaysRef}
+          cueRef={cueRef}
           tier={tier}
           dofRef={dofRef}
           onRound={onRound}

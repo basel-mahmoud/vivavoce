@@ -280,6 +280,15 @@ export class ExaminerRuntime {
     this.nextSaccade = 0.4 + hash(seed * 3.1) * 1.4;
   }
 
+  /** Development and review: how far the paddle is raised and turned, and whether it has settled. */
+  get paddleState() {
+    return {
+      raise: this.raise.x,
+      flip: this.flip.x,
+      settled: Math.abs(this.raise.x - this.paddleGoal) < 0.01 && Math.abs(this.raise.v) + Math.abs(this.flip.v) < 0.05,
+    };
+  }
+
   /** The root frame is fixed; call again only if the panel is moved. */
   refreshRoot() {
     this.parts.nodes.root.updateWorldMatrix(true, false);
@@ -414,17 +423,23 @@ export class ExaminerRuntime {
     const gaze = clamp(Math.atan2(_look.x, _look.z), -0.95, 0.95);
     const pitch = -Math.atan2(_look.y, Math.hypot(_look.x, _look.z));
     let yaw = gaze;
-    if (typeof lk === 'number') {
+    let headPitch = pitch;
+    if (typeof lk === 'number' || lk === 'pointer') {
       // turning to another examiner is limited by how far away it sits: a neighbour glances,
-      // mostly with its eyes, so no face ever swings out of the camera's view
+      // mostly with its eyes, so no face ever swings out of the camera's view. Following the
+      // visitor's pointer, the eyes lead and the head turns at most about 6 degrees after them.
       _camR.setFromMatrixPosition(camera.matrixWorld).applyMatrix4(this.rootInv).sub(this.visorRoot);
       const toCamera = Math.atan2(_camR.x, _camR.z);
-      const reach = Math.min(0.5, 0.13 * Math.abs(lk - i));
+      const reach = lk === 'pointer' ? 0.105 : Math.min(0.5, 0.13 * Math.abs(lk - i));
       yaw = toCamera + clamp(gaze - toCamera, -reach, reach);
+      if (lk === 'pointer') {
+        const camPitch = -Math.atan2(_camR.y, Math.hypot(_camR.x, _camR.z));
+        headPitch = camPitch + clamp(pitch - camPitch, -0.08, 0.08);
+      }
     }
     const bodyYawT = clamp(yaw * 0.42, -0.2, 0.2);
     const headYawT = clamp(yaw - bodyYawT, -this.headLimit * 1.2, this.headLimit * 1.2);
-    const headPitchT = clamp(pitch * 0.55, -HEAD_LIMITS.pitch, HEAD_LIMITS.pitch);
+    const headPitchT = clamp(headPitch * 0.55, -HEAD_LIMITS.pitch, HEAD_LIMITS.pitch);
     this.focus = still ? ch.focus : damp(this.focus, ch.focus, 5, dt);
     const lean = 0.015 + this.focus * 0.075 + this.speaking * 0.025;
     if (still) {
@@ -536,8 +551,16 @@ export class ExaminerRuntime {
 
     /* Draw only the paddle face that points at the camera. */
     _camR.setFromMatrixPosition(camera.matrixWorld);
-    this.parts.markText.visible = facesCamera(this.parts.front, _camR);
-    this.parts.nameText.visible = facesCamera(this.parts.back, _camR);
+    this.parts.markText.visible = facesCamera(this.parts.front, _camR, -0.05);
+    // The axis name shows only on a paddle lying face-down at rest, seen from high enough to read,
+    // and always upright for the lens: never mid-flight, rotated, mirrored or upside down.
+    const name = this.parts.nameText;
+    name.visible = this.raise.x < 0.03 && this.flip.x > 2.9 && facesCamera(this.parts.back, _camR, 0.3);
+    if (name.visible) {
+      _x.set(1, 0, 0).transformDirection(this.parts.back.matrixWorld);
+      _y.setFromMatrixColumn(camera.matrixWorld, 0);
+      name.rotation.z = _x.dot(_y) < 0 ? Math.PI : 0;
+    }
 
     this.first = false;
   }
@@ -600,10 +623,11 @@ function blinkCurve(t: number) {
   return 1 - (t - 0.09) / 0.12;
 }
 
-function facesCamera(anchor: THREE.Object3D, camWorld: THREE.Vector3) {
+/** Whether an anchor's face (+z) points at the camera by more than `min` (the cosine of the view). */
+function facesCamera(anchor: THREE.Object3D, camWorld: THREE.Vector3, min: number) {
   anchor.updateWorldMatrix(true, false);
   _n.set(0, 0, 1).transformDirection(anchor.matrixWorld);
   _tmp2.setFromMatrixPosition(anchor.matrixWorld);
   _tmp.copy(camWorld).sub(_tmp2).normalize();
-  return _n.dot(_tmp) > -0.05;
+  return _n.dot(_tmp) > min;
 }

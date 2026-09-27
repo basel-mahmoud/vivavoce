@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BEATS, HERO_END, OUTRO, STOPS, STOP_SHOTS, beatAt, ramp, settle, stillAt, stopBlend } from './story';
+import { BEATS, HANDOFF, HERO_END, OUTRO, STOPS, STOP_SHOTS, beatAt, marksAt, ramp, settle, stillAt, stopBlend } from './story';
 
 describe('room story timing', () => {
   it('has one shot per stop', () => {
@@ -31,7 +31,15 @@ describe('room story timing', () => {
     expect(stillAt(HERO_END)).toBe(0);
     BEATS.forEach((b, i) => expect(stillAt(b)).toBe(i + 1));
     expect(stillAt(OUTRO)).toBe(6);
-    expect(stillAt(1)).toBe(6);
+    expect(stillAt(HANDOFF)).toBe(7);
+    expect(stillAt(1)).toBe(7);
+  });
+
+  it('counts the examiners that have marked the answer, cumulatively', () => {
+    expect(marksAt(0)).toBe(0);
+    expect(marksAt(HERO_END)).toBe(0);
+    BEATS.forEach((b, i) => expect(marksAt(b)).toBe(i + 1));
+    expect(marksAt(OUTRO)).toBe(5);
   });
 
   it('maps piecewise and clamps', () => {

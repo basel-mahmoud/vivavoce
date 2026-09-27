@@ -1014,7 +1014,8 @@ export const POSES: Record<ExaminerKey, Record<'raise' | 'present' | 'chinTap', 
   structure: {
     raise: raisePose('structure', [0.6, 0.98, 0.53], [-0.05, 0.1, 1], 'speaking'),
     present: freeHandPose('structure', { pos: [-0.56, 0.72, 0.62], gesture: 'present' }, 'speaking'),
-    chinTap: freeHandPose('structure', { pos: [-0.2, 0.9, 0.58], gesture: 'chin' }, 'sceptical'),
+    // beside the visor, not across it: the raised brow is the point of the look
+    chinTap: freeHandPose('structure', { pos: [-0.5, 0.78, 0.6], gesture: 'chin' }, 'sceptical'),
   },
   conciseness: {
     raise: raisePose('conciseness', [0.52, 1.8, 0.3], [-0.1, 0.1, 1], 'marking'),
