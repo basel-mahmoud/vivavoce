@@ -79,6 +79,8 @@ export interface Cast {
   ready: Promise<void>;
   setScheme(scheme: Scheme): void;
   setShadows(on: boolean): void;
+  /** Show or hide the whole cast (hidden until its programs are compiled). */
+  setVisible(on: boolean): void;
   update(time: number, dt: number, camera: THREE.Camera, channels: PanelChannels): void;
   /** World position of an examiner's visor centre. */
   visorWorld(index: number, out: THREE.Vector3): THREE.Vector3;
@@ -257,6 +259,9 @@ export function buildCast(source: THREE.Object3D, maps: DetailTextures, initial:
       }
       faces.forEach((f) => f.setScheme(scheme));
       coinMaterials.forEach((m) => m.color.set(FINISH[scheme].ex_coin!.color));
+    },
+    setVisible(on) {
+      root.visible = on;
     },
     setShadows(on) {
       root.traverse((o) => {

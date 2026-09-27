@@ -12,6 +12,7 @@ import { Studio, type FocusLight } from './set/Studio';
 import { CANVAS, Cyclorama } from './set/Cyclorama';
 import { Lamp, Mic, Riser } from './set/Props';
 import { Director, type DofState, type RoomCue, type RoomOverlays, type RoundState } from './Director';
+import { precompile } from './compile';
 import type { Insets, ShotSet } from './camera';
 import { stillAt } from './story';
 
@@ -187,6 +188,12 @@ function Room({
   const maskRef = useRef(new THREE.Vector4(-2, -1, -2, -1));
   const edgeRef = useRef(new THREE.Vector4(0.04, 0.04, 0.06, 0.06));
   const shadows = tier >= 2;
+  const gl = useThree((s) => s.gl);
+  const camera = useThree((s) => s.camera);
+  const scene = useThree((s) => s.scene);
+  // desktop tiers draw through the post chain (Post.tsx); phones straight to the screen
+  const viaComposer = tier >= 2;
+  const prepare = useCallback((root: THREE.Object3D) => precompile(gl, root, camera, scene, viaComposer), [gl, camera, scene, viaComposer]);
   const onCast = useCallback(
     (c: Cast) => {
       castRef.current = c;
@@ -220,26 +227,25 @@ function Room({
       <Riser dark={dark} shadows={shadows} />
       <Lamp dark={dark} />
       <Mic shotsRef={shotsRef} weightRef={micWeightRef} />
-      <Panel channelsRef={channelsRef} dark={dark} shadows={shadows} onReady={onCast} />
+      <Panel channelsRef={channelsRef} dark={dark} shadows={shadows} onReady={onCast} prepare={prepare} />
     </>
   );
 }
 
-/** Counts rendered frames after the panel is ready, then reveals the canvas. */
+/**
+ * Counts rendered frames after the panel is ready, then reveals the canvas. The cast's programs are
+ * compiled before it is drawn (Panel's `prepare`) and the set's in the frames before this, all
+ * behind the poster, in the variant the frames use.
+ */
 function Reveal({ ready, onReady }: { ready: boolean; onReady: () => void }) {
-  const gl = useThree((s) => s.gl);
-  const scene = useThree((s) => s.scene);
-  const camera = useThree((s) => s.camera);
   const invalidate = useThree((s) => s.invalidate);
   const frames = useRef(-1);
   const done = useRef(false);
   useEffect(() => {
     if (!ready) return;
-    // compile every program now, behind the poster, so the first visible frames do not hitch
-    gl.compile(scene, camera);
     frames.current = 0;
     invalidate();
-  }, [ready, gl, scene, camera, invalidate]);
+  }, [ready, invalidate]);
   useFrame(() => {
     if (done.current || frames.current < 0) return;
     frames.current += 1;
@@ -294,6 +300,8 @@ export default function Scene({ progress, active, playing, reduce, paused, dark,
       }}
       onCreated={({ gl }) => {
         gl.setClearColor(dark ? CANVAS.dark : CANVAS.light, 1);
+        // the shaders are fixed and checked in development; skipping the info-log reads saves stalls
+        gl.debug.checkShaderErrors = process.env.NODE_ENV !== 'production';
         // a lost context (a GPU reset, a phone reclaiming memory) hands the stage back to the poster
         gl.domElement.addEventListener('webglcontextlost', onLost, { once: true });
       }}
