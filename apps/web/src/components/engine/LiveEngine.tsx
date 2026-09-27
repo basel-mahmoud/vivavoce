@@ -88,12 +88,17 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
     const el = section.current;
     if (!el) return;
     let asked = false;
-    const ioNear = new IntersectionObserver(([e]) => e?.isIntersecting && setNear(true), { rootMargin: '100% 0px' });
-    const ioView = new IntersectionObserver(([e]) => setInView(Boolean(e?.isIntersecting)), { rootMargin: '80px 0px' });
+    // A busy page can be handed several entries in one callback (the first report, and a scroll
+    // that came before it was delivered): the last entry is where the section is now. Reading only
+    // the first left the stage unmounted for good when a visitor arrived mid-hydration.
+    const now = (entries: IntersectionObserverEntry[]) => entries[entries.length - 1];
+    const ioNear = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && setNear(true), { rootMargin: '100% 0px' });
+    const ioView = new IntersectionObserver((entries) => setInView(Boolean(now(entries)?.isIntersecting)), { rootMargin: '80px 0px' });
     // Space answers (and the panel asks its question) once the section holds the screen: a third
     // of it in view, or half the viewport filled by it when it is taller than a short screen
     const ioKeys = new IntersectionObserver(
-      ([e]) => {
+      (entries) => {
+        const e = now(entries);
         if (!e) return;
         const cover = e.intersectionRect.height / Math.max(1, e.rootBounds?.height ?? window.innerHeight);
         spaceArmed.current = e.intersectionRatio >= 0.3 || cover >= 0.5;
