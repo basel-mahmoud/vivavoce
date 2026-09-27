@@ -208,9 +208,10 @@ describe('boot script', () => {
     document.dispatchEvent(new Event('DOMContentLoaded'));
     await vi.advanceTimersByTimeAsync(10_000);
     expect(b.times.done).toBeUndefined();
-    await vi.advanceTimersByTimeAsync(4000);
+    await vi.advanceTimersByTimeAsync(2000);
     expect(b.times.max).toBeGreaterThanOrEqual(11_000);
-    expect(b.times.done).toBeDefined();
+    // by the quick ending: the page is back within a second or so of the longest wait
+    expect(b.times.done).toBeLessThanOrEqual(12_300);
     expect(localStorage.getItem(BOOT_STORE)).toBeNull();
     b.mark('app');
     for (const name of ['code', 'model', 'textures', 'labels', 'compile', 'ready']) b.mark(name);

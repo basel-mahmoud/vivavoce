@@ -414,9 +414,10 @@ export function bootController(
   /* ── Skip, the longest wait, a return from the back/forward cache ───── */
 
   for (const t of INPUTS) w.addEventListener(t, onInput, { capture: true, passive: true });
+  // the longest wait: the page comes back now, by the quick ending (the room joins it when it can)
   w.setTimeout(() => {
     if (phase !== 'portal' && phase !== 'done') {
-      forced = true;
+      forced = quick = true;
       log('max');
     }
   }, cfg.max);
