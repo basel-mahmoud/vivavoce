@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Archivo, JetBrains_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
+import { fontGateScript } from '@/components/site/fontGate';
 import { site } from '@/lib/site';
 import './globals.css';
 
@@ -66,6 +67,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${archivo.variable} ${jetbrains.variable}`}>
       <body className="antialiased">
+        {/* before any content is parsed: animated type waits for Archivo (components/site/fontGate) */}
+        <script dangerouslySetInnerHTML={{ __html: fontGateScript(archivo.style.fontFamily) }} />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-cobalt focus:px-4 focus:py-2 focus:font-bold focus:text-paper"

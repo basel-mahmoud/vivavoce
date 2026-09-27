@@ -1,27 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { motion, useTransform, type MotionValue } from 'motion/react';
 import { ArrowRight, Mic } from 'lucide-react';
 import { RedPen } from '@/components/ui/RedPen';
-import { useFontsReady } from '@/components/site/useFontsReady';
 import { cn } from '@/lib/cn';
 import { AXES, ROUNDS, weakestIndex } from './data';
 import { BEATS, BEAT_WINDOW, HERO_END, OUTRO, ramp } from './story';
+import { HeroTitle } from './HeroTitle';
 import styles from './room.module.css';
-
-/**
- * A headline word that rises into focus: transform and blur only, never from transparent, so every
- * word is painted in the first frame (CSS, so it plays before hydration).
- */
-function Rise({ i, children }: { i: number; children: ReactNode }) {
-  return (
-    <span className={styles.rise} style={{ '--i': i } as React.CSSProperties}>
-      {children}
-    </span>
-  );
-}
 
 /**
  * Handlers that tell the panel someone is about to answer: a mouse or pen resting on the key, or
@@ -44,9 +32,9 @@ function listenCue(onListen: Listen) {
 }
 
 /**
- * The first viewport's copy: the promise in two lines, "before" circled in red pen, one support
- * line and the two keys. It fades as the scroll leaves the hero; focusing a key brings it back.
- * Resting on "Answer a question" turns the panel to listen.
+ * The first viewport's copy: the promise, rising from a whisper to "loud" over the candidate's
+ * voice (HeroTitle), one support line and the two keys. It fades as the scroll leaves the hero;
+ * focusing a key brings it back. Resting on "Answer a question" turns the panel to listen.
  */
 export function HeroCopy({
   progress,
@@ -60,8 +48,6 @@ export function HeroCopy({
   const opacity = useTransform(progress, (v) => ramp(v, [HERO_END - 0.035, HERO_END + 0.01], [1, 0]));
   const y = useTransform(progress, (v) => ramp(v, [0, HERO_END + 0.01], [0, -36]));
   const visibility = useTransform(opacity, (o) => (o > 0.02 ? 'visible' : 'hidden'));
-  // the circle is measured on the words it loops, so it waits for the display face
-  const fontsReady = useFontsReady();
 
   return (
     <motion.div
@@ -69,23 +55,11 @@ export function HeroCopy({
       onFocus={onFocusBack}
       className="relative max-w-[40rem] motion-reduce:!transform-none"
     >
-      <h1 className={cn('display text-ink', styles.heroTitle)}>
-        <span className="block">
-          <Rise i={0}>Say</Rise> <Rise i={1}>it</Rise> <Rise i={2}>out</Rise> <Rise i={3}>loud</Rise>
-        </span>
-        <span className="block">
-          <Rise i={4}>
-            <RedPen mark="circle" play="manual" show={fontsReady} delay={700} iterations={1}>
-              before
-            </RedPen>
-          </Rise>{' '}
-          <Rise i={5}>it</Rise> <Rise i={6}>counts.</Rise>
-        </span>
-      </h1>
-      <p className={cn(styles.riseBlock, styles.heroLead, 'font-medium text-ink-mut')} style={{ '--i': 7 } as React.CSSProperties}>
+      <HeroTitle />
+      <p className={cn(styles.heroLead, 'font-medium text-ink-mut')}>
         Real exam questions, answered out loud and marked on five axes in seconds.
       </p>
-      <div className={cn(styles.riseBlock, styles.heroKeys)} style={{ '--i': 8 } as React.CSSProperties}>
+      <div className={styles.heroKeys}>
         <a href="#live" className={cn('btn btn-primary btn-lg', styles.heroKey)} {...listenCue(onListen)}>
           <Mic size={18} aria-hidden />
           Answer a question

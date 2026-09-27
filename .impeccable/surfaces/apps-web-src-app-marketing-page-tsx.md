@@ -50,8 +50,18 @@ subjects, use cases and privacy each take their own form; close on an
 admission slip.
 
 FIRST VIEWPORT: Left ~42%: "Say it out loud before it counts." in two lines,
-"before" circled in red pen, one support line, "Answer a question" (cobalt
-ink, primary) and "Get early access". Right ~58%, bleeding off the edge: the
+set as a crescendo (round 3, owner asked for a far better title). "Say it
+out loud" rises word by word in Archivo's size, weight and width, from a
+light, condensed "Say" to "loud" in black at full width (6rem at most), over
+the candidate's voice: a blue-ink band drawn the way the live engine draws
+your voice, rising off the paper's faint rule, one syllable under each word
+and silence under each space. "before it counts." is firm and black to the
+same measure. No red in the headline: no examiner has marked anything yet.
+It enters from a whisper as the voice plays (composited, still by 1.5s,
+waiting for the display face); reduced motion and the still fallback show
+the settled frame. Then one support line, "Answer a question" (cobalt ink,
+primary) and "Get early access". The copy starts at the nav's content edge
+on screens wider than the nav. Right ~58%, bleeding off the edge: the
 panel behind the bench under a lamp pool, Structure speaking (vermilion
 waveform face, 48 raised), the other four turned toward it, every mark
 legible, an "Example round" label.

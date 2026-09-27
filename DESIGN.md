@@ -270,7 +270,7 @@ Keys ending in `-night` are the `prefers-color-scheme: dark` values of the theme
 **Character:** One grotesque does all the talking. Archivo at 900 and stretched to width 118 reads like a verdict said out loud; at normal width it stays plain and quick to read. JetBrains Mono is the scoreboard: tabular, and only ever a number.
 
 ### Hierarchy
-- **Display** (900, width 118, clamp(2.6rem, 6.2vw, 5.4rem), line-height 0.94, -0.028em): page openers (loosened to line-height 1) and the home hero (clamp(2.7rem, 5.6vw, 5.4rem)). Words rise into focus on load, 70ms apart.
+- **Display** (900, width 118, clamp(2.6rem, 6.2vw, 5.4rem), line-height 0.94, -0.028em): page openers (loosened to line-height 1). Words rise into focus on load, 70ms apart. The home hero is set apart as the Crescendo (see its rule below).
 - **Headline** (900, width 118, clamp(2.3rem, 5vw, 4.4rem), 0.94, -0.028em): every section h2. The same voice at smaller clamps names the axes in captions and the index, the contact inboxes, and the mobile menu links (1.6rem).
 - **Title** (900, normal width, 1.25rem, 1.375): card and step titles, axis questions, FAQ questions (up to 1.6rem), the question in the live engine (up to 1.85rem).
 - **Lead** (500, 1.125rem, 1.625; 1.25rem in page openers): the one paragraph under each headline, about 36rem wide, in `ink-mut`.
@@ -284,6 +284,8 @@ Text carries -0.008em tracking site-wide; headings balance their line breaks and
 **The Expanded Voice Rule.** Archivo at 900, width 118 and -0.028em is for headlines and names: every h1 and h2, axis and inbox names in ruled indexes, the mobile menu links and the wordmark. Titles, body and labels stay at normal width.
 
 **The Marks-Only Mono Rule.** JetBrains Mono appears only where a number is being marked, counted or counted down. Labels, tags, captions and navigation are Archivo, sentence case, bold.
+
+**The Crescendo Rule.** The home page's h1 is the one headline that is not set in a single voice. "Say it out loud" gets louder word by word: Say at 0.62 of "loud" (400, width 86), it at 0.72 (560, 96), out at 0.85 (760, 110), loud at full size (900, 125), one setting per word, never per letter; at night the two quiet words take one weight step more. "loud" is sized from the column so both lines fill it, and never passes 6rem. Under line one runs the candidate's voice in `ink-blue`: a closed band mirrored about the paper's faint rule, the live engine's own drawing, one syllable under each word and only the rule under each space. "before it counts." is 900 at normal width, sized so its ink ends where "loud" does. There is no red pen in it: nothing has been marked yet. It enters from a whisper (every word at 0.9 of "Say", all painted in the first frame) as the band is uncovered left to right at speaking pace, each word swelling as the voice reaches it and pushing the rest of the line along, all in transforms, still by 1.5s. It waits for Archivo (a font gate in the root layout, with the settled frame after 800ms), and reduced motion and the still fallback show the settled frame.
 
 **The Stamped Chip Rule.** Emphasis inside a headline is one word set as a vermilion chip with coal text, rotated -2° with a 0.18em radius, stamped in after the words rise. Never a second typeface, italics, or gradient text.
 

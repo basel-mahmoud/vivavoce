@@ -38,17 +38,8 @@
     z-index: 1;
     max-width: 40rem;
     padding: 6rem 1rem 0;
-  }
-  .vv-still-hero-title {
-    font-size: clamp(2.45rem, 10.4vw, 4.4rem);
-    color: var(--color-ink);
-  }
-  /* The red pen loops "before" by its ink, cap height to baseline, not by the
-     line box, so the loop stays clear of the line above and the one below
-     (as the live room's heading does). */
-  .vv-still-hero-title .vv-redpen[data-mark='circle'] > .vv-redpen-words {
-    display: inline-block;
-    line-height: 0.74em;
+    --hero-col: calc(min(40rem, 100vw) - 2rem);
+    --hero-gutter: 1rem;
   }
   .vv-still-hero-line {
     max-width: 30rem;
@@ -79,6 +70,8 @@
   @media (min-width: 640px) {
     .vv-still-hero-copy {
       padding-inline: 1.5rem;
+      --hero-col: calc(min(40rem, 100vw) - 3rem);
+      --hero-gutter: 1.5rem;
     }
     .vv-still-hero-line {
       margin-top: 1.5rem;
@@ -103,17 +96,17 @@
       justify-content: center;
       width: 44%;
       max-width: none;
-      padding: 0 0 0 clamp(2rem, 4.4vw, 4rem);
+      /* as the live room: the nav's content edge once the screen is wider than the nav */
+      --edge: max(clamp(2rem, 4.4vw, 4rem), 2.5rem + (100vw - 87.5rem) / 2);
+      padding: 0 0 0 var(--edge);
+      --hero-col: calc(44vw - var(--edge) - 0.25rem);
+      --hero-gutter: var(--edge);
     }
-    .vv-still-hero-title {
-      font-size: clamp(2.4rem, 4vw, 4.6rem);
-    }
+    /* under the poster's bench, where the live room's own caption sits over it */
     .vv-still-hero-note {
-      left: 47.5%;
-      right: 1%;
-      bottom: 1.5rem;
-      width: fit-content;
-      margin-inline: auto;
+      left: auto;
+      right: 16.5%;
+      bottom: 12%;
     }
   }
 
