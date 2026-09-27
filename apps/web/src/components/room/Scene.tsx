@@ -82,9 +82,11 @@ function StillDriver({ progress }: { progress: MotionValue<number> }) {
  * pass included), read by the perf report as window.__vvRoom.
  */
 function DrawCounter({ tier }: { tier: Tier }) {
+  const frames = useRef(0);
   useFrame((state) => {
     const info = state.gl.info;
     const w = window as unknown as { __vvRoom?: Record<string, unknown> };
+    frames.current += 1;
     if (info.autoReset) info.autoReset = false;
     else {
       const cam = state.camera as THREE.PerspectiveCamera;
@@ -93,6 +95,8 @@ function DrawCounter({ tier }: { tier: Tier }) {
         draws: info.render.calls,
         triangles: info.render.triangles,
         tier,
+        // frames drawn so far: the review scripts wait for new frames, not for a quiet clock
+        frame: frames.current,
         camera: [cam.position.x, cam.position.y, cam.position.z, cam.fov, cam.view?.offsetX ?? 0, cam.view?.offsetY ?? 0].map((v) => Math.round(v * 100) / 100),
       };
     }

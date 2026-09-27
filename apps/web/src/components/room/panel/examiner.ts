@@ -280,6 +280,15 @@ export class ExaminerRuntime {
     this.nextSaccade = 0.4 + hash(seed * 3.1) * 1.4;
   }
 
+  /** Development and review: how far the paddle is raised and turned, and whether it has settled. */
+  get paddleState() {
+    return {
+      raise: this.raise.x,
+      flip: this.flip.x,
+      settled: Math.abs(this.raise.x - this.paddleGoal) < 0.01 && Math.abs(this.raise.v) + Math.abs(this.flip.v) < 0.05,
+    };
+  }
+
   /** The root frame is fixed; call again only if the panel is moved. */
   refreshRoot() {
     this.parts.nodes.root.updateWorldMatrix(true, false);
