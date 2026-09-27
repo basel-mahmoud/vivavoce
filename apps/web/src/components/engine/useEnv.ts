@@ -1,6 +1,7 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
+import { hasWebGL } from '@/lib/webgl';
 
 /*
  * What the page can know only in a browser, read so that hydration always renders the server's
@@ -30,19 +31,8 @@ export const useDark = () => useSyncExternalStore(subDark, () => window.matchMed
 /** A mouse or trackpad: hover exists and is precise. */
 export const useFinePointer = () => useSyncExternalStore(subFine, () => window.matchMedia(FINE).matches, () => false);
 
-let webgl: boolean | null = null;
-function probeWebGL(): boolean {
-  if (webgl !== null) return webgl;
-  try {
-    const c = document.createElement('canvas');
-    webgl = Boolean(c.getContext('webgl2') ?? c.getContext('webgl'));
-  } catch {
-    webgl = false;
-  }
-  return webgl;
-}
-/** null while hydrating. */
-export const useWebGL = () => useSyncExternalStore(noop, probeWebGL, () => null);
+/** null while hydrating (the probe is shared with the room, so a page asks only once). */
+export const useWebGL = () => useSyncExternalStore(noop, hasWebGL, () => null);
 
 function subVisible(cb: () => void) {
   document.addEventListener('visibilitychange', cb);

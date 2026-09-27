@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Text, configureTextBuilder } from 'troika-three-text';
+import { Text, configureTextBuilder, preloadFont } from 'troika-three-text';
 import {
   AXIS_NAME,
   BENCH_LABELS,
@@ -19,16 +19,29 @@ import {
 import { createFaceMaterial, type FaceController } from '../examiners/faceMaterial';
 import { ExaminerRuntime, type CoinLook } from './examiner';
 import type { PanelChannels } from './channels';
+import { FONT_DISPLAY, FONT_MONO } from '../assets';
 
 // Troika builds glyph atlases in a blob-URL worker, which the site's CSP
 // forbids. A few short labels are cheap on the main thread, so keep the
 // policy strict and skip the worker.
 configureTextBuilder({ useWorker: false });
 
-export const MODEL_URL = '/models/examiners.glb';
-export const DETAIL_URLS = Object.values(DETAIL_TEXTURES);
-const FONT_MONO = '/fonts/jetbrains-mono-700.woff';
-const FONT_DISPLAY = '/fonts/archivo-900.woff';
+/** Glyph atlas cell size, shared by every label (and by the warm-up below, so its glyphs are reused). */
+const SDF_SIZE = 64;
+
+/**
+ * Set every glyph the labels will need while the cast is still downloading: the fonts are parsed and
+ * the glyph atlas is drawn now, instead of after the model arrives, when they would hold up the
+ * reveal. The marks are digits; the names are set as they will appear (whole words, so any ligature
+ * is covered) plus their letters on their own (letter-spaced names are set without ligatures).
+ */
+export function warmLabels() {
+  const names = Object.values(AXIS_NAME);
+  const words = [...names, ...names.map((n) => n.toUpperCase())];
+  const letters = [...new Set(words.join(''))].join('');
+  preloadFont({ font: FONT_MONO, characters: '0123456789', sdfGlyphSize: SDF_SIZE }, () => {});
+  preloadFont({ font: FONT_DISPLAY, characters: [...words, letters], sdfGlyphSize: SDF_SIZE }, () => {});
+}
 
 const PAPER = '#f6f6f3';
 const COAL = '#10131a';
@@ -81,7 +94,7 @@ function makeText(parent: THREE.Object3D, str: string, font: string, size: numbe
   t.anchorY = 'middle';
   t.letterSpacing = opts.letter ?? 0;
   t.curveRadius = opts.curve ?? 0;
-  t.sdfGlyphSize = 64;
+  t.sdfGlyphSize = SDF_SIZE;
   t.material = material;
   if (opts.offset) t.position.set(...opts.offset);
   parent.add(t);

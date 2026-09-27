@@ -21,4 +21,10 @@ declare module 'troika-three-text' {
     sync(callback?: () => void): void;
     dispose(): void;
   }
+
+  /** Typeset `characters` in `font` ahead of time, filling the shared glyph atlas. */
+  export function preloadFont(
+    options: { font: string; characters: string | readonly string[]; sdfGlyphSize?: number },
+    callback: () => void,
+  ): void;
 }

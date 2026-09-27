@@ -7,7 +7,7 @@ import { PerformanceMonitor } from '@react-three/drei';
 import type { MotionValue } from 'motion/react';
 import { Panel } from './panel/Panel';
 import { createChannels, type PanelChannels } from './panel/channels';
-import type { Cast } from './panel/cast';
+import { warmLabels, type Cast } from './panel/cast';
 import { Studio, type FocusLight } from './set/Studio';
 import { CANVAS, Cyclorama } from './set/Cyclorama';
 import { Lamp, Mic, Riser } from './set/Props';
@@ -22,7 +22,9 @@ export type { RoomCue, RoomOverlays, RoundState } from './Director';
  * The post chain (N8AO, SMAA, depth of field) is its own chunk, fetched only on desktop tiers. If
  * it cannot be fetched the room goes on without it, as it does on phones.
  */
-const Post = lazy<ComponentType<PostProps>>(() => import('./Post').catch(() => ({ default: NoPost })));
+let postChunk: Promise<{ default: ComponentType<PostProps> }> | null = null;
+const loadPost = () => (postChunk ??= import('./Post').catch(() => ({ default: NoPost })));
+const Post = lazy<ComponentType<PostProps>>(loadPost);
 
 interface PostProps {
   tier: 2 | 3;
@@ -259,6 +261,13 @@ export default function Scene({ progress, active, playing, reduce, paused, dark,
   const [post, setPost] = useState(tier === 1);
   const onPanel = useCallback(() => setPanel(true), []);
   const onPost = useCallback(() => setPost(true), []);
+
+  // While the cast downloads: fetch the post chain (desktop tiers) and set the labels' glyphs, so
+  // neither waits for the model.
+  useEffect(() => {
+    if (startTier > 1) void loadPost();
+    warmLabels();
+  }, [startTier]);
 
   // if the post chunk is slow or fails, reveal without it rather than never
   useEffect(() => {

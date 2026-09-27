@@ -1,8 +1,7 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import * as THREE from 'three';
-import { useFrame, useLoader } from '@react-three/fiber';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DETAIL_URLS, MODEL_URL, buildCast, detailMaps, type Cast } from './cast';
+import { use, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { buildCast, detailMaps, type Cast } from './cast';
+import { loadDetailTextures, loadModel } from './load';
 import type { PanelChannels } from './channels';
 import { devTimeScale } from '../dev';
 
@@ -31,8 +30,11 @@ const MAX_STEP = 0.1;
  * drive it, in this room or in a second, lighter canvas.
  */
 export function Panel({ channelsRef, dark, shadows, onReady, timeScale }: PanelProps) {
-  const gltf = useLoader(GLTFLoader, MODEL_URL);
-  const textures = useLoader(THREE.TextureLoader, DETAIL_URLS);
+  // both downloads are usually under way already (assets.ts); ask for both before waiting on either
+  const model = loadModel();
+  const details = loadDetailTextures();
+  const gltf = use(model);
+  const textures = use(details);
   const maps = useMemo(() => detailMaps(textures), [textures]);
   // the cast is built once in the scheme it first meets; later scheme changes swap materials only
   const [initialScheme] = useState<'light' | 'dark'>(dark ? 'dark' : 'light');

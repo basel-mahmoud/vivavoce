@@ -13,6 +13,8 @@ import { Ruler } from './Ruler';
 import { RoomTags } from './RoomTags';
 import { RoomPoster } from './RoomPoster';
 import { SceneBoundary } from './SceneBoundary';
+import { prefetchRoom } from './assets';
+import { hasWebGL } from '@/lib/webgl';
 import type { Insets, RoomCue, RoomOverlays, RoundState } from './Scene';
 import styles from './room.module.css';
 
@@ -27,25 +29,6 @@ const NOTE_SAID = AXES.map(
 );
 
 /* ── Environment probes (server snapshots keep hydration identical) ──── */
-
-let webglCache: boolean | null = null;
-function probeWebGL(): boolean {
-  if (webglCache !== null) return webglCache;
-  try {
-    const c = document.createElement('canvas');
-    const gl = (c.getContext('webgl2') ?? c.getContext('webgl')) as WebGLRenderingContext | null;
-    webglCache = Boolean(gl);
-    // hand the probe's context straight back: browsers cap live contexts, and the room needs one
-    gl?.getExtension('WEBGL_lose_context')?.loseContext();
-  } catch {
-    webglCache = false;
-  }
-  return webglCache;
-}
-const noop = () => () => {};
-function useWebGL(): boolean | null {
-  return useSyncExternalStore(noop, probeWebGL, () => null);
-}
 
 function subscribeDark(cb: () => void) {
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -74,14 +57,17 @@ function useReduce(): boolean {
 /**
  * Whether to start the live room at all, and when: never without WebGL or when the visitor asks
  * to save data, and otherwise only after the first paint, once the browser is idle (or within two
- * seconds), so the poster and the words are what the page paints first.
+ * seconds), so the poster and the words are what the page paints first. WebGL is probed here, after
+ * hydration, not while hydrating. The room's downloads (the cast, its maps and label fonts) start as
+ * soon as the page has hydrated: the network is free by then, and they arrive while the room's code
+ * does instead of after it.
  */
-function useLiveRoom(webgl: boolean | null): boolean {
+function useLiveRoom(): boolean {
   const [start, setStart] = useState(false);
   useEffect(() => {
-    if (webgl !== true) return;
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-    if (connection?.saveData) return;
+    if (connection?.saveData || !hasWebGL()) return;
+    prefetchRoom();
     let idle = 0;
     let timer = 0;
     const frame = requestAnimationFrame(() => {
@@ -93,7 +79,7 @@ function useLiveRoom(webgl: boolean | null): boolean {
       if (idle) window.cancelIdleCallback(idle);
       window.clearTimeout(timer);
     };
-  }, [webgl]);
+  }, []);
   return start;
 }
 
@@ -139,8 +125,7 @@ export function RoomStory() {
   // behaviour only, and false while hydrating, so the server and the client render the same tree
   const reduce = useReduce();
   const dark = useDark();
-  const webgl = useWebGL();
-  const live = useLiveRoom(webgl);
+  const live = useLiveRoom();
   const pageVisible = usePageVisible();
   const [ready, setReady] = useState(false);
   // a live room that failed (a chunk, the model, the WebGL context) hands back to its poster for good
