@@ -1067,12 +1067,15 @@
         transparent 0 calc(var(--gap) - 1px),
         var(--color-rule) calc(var(--gap) - 1px) var(--gap)
       );
+    /* The blue rules run a little under each baseline of the body and the
+       address (both sit on the 2rem pitch below the heading), never through
+       the words. */
     background-position:
       0 var(--head),
-      0 calc(var(--head) + 1px);
+      0 calc(var(--head) + 0.45rem);
     background-size:
       100% 1.5px,
-      100% calc(100% - var(--head) - 1px);
+      100% calc(100% - var(--head) - 0.45rem);
     background-repeat: no-repeat;
     box-shadow: var(--shadow-paper);
     transition:
@@ -1111,6 +1114,7 @@
   .vv-inbox-body {
     display: block;
     max-width: 26rem;
+    min-height: calc(var(--gap) * 2);
     margin-top: 0.95rem;
     color: var(--color-ink-mut);
     font-size: 1.0625rem;
@@ -1121,8 +1125,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    margin-top: auto;
-    padding-top: calc(var(--gap) * 1);
+    padding-top: var(--gap);
     color: var(--color-ink-blue);
     font-size: 1.125rem;
     font-weight: 800;
