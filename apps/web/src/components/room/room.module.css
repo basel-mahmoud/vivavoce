@@ -518,10 +518,14 @@
     padding-inline: 1.5rem;
   }
 }
-/* portrait tablets set the promise large: the red-pen loop around "before" needs its margin */
+/* Portrait tablets: the promise in its two lines ("before it counts." is about 9.6 of its own ems
+   wide, in a column of at most 40rem), and the red-pen loop around "before" keeps its margin. */
 @media (min-width: 640px) and (max-aspect-ratio: 21/20) {
   .heroCap {
     padding-left: 0.5rem;
+  }
+  .heroTitle {
+    font-size: clamp(2.45rem, min(7.6vw, (min(100vw, 44rem) - 4rem) / 9.8), 4.2rem);
   }
 }
 
