@@ -1,12 +1,14 @@
 import { ArrowDown } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
 import { Round } from '@/components/home/Round';
-import { LiveEngine } from '@/components/engine/LiveEngine';
+import { LiveEngine, WarmSections } from '@/components/home/lazy';
 import { Close } from '@/components/home/Closing';
 import { Deferred } from '@/components/home/Deferred';
 import { EnginePlaceholder } from '@/components/home/EnginePlaceholder';
 import { SectionBoundary } from '@/components/home/SectionBoundary';
 import { pageMeta } from '@/lib/site';
+// The live engine's code loads after the first screen; its styles must not wait for it.
+import '@/components/engine/engine.module.css';
 
 export const metadata = pageMeta({
   title: 'How it works',
@@ -37,6 +39,7 @@ export default function HowItWorksPage() {
       <Deferred height="1000px">
         <Close />
       </Deferred>
+      <WarmSections names={['engine']} />
     </>
   );
 }
