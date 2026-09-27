@@ -376,6 +376,16 @@ The real evaluator, playable inside a coal field: the candidate's side (the ques
 - **Verdict:** a vermilion stamp with the overall mark in mono ("/100 overall"), "Fix first:" with the axis in vermilion, one improvement under a `line-dark` rule, then "Scores are guidance, not grades." and who marked it.
 - **Mic:** the Speak button carries a coal disc with the mic icon. While listening it becomes a paper Stop button, the answer border turns vermilion, and on fine pointers a live waveform (analysed in the browser with about 60ms attack and 300ms release) draws in paper, turning vermilion when loud, while a vermilion ring swells with the level.
 
+### First-Visit Loader (signature)
+"Sounding out": the first time someone opens the home page (the room's assets not yet cached), the page opens on its own paper and the brand mark builds itself while the site loads underneath (`apps/web/src/components/boot`).
+- **Pen down and voice:** the check's first point lands in print and its tip in blue ink; the icon's arcs ripple off the tip in the promise's rhythm, four syllables with the last one loudest ("Say it out loud"), then a breath. The loop is CSS on its own layers, so it keeps moving while the room compiles.
+- **Drawing:** the check draws towards the tip as far as the page has really loaded (the page, its face and poster, the room's code, the cast by its bytes, maps, label fonts, shaders, first frames), eased and never backwards. One bold 0.8125rem Archivo line under the mark names the stage: "Setting out the paper", "Seating the panel", "Warming the lamp", "The panel is listening".
+- **Stamp:** at 100% the tip's blue runs down to meet the print, the arcs hold, and the vermilion square slams down behind the strokes (100ms, accelerating, under a tightening shadow), squashes and settles.
+- **Portal:** once the room has run a steady stretch of frames (at most 1.5s of watching), the strokes lift off, a window opens in the square and the square zooms past the viewport as a thin vermilion rim while the page settles in behind it. The crescendo plays as the hero comes into view; the room's first round starts as the overlay goes.
+- **Bounds:** about 2s at the least, 11s at the most; any key, tap or wheel after 0.8s skips to a quick ending. Never under reduced motion, over a deep link or a restored scroll, or on a second visit. By night the strokes are lifted to night ink and lifted cobalt until the stamp lands.
+
+**The Honest Progress Rule.** The loader's mark only draws as far as the page has really loaded, and the page is revealed only once it runs smoothly (or the longest wait is up). It never fakes a finish, and it never holds a ready page for show beyond its shortest run.
+
 ### Score Surfaces
 **The Guidance Note Rule.** Any surface that shows a mark (paddles, stamps, captions, index rows, previews) carries "Scores are guidance, not grades." or labels its marks as an example, within the same view.
 
