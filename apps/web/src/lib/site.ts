@@ -48,6 +48,17 @@ export const site = {
 } as const;
 
 /**
+ * The social card (app/opengraph-image.jpg, app/twitter-image.jpg). A page
+ * that sets its own openGraph replaces the layout's, file-based image
+ * included, so every page names the card itself.
+ */
+const SOCIAL_CARD = {
+  width: 1200,
+  height: 630,
+  alt: 'VivaVoce. Say it out loud before it counts: five AI examiners behind a bench hold up their marks for an example answer, 71, 66, 48, 62 and 54, with Structure’s 48 in red as the one to fix first.',
+} as const;
+
+/**
  * A page's metadata with its own canonical address and social card URL.
  * Next replaces (does not merge) nested objects like openGraph, so every page
  * gets the whole set from here rather than half of it from the layout.
@@ -77,8 +88,14 @@ export function pageMeta({
       title: social,
       description,
       url: path,
+      images: [{ url: '/opengraph-image.jpg', type: 'image/jpeg', ...SOCIAL_CARD }],
     },
-    twitter: { card: 'summary_large_image', title: social, description },
+    twitter: {
+      card: 'summary_large_image',
+      title: social,
+      description,
+      images: [{ url: '/twitter-image.jpg', ...SOCIAL_CARD }],
+    },
     ...(index ? {} : { robots: { index: false, follow: true } }),
   };
 }
