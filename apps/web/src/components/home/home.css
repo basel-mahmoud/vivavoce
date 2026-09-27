@@ -144,14 +144,16 @@
     --card-h: 28.5rem;
     height: calc(var(--card-h) + 3.5rem);
   }
-  @media (max-width: 420px) {
+  /* The longest previews (Mock Viva, Interview) wrap to more lines as the card
+     narrows, so the card grows with them and the last line is never cut off. */
+  @media (max-width: 560px) {
     .vv-deck[data-narrow] {
-      --card-h: 30.5rem;
+      --card-h: 31rem;
     }
   }
-  @media (max-width: 359px) {
+  @media (max-width: 420px) {
     .vv-deck[data-narrow] {
-      --card-h: 34rem;
+      --card-h: calc(31rem + (420px - 100vw) * 0.95);
     }
   }
   .vv-deck-card {
