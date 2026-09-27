@@ -8,6 +8,7 @@ import type { MotionValue } from 'motion/react';
 import { Panel } from './panel/Panel';
 import { createChannels, type PanelChannels } from './panel/channels';
 import { warmLabels, type Cast } from './panel/cast';
+import { loadDetailTextures, loadModel } from './panel/load';
 import { Studio, type FocusLight } from './set/Studio';
 import { CANVAS, Cyclorama } from './set/Cyclorama';
 import { Lamp, Mic, Riser } from './set/Props';
@@ -59,9 +60,14 @@ function guessTier(): Tier {
   return coarse || narrow || cores <= 2 ? 1 : 2;
 }
 
-// On desktop tiers, fetch the post chain as soon as this module runs (on desktops the page takes
-// the room's code while the cast downloads), not when the canvas mounts.
-if (typeof window !== 'undefined' && guessTier() > 1) void loadPost();
+// As soon as this module runs (on desktops the page takes the room's code while the cast downloads),
+// not when the canvas mounts: parse the cast and wrap its maps (plain script, no GPU needed), and on
+// desktop tiers fetch the post chain.
+if (typeof window !== 'undefined') {
+  loadModel().catch(() => {});
+  loadDetailTextures().catch(() => {});
+  if (guessTier() > 1) void loadPost();
+}
 
 function forcedTier() {
   return process.env.NODE_ENV !== 'production' && new URLSearchParams(window.location.search).has('tier');
