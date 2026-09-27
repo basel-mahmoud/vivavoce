@@ -1,0 +1,1799 @@
+/*
+ * Styles for the site chrome and the inner pages (components/site). Imported
+ * by app/globals.css after the home styles, so they share the theme tokens.
+ * Tokens only: every colour is a --color-* token or a mix of them.
+ */
+
+@layer components {
+  /* ── Nav: the capsule ───────────────────────────────────────────────── */
+
+  .vv-nav {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 40;
+    padding: 0.75rem 0.75rem 0;
+    pointer-events: none;
+  }
+  @media (min-width: 640px) {
+    .vv-nav {
+      padding-inline: 1.25rem;
+    }
+  }
+  .vv-nav-capsule {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    max-width: 1360px;
+    height: 3.5rem;
+    margin-inline: auto;
+    padding-inline: 0.625rem 0.25rem;
+    border: 1px solid color-mix(in oklab, var(--color-line) 85%, transparent);
+    border-radius: 999px;
+    /* A light backing, not glass: the words stay legible over the room. */
+    background: color-mix(in oklab, var(--color-canvas) 64%, transparent);
+    pointer-events: auto;
+    transition:
+      background-color var(--dur-ui) ease,
+      border-color var(--dur-ui) ease,
+      box-shadow var(--dur-ui) ease;
+  }
+  @media (min-width: 960px) {
+    .vv-nav-capsule {
+      padding-inline: 1rem 0.375rem;
+    }
+  }
+  .vv-nav[data-solid] .vv-nav-capsule {
+    border-color: var(--color-line);
+    background: var(--color-card);
+    box-shadow: var(--shadow-float);
+  }
+  .vv-nav-logo {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    margin-right: auto;
+    padding-inline: 0.25rem;
+    border-radius: 0.75rem;
+    color: var(--color-ink);
+  }
+
+  .vv-nav-links {
+    display: none;
+  }
+  @media (min-width: 960px) {
+    .vv-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.125rem;
+    }
+  }
+  .vv-nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 2.5rem;
+    padding-inline: 0.875rem;
+    border-radius: 999px;
+    color: var(--color-ink-mut);
+    font-size: 0.875rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: color var(--dur-hover) ease;
+  }
+  .vv-nav-link[aria-current='page'] {
+    color: var(--color-ink);
+  }
+  .vv-nav-link:focus-visible {
+    border-radius: 999px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-nav-link:hover {
+      color: var(--color-ink);
+    }
+  }
+  .vv-nav-pill {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: var(--color-card-2);
+  }
+
+  /* The candidate's own underline, drawn once on arrival. */
+  .vv-ink {
+    position: absolute;
+    left: 0;
+    bottom: -0.3rem;
+    width: 100%;
+    height: 0.4rem;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .vv-nav-link > .vv-ink {
+    left: 0.8rem;
+    bottom: 0.32rem;
+    width: calc(100% - 1.6rem);
+  }
+  .vv-ink path {
+    fill: none;
+    stroke: var(--color-ink-blue);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: 0;
+    animation: vv-ink-draw 460ms var(--ease-out) 160ms both;
+  }
+  @keyframes vv-ink-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+  }
+
+  .vv-nav-end {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .vv-nav-cta.btn {
+    height: 2.75rem;
+    padding-inline: 0.75rem;
+    font-size: 0.8125rem;
+  }
+  @media (min-width: 960px) {
+    .vv-nav-cta.btn {
+      height: 2.625rem;
+      margin-left: 0.5rem;
+      padding-inline: 1.125rem;
+    }
+  }
+  /* The smallest phones keep the logo and the menu; the key is in the sheet. */
+  @media (max-width: 369px) {
+    .vv-nav-cta.btn {
+      display: none;
+    }
+  }
+  /* Phones: at the top of a page the page's own keys lead, so the capsule's
+     key steps back to a hairline until the page moves under it. With the
+     sheet open, the sheet carries the key and the capsule's goes away. */
+  @media (max-width: 959px) {
+    .vv-nav:not([data-solid]) .vv-nav-cta.btn-primary {
+      --btn-lip-color: color-mix(in oklab, currentColor 26%, transparent);
+      --btn-edge: color-mix(in oklab, currentColor 30%, transparent);
+      background-color: transparent;
+      color: var(--color-ink);
+    }
+  }
+  .vv-nav[data-open] .vv-nav-cta.btn {
+    visibility: hidden;
+  }
+
+  .vv-nav-toggle {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    color: var(--color-ink);
+    cursor: pointer;
+  }
+  .vv-nav-toggle:focus-visible {
+    border-radius: 999px;
+  }
+  .vv-nav-toggle > span {
+    position: absolute;
+    left: calc(50% - 0.625rem);
+    top: calc(50% - 1px);
+    width: 1.25rem;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 320ms var(--ease-in-out);
+  }
+  .vv-nav-toggle > span:first-child {
+    transform: translateY(-4px);
+  }
+  .vv-nav-toggle > span:last-child {
+    transform: translateY(4px);
+  }
+  .vv-nav[data-open] .vv-nav-toggle > span:first-child {
+    transform: rotate(45deg);
+  }
+  .vv-nav[data-open] .vv-nav-toggle > span:last-child {
+    transform: rotate(-45deg);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-nav-toggle:hover {
+      background: var(--color-card-2);
+    }
+  }
+  @media (min-width: 960px) {
+    .vv-nav-toggle {
+      display: none;
+    }
+  }
+
+  /* ── Nav: the sheet (phones) ────────────────────────────────────────── */
+
+  .vv-sheet-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: rgb(var(--vv-shadow) / 0.36);
+    pointer-events: auto;
+  }
+  @media (prefers-color-scheme: dark) {
+    .vv-sheet-scrim {
+      background: rgb(0 0 0 / 0.55);
+    }
+  }
+  /* A sheet of ruled exam paper, dropping from behind the capsule. */
+  .vv-sheet {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    max-height: 100svh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 5.25rem 1.25rem 1.25rem;
+    border-radius: 0 0 var(--radius-field) var(--radius-field);
+    background-color: var(--color-card);
+    background-image: linear-gradient(
+      to right,
+      transparent 2.25rem,
+      var(--color-margin) 2.25rem calc(2.25rem + 1px),
+      transparent calc(2.25rem + 1px)
+    );
+    box-shadow: var(--shadow-float);
+    pointer-events: auto;
+  }
+  .vv-sheet-links {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--color-rule);
+  }
+  .vv-sheet-link {
+    display: flex;
+    align-items: center;
+    min-height: 3.5rem;
+    padding-left: 1.75rem;
+    border-bottom: 1px solid var(--color-rule);
+    color: var(--color-ink);
+    font-size: 1.625rem;
+    font-weight: 900;
+    font-stretch: 112%;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .vv-sheet-link:focus-visible {
+    outline-offset: -2px;
+    border-radius: 0.5rem;
+  }
+  .vv-sheet-link:active {
+    background: var(--color-card-2);
+  }
+  .vv-sheet-link .vv-ink {
+    bottom: -0.45rem;
+    height: 0.5rem;
+  }
+  .vv-sheet-cta.btn {
+    width: 100%;
+    margin-top: 1.25rem;
+  }
+  @media (min-width: 960px) {
+    .vv-sheet,
+    .vv-sheet-scrim {
+      display: none;
+    }
+  }
+
+  /* ── Footer: the bench, the panel and their note ────────────────────── */
+
+  .vv-foot {
+    --bench-pad: clamp(3rem, 5.2vw, 4.5rem);
+    --head-w: clamp(4.1rem, 11vw, 10.5rem);
+    margin-top: calc(var(--head-w) * 0.62 + 1.25rem);
+  }
+  .vv-foot-bench {
+    position: relative;
+    padding: var(--bench-pad) 1rem 1.25rem;
+    /* The lit front edge of the bench, so the ledge reads at night too. */
+    box-shadow: inset 0 1px 0 rgb(253 253 254 / 0.1);
+  }
+  @media (min-width: 640px) {
+    .vv-foot-bench {
+      padding-inline: 1.25rem;
+    }
+  }
+  .vv-foot-inner {
+    display: grid;
+    gap: 3.5rem;
+    max-width: 1360px;
+    margin-inline: auto;
+  }
+  @media (min-width: 1024px) {
+    .vv-foot-inner {
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
+      align-items: start;
+      gap: 5rem;
+    }
+  }
+  .vv-foot-notecol {
+    position: relative;
+    min-width: 0;
+    max-width: 38rem;
+  }
+
+  /* The heads, behind the ledge. Each clip shows the top of its frame. */
+  .vv-ledge {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(100% + var(--bench-pad));
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(0.35rem, 1.2vw, 1.25rem);
+    pointer-events: none;
+  }
+  /* Wide screens: the panel sits right behind their note, from its left edge. */
+  @media (min-width: 1024px) {
+    .vv-ledge {
+      right: auto;
+      left: 0.25rem;
+      justify-content: flex-start;
+    }
+  }
+  /* Each window is the head's peek plus some headroom above it, so a hop up
+     is never cut off at the top; the ledge (the window's foot) still hides
+     everything below it. */
+  .vv-peek {
+    --headroom: 0.22;
+    position: relative;
+    flex: none;
+    width: var(--head-w);
+    height: calc(var(--head-w) * (var(--peek) + var(--headroom)));
+    margin-inline: calc(var(--head-w) * var(--trim-l) * -1) calc(var(--head-w) * var(--trim-r) * -1);
+    overflow: hidden;
+  }
+  .vv-peek-head {
+    position: absolute;
+    top: calc(var(--head-w) * var(--headroom));
+    left: 0;
+    display: block;
+    width: 100%;
+    transition: transform var(--rise);
+    transition-delay: calc(var(--i) * 70ms);
+  }
+  .vv-peek-head .vv-portrait {
+    display: block;
+    width: 100% !important;
+  }
+  .vv-ledge[data-sunk] .vv-peek-head {
+    transform: translateY(calc(var(--peek) * 100% + 2px));
+    transition: none;
+  }
+  .vv-ledge[data-pleased] .vv-peek-head {
+    transform: translateY(-5%);
+    transition: transform var(--perk);
+    transition-delay: calc(var(--i) * 40ms);
+  }
+  /* Let in: the five hop up together, a beat apart. Two names, so each new
+     admission restarts the hop. */
+  .vv-ledge[data-hop='a'] .vv-peek-head {
+    animation: vv-hop-a 620ms var(--ease-out) calc(var(--i) * 45ms) both;
+  }
+  .vv-ledge[data-hop='b'] .vv-peek-head {
+    animation: vv-hop-b 620ms var(--ease-out) calc(var(--i) * 45ms) both;
+  }
+  @keyframes vv-hop-a {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    38% {
+      translate: 0 -14%;
+    }
+  }
+  @keyframes vv-hop-b {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    38% {
+      translate: 0 -14%;
+    }
+  }
+  /* A slip torn at without an email: Structure rises for a sceptical look. */
+  .vv-ledge[data-frown] .vv-peek[data-axis='structure'] .vv-peek-head {
+    transform: translateY(-9%);
+    transition: transform var(--perk);
+  }
+
+  /* The note: ruled paper lying on the bench, signed by all five. Text sits
+     on the rules; each examiner's head sits in the margin beside their line. */
+  .vv-note {
+    --gap: 2.125rem;
+    --margin-x: 2.75rem;
+    --note-rule: color-mix(in oklab, var(--color-cobalt) 17%, var(--vv-paper-obj));
+    --note-margin: color-mix(in oklab, var(--color-verm) 46%, var(--vv-paper-obj));
+    --vv-focus: var(--color-cobalt);
+    position: relative;
+    padding: var(--gap) 1.5rem calc(var(--gap) * 0.75) calc(var(--margin-x) + 1rem);
+    border-radius: 0.6rem;
+    /* Lamp-lit at night, so the faces above it stay the brightest thing. */
+    background-color: var(--vv-paper-obj);
+    background-image:
+      linear-gradient(
+        to right,
+        transparent calc(var(--margin-x) - 1px),
+        var(--note-margin) calc(var(--margin-x) - 1px) var(--margin-x),
+        transparent var(--margin-x)
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 calc(var(--gap) - 1px),
+        var(--note-rule) calc(var(--gap) - 1px) var(--gap)
+      );
+    /* Rules land a little under each baseline. */
+    background-position:
+      0 0,
+      0 calc(var(--gap) - 0.52rem);
+    background-repeat: no-repeat, repeat;
+    color: var(--color-coal);
+    rotate: -1deg;
+    box-shadow:
+      0 1px 1px rgb(0 0 0 / 0.22),
+      0 26px 40px -26px rgb(0 0 0 / 0.75);
+  }
+  .vv-note-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    font-stretch: 116%;
+    letter-spacing: -0.02em;
+    line-height: var(--gap);
+  }
+  .vv-note-body {
+    margin-top: var(--gap);
+    max-width: 34rem;
+    font-size: 1.03rem;
+    font-weight: 500;
+    line-height: var(--gap);
+  }
+  .vv-note-sigs {
+    margin-top: var(--gap);
+  }
+  .vv-note-sig {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    height: var(--gap);
+  }
+  /* The examiner's head, in the margin: the examiner's side of the page. */
+  .vv-note-sig .vv-portrait {
+    position: absolute;
+    left: calc(-1rem - var(--margin-x) + (var(--margin-x) - 1.75rem) / 2);
+    bottom: 0.3rem;
+    width: 1.75rem !important;
+  }
+  .vv-note-line {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: var(--gap);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .vv-note-name {
+    margin-left: auto;
+    color: color-mix(in oklab, var(--color-coal) 62%, var(--vv-paper-obj));
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: var(--gap);
+    white-space: nowrap;
+  }
+  @media (max-width: 479px) {
+    .vv-note {
+      --gap: 1.95rem;
+      --margin-x: 2.4rem;
+      padding-right: 1rem;
+      padding-left: calc(var(--margin-x) + 0.75rem);
+    }
+    .vv-note-sig .vv-portrait {
+      left: calc(-0.75rem - var(--margin-x) + (var(--margin-x) - 1.6rem) / 2);
+      width: 1.6rem !important;
+    }
+    .vv-note-line {
+      font-size: 0.94rem;
+    }
+    .vv-note-name {
+      font-size: 0.75rem;
+    }
+  }
+  /* The narrowest phones: every signed line still reads in full. */
+  @media (max-width: 379px) {
+    .vv-note {
+      padding-right: 0.75rem;
+    }
+    .vv-note-sig {
+      gap: 0.5rem;
+    }
+    .vv-note-line {
+      font-size: 0.85rem;
+    }
+    .vv-note-name {
+      font-size: 0.66rem;
+    }
+  }
+
+  .vv-foot-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.25rem 1.5rem;
+  }
+  @media (min-width: 640px) {
+    .vv-foot-links {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .vv-foot-links {
+      padding-top: 0.5rem;
+    }
+  }
+  .vv-foot-head {
+    color: var(--color-paper-mut);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  .vv-foot-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    color: var(--color-paper);
+    font-size: 1.0625rem;
+    font-weight: 700;
+  }
+  @media (pointer: coarse) {
+    .vv-foot-link {
+      min-height: 2.75rem;
+    }
+  }
+
+  .vv-foot-base {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    max-width: 1360px;
+    margin: clamp(3.5rem, 6vw, 5.5rem) auto 0;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--color-line-dark);
+  }
+  @media (min-width: 1024px) {
+    .vv-foot-base {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 3rem;
+    }
+  }
+  .vv-foot-mark {
+    line-height: 0;
+  }
+  .vv-wordmark {
+    display: inline-block;
+    color: var(--color-paper);
+    font-size: clamp(2.6rem, 5vw, 4.4rem);
+    font-weight: 900;
+    font-stretch: 118%;
+    font-variation-settings:
+      'wght' 900,
+      'wdth' 118;
+    letter-spacing: -0.03em;
+    line-height: 0.82;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .vv-foot-print {
+    max-width: 38rem;
+    color: var(--color-paper-mut);
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  @media (min-width: 1024px) {
+    .vv-foot-print {
+      text-align: right;
+    }
+  }
+  .vv-foot-print strong {
+    color: var(--color-paper);
+    font-weight: 700;
+  }
+  .vv-foot-legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    margin-top: 0.5rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-foot-legal {
+      justify-content: flex-end;
+    }
+  }
+  .vv-foot-mail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--color-paper);
+    font-weight: 700;
+  }
+
+  /* ── Page hero (inner pages) ────────────────────────────────────────── */
+
+  .vv-hero {
+    padding-top: clamp(7.25rem, 10.5vw, 10rem);
+    padding-bottom: clamp(2.75rem, 5vw, 4.5rem);
+  }
+  /* Followed by a section that brings its own top padding. */
+  .vv-hero[data-flush] {
+    padding-bottom: clamp(0.5rem, 1.5vw, 1rem);
+  }
+  .vv-hero-title {
+    max-width: 13.5em;
+    font-size: clamp(2.4rem, 5.9vw, 5.25rem);
+    line-height: 1;
+  }
+  .vv-hero-intro {
+    max-width: 38rem;
+    margin-top: 1.5rem;
+    color: var(--color-ink-mut);
+    font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+    font-weight: 500;
+    line-height: 1.6;
+  }
+  .vv-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  /* The page's own exhibit under the words: on /features, the panel itself,
+     dealing its marks as the page opens. */
+  .vv-hero-figure {
+    margin-top: clamp(1.75rem, 3.2vw, 2.75rem);
+  }
+  .vv-hero-panel {
+    max-width: 50rem;
+  }
+  .vv-hero-panel .vv-seats {
+    margin-top: 0;
+  }
+  .vv-hero-panel .vv-seat > .vv-portrait {
+    width: min(100%, 8rem) !important;
+  }
+  .vv-hero-panel .vv-seat > .vv-paddle {
+    --d: clamp(2.85rem, 5.4vw, 4.25rem);
+  }
+  .vv-hero-panel-note {
+    margin-top: 0.35rem;
+    color: var(--color-ink-mut);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  /* A heading with something in the margin: the exam script's left margin,
+     its red rule, and the examiner's mark in it beside the first line. */
+  .vv-hero[data-margin] {
+    --hero-mx: clamp(2.6rem, 7vw, 6rem);
+    display: grid;
+    grid-template-columns: var(--hero-mx) minmax(0, 1fr);
+  }
+  .vv-hero-margin {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 0.1rem;
+    padding-right: clamp(0.4rem, 1vw, 1rem);
+    border-right: 1.5px solid var(--color-margin);
+  }
+  .vv-hero[data-margin] .vv-hero-text {
+    padding-left: clamp(0.9rem, 2.2vw, 1.75rem);
+  }
+  .vv-hero-tick {
+    display: block;
+    width: 100%;
+    max-width: 4.25rem;
+    height: auto;
+  }
+
+  /* The examiner's correction: a word struck in red pen, the right one after. */
+  .vv-rewrite-was {
+    position: relative;
+    display: inline-block;
+    color: var(--color-ink-mut);
+  }
+  .vv-rewrite-strike {
+    position: absolute;
+    left: -0.06em;
+    right: -0.06em;
+    top: 0.34em;
+    width: calc(100% + 0.12em);
+    height: 0.34em;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .vv-rewrite-strike path {
+    fill: none;
+    stroke: var(--color-verm-text);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-dasharray: 1 1;
+    animation: vv-strike-draw 420ms var(--ease-out) 520ms both;
+  }
+  @keyframes vv-strike-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+  }
+
+  /* The red-pen tick (PenTick). */
+  .vv-tick {
+    overflow: visible;
+  }
+  .vv-tick path {
+    fill: none;
+    stroke: var(--color-verm-text);
+    stroke-width: 5.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .vv-tick[data-pending] {
+    opacity: 0;
+  }
+
+  /* ── Documents: legal text on a sheet of exam paper ─────────────────── */
+
+  .vv-doc-grid {
+    display: grid;
+    gap: 2rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-doc-grid {
+      grid-template-columns: 14rem minmax(0, 53rem);
+      justify-content: start;
+      gap: 3.5rem;
+    }
+  }
+  .vv-toc {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .vv-toc {
+      position: sticky;
+      top: 6.5rem;
+      display: block;
+      align-self: start;
+      padding-top: 2.75rem;
+    }
+  }
+  .vv-toc-head {
+    color: var(--color-ink-mut);
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+  .vv-toc ul {
+    display: flex;
+    flex-direction: column;
+    margin-top: 0.6rem;
+  }
+  .vv-toc-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    color: var(--color-ink-mut);
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: color var(--dur-hover) ease;
+  }
+  .vv-toc-link[aria-current] {
+    color: var(--color-ink);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-toc-link:hover {
+      color: var(--color-ink);
+    }
+  }
+  .vv-toc-link .vv-ink {
+    bottom: -0.3rem;
+  }
+
+  .vv-doc {
+    --doc-margin: 1.35rem;
+    position: relative;
+    min-width: 0;
+    padding: 1.5rem 1.15rem 2.25rem calc(var(--doc-margin) + 1.1rem);
+    border: 1px solid var(--color-line);
+    border-radius: 1.25rem;
+    background-color: var(--color-card);
+    background-image: linear-gradient(
+      to right,
+      transparent calc(var(--doc-margin) - 1px),
+      var(--color-margin) calc(var(--doc-margin) - 1px) var(--doc-margin),
+      transparent var(--doc-margin)
+    );
+    box-shadow: var(--shadow-paper);
+  }
+  @media (min-width: 640px) {
+    .vv-doc {
+      --doc-margin: 3.5rem;
+      padding: 2rem 3rem 3.25rem calc(var(--doc-margin) + 2.25rem);
+    }
+  }
+  .vv-doc-date {
+    margin-bottom: 1.75rem;
+    color: var(--color-ink-faint);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: right;
+  }
+  .vv-doc-body {
+    max-width: 68ch;
+    color: var(--color-ink-mut);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+  .vv-doc-body > * + *,
+  .vv-doc-section > * + * {
+    margin-top: 1.15rem;
+  }
+  .vv-doc-body > .vv-doc-section {
+    margin-top: 2.75rem;
+  }
+  .vv-doc-body > .vv-doc-section:first-child {
+    margin-top: 0;
+  }
+  .vv-doc-section h2 {
+    color: var(--color-ink);
+    font-size: clamp(1.35rem, 2vw, 1.6rem);
+    font-weight: 900;
+    font-stretch: 112%;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    scroll-margin-top: 6.5rem;
+  }
+  .vv-doc-body a {
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--color-ink-blue) 55%, transparent);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.22em;
+    transition: text-decoration-color var(--dur-hover) ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-doc-body a:hover {
+      text-decoration-color: var(--color-ink-blue);
+    }
+  }
+  .vv-doc-body strong {
+    color: var(--color-ink);
+    font-weight: 700;
+  }
+  .vv-doc-body ul {
+    padding-left: 1.3rem;
+    list-style: disc;
+  }
+  .vv-doc-body li + li {
+    margin-top: 0.45rem;
+  }
+  .vv-doc-body li::marker {
+    color: var(--color-ink-faint);
+  }
+  .vv-doc-fine {
+    color: var(--color-ink-faint);
+    font-size: 0.9rem;
+  }
+  /* The short version, written on ruled lines with its key words highlighted. */
+  .vv-doc-body .vv-doc-summary {
+    --gap: 2.25rem;
+    padding: 0;
+    list-style: none;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0 calc(var(--gap) - 1px),
+      var(--color-rule) calc(var(--gap) - 1px) var(--gap)
+    );
+    background-position: 0 -0.5rem;
+    line-height: var(--gap);
+  }
+  .vv-doc-body .vv-doc-summary li + li {
+    margin-top: 0;
+  }
+  .vv-doc-summary strong {
+    padding: 0.05em 0.2em;
+    border-radius: 0.2em;
+    background: color-mix(in oklab, var(--color-butter) 78%, transparent);
+    color: var(--color-coal);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  /* ── FAQ ────────────────────────────────────────────────────────────── */
+
+  .vv-faq-grid {
+    display: grid;
+    gap: 3rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-faq-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      gap: 4rem;
+    }
+    .vv-faq-aside {
+      position: sticky;
+      top: 7rem;
+      align-self: start;
+    }
+  }
+  .vv-faq {
+    border-bottom: 1px solid var(--color-line);
+  }
+  .vv-faq-item {
+    border-top: 1px solid var(--color-line);
+  }
+  .vv-faq-q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    width: 100%;
+    padding-block: 1.5rem;
+    color: var(--color-ink);
+    font-size: clamp(1.2rem, 2vw, 1.55rem);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    text-align: left;
+    cursor: pointer;
+  }
+  .vv-faq-q:focus-visible {
+    border-radius: 0.5rem;
+    outline-offset: 4px;
+  }
+  .vv-faq-text {
+    transition: color var(--dur-hover) ease;
+  }
+  .vv-faq-toggle {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1.5px solid var(--color-line);
+    border-radius: 999px;
+    color: var(--color-ink);
+    transition:
+      background-color 220ms ease,
+      border-color 220ms ease,
+      color 220ms ease;
+  }
+  .vv-faq-toggle svg {
+    transition: transform 300ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-faq-q:hover .vv-faq-text {
+      color: var(--color-ink-blue);
+    }
+    .vv-faq-q:hover .vv-faq-toggle {
+      border-color: color-mix(in oklab, var(--color-ink-blue) 55%, var(--color-line));
+    }
+  }
+  /* Open: the toggle is filled in blue ink, the candidate's own mark. */
+  .vv-faq-item[data-open] .vv-faq-toggle {
+    border-color: var(--color-cobalt);
+    background: var(--color-cobalt);
+    color: var(--color-paper);
+  }
+  .vv-faq-item[data-open] .vv-faq-toggle svg {
+    transform: rotate(45deg);
+  }
+  .vv-faq-a {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 230ms var(--ease-out);
+  }
+  .vv-faq-item[data-open] .vv-faq-a {
+    grid-template-rows: 1fr;
+    transition-duration: 340ms;
+  }
+  .vv-faq-a-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .vv-faq-a p {
+    max-width: 44rem;
+    padding: 0 1rem 1.9rem 0;
+    color: var(--color-ink-mut);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition:
+      opacity 180ms ease,
+      transform 260ms var(--ease-out);
+  }
+  @media (min-width: 640px) {
+    .vv-faq-a p {
+      padding-right: 4.25rem;
+    }
+  }
+  .vv-faq-item[data-open] .vv-faq-a p {
+    opacity: 1;
+    transform: none;
+    transition-delay: 60ms;
+  }
+
+  /* ── Contact: index cards ───────────────────────────────────────────── */
+
+  .vv-inboxes {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 768px) {
+    .vv-inboxes {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+    .vv-inboxes > [data-main] {
+      grid-column: span 2;
+    }
+  }
+  @media (min-width: 1100px) {
+    .vv-inboxes {
+      grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .vv-inboxes > [data-main] {
+      grid-column: auto;
+    }
+  }
+  /* An index card: a red rule under the heading, faint blue rules below. */
+  .vv-inbox {
+    --head: 4.5rem;
+    --gap: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1.35rem 1.5rem 1.4rem;
+    border: 1px solid var(--color-line);
+    border-radius: 1rem;
+    background-color: var(--color-card);
+    background-image:
+      linear-gradient(var(--color-margin), var(--color-margin)),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 calc(var(--gap) - 1px),
+        var(--color-rule) calc(var(--gap) - 1px) var(--gap)
+      );
+    /* The blue rules run a little under each baseline of the body and the
+       address (both sit on the 2rem pitch below the heading), never through
+       the words. */
+    background-position:
+      0 var(--head),
+      0 calc(var(--head) + 0.45rem);
+    background-size:
+      100% 1.5px,
+      100% calc(100% - var(--head) - 0.45rem);
+    background-repeat: no-repeat;
+    box-shadow: var(--shadow-paper);
+    transition:
+      transform 300ms var(--ease-out),
+      box-shadow 300ms var(--ease-out);
+  }
+  [data-main] > .vv-inbox {
+    --head: 6rem;
+  }
+  .vv-inbox:active {
+    transform: scale(0.99);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-inbox:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-float);
+    }
+  }
+  .vv-inbox:focus-visible {
+    border-radius: 1rem;
+  }
+  .vv-inbox-title {
+    display: flex;
+    align-items: center;
+    height: calc(var(--head) - 1.35rem);
+    color: var(--color-ink);
+    font-size: 2rem;
+    font-weight: 900;
+    font-stretch: 118%;
+    letter-spacing: -0.028em;
+    line-height: 1;
+  }
+  [data-main] .vv-inbox-title {
+    font-size: clamp(2.4rem, 4.4vw, 3.4rem);
+  }
+  .vv-inbox-body {
+    display: block;
+    max-width: 26rem;
+    min-height: calc(var(--gap) * 2);
+    margin-top: 0.95rem;
+    color: var(--color-ink-mut);
+    font-size: 1.0625rem;
+    font-weight: 500;
+    line-height: var(--gap);
+  }
+  .vv-inbox-mail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding-top: var(--gap);
+    color: var(--color-ink-blue);
+    font-size: 1.125rem;
+    font-weight: 800;
+    line-height: var(--gap);
+    overflow-wrap: anywhere;
+  }
+  [data-main] .vv-inbox-mail {
+    font-size: clamp(1.2rem, 1.8vw, 1.45rem);
+  }
+
+  /* ── Waitlist: the admission slip ───────────────────────────────────── */
+
+  .vv-wl {
+    padding-top: clamp(7.25rem, 10.5vw, 10rem);
+  }
+  .vv-wl-grid {
+    display: grid;
+    /* One track that may shrink below its content: a form field's intrinsic
+       width must never set the page's width on a small phone. */
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'copy' 'slip' 'more';
+    gap: 2.5rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-wl-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas:
+        'copy slip'
+        'more slip';
+      grid-template-rows: auto 1fr;
+      column-gap: 5rem;
+      row-gap: 3rem;
+      align-items: start;
+    }
+  }
+  .vv-wl-copy {
+    grid-area: copy;
+  }
+  .vv-wl-slip {
+    grid-area: slip;
+  }
+  .vv-wl-more {
+    grid-area: more;
+  }
+  /* On wide screens the slip sits level with the pitch, not above empty space. */
+  @media (min-width: 1024px) {
+    .vv-wl-slip {
+      align-self: center;
+    }
+  }
+  .vv-wl-slip {
+    min-width: 0;
+  }
+  .vv-perks > li {
+    padding-block: 1.1rem;
+    border-top: 1px solid var(--color-line);
+  }
+  .vv-perks > li:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  /* ── 404 ────────────────────────────────────────────────────────────── */
+
+  .vv-404 {
+    padding-top: clamp(7.25rem, 11vw, 10rem);
+    padding-bottom: clamp(4rem, 8vw, 7rem);
+  }
+  .vv-404-grid {
+    display: grid;
+    gap: 3rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-404-grid {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.85fr);
+      align-items: center;
+      gap: 4rem;
+    }
+  }
+  .vv-404-board {
+    max-width: 48rem;
+  }
+  .vv-404-path {
+    min-height: 1.75rem;
+    margin-top: 2.25rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.75rem;
+  }
+  .vv-404-code {
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  .vv-404-hint {
+    min-height: 1.75rem;
+    margin-top: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.75rem;
+  }
+  .vv-404-copy {
+    max-width: 34rem;
+    margin-top: 1.25rem;
+    color: var(--color-ink-mut);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+  }
+  .vv-404-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  .vv-404-examiner {
+    position: relative;
+    justify-self: center;
+    width: min(78%, 22rem);
+  }
+  .vv-404-examiner .vv-portrait {
+    width: 100% !important;
+  }
+  .vv-404-seeme {
+    position: absolute;
+    top: -11%;
+    left: -15%;
+    color: var(--color-verm-text);
+    font-size: clamp(2rem, 3.6vw, 3.1rem);
+    font-weight: 900;
+    font-stretch: 112%;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    white-space: nowrap;
+    rotate: -7deg;
+  }
+
+  /* ── Dashboard: the progress board ──────────────────────────────────── */
+
+  .vv-dash-example {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1.1rem 1.25rem;
+    border: 1.5px dashed color-mix(in oklab, var(--color-ink) 20%, transparent);
+    border-radius: 1.25rem;
+  }
+  @media (min-width: 900px) {
+    .vv-dash-example {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      padding-inline: 1.5rem;
+    }
+  }
+  .vv-dash-example-text {
+    max-width: 38rem;
+    color: var(--color-ink-mut);
+    font-weight: 600;
+    line-height: 1.55;
+  }
+  .vv-dash-example-tag {
+    display: inline-block;
+    margin-right: 0.6rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.35rem;
+    background: var(--color-butter);
+    color: var(--color-coal);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    vertical-align: 0.1em;
+  }
+  .vv-dash {
+    display: grid;
+    gap: 1rem;
+  }
+  .vv-dash-sheet,
+  .vv-dash-cells,
+  .vv-dash-card {
+    border: 1px solid var(--color-line);
+    border-radius: 1.25rem;
+    background: var(--color-card);
+    box-shadow: var(--shadow-paper);
+  }
+  .vv-dash-sheet {
+    padding: 1.4rem 1rem 1.1rem;
+  }
+  @media (min-width: 768px) {
+    .vv-dash-sheet {
+      padding: 2.25rem 2.5rem 1.6rem;
+    }
+  }
+  .vv-dash-sheet-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding-inline: 0.25rem;
+  }
+  .vv-dash-title {
+    font-size: clamp(1.45rem, 2.4vw, 2rem);
+    font-weight: 900;
+    font-stretch: 112%;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .vv-dash-sub {
+    max-width: 32rem;
+    margin-top: 0.5rem;
+    color: var(--color-ink-mut);
+    line-height: 1.55;
+  }
+  .vv-dash-overall {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0.25rem 0.6rem 0 0;
+  }
+  .vv-dash-overall-label {
+    color: var(--color-ink-mut);
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+  .vv-dash-overall-mark {
+    color: var(--color-ink);
+    font-size: clamp(2.3rem, 4.4vw, 3.4rem);
+    line-height: 1;
+  }
+  /* Five seats behind one bench: portraits on the first row, the bench across
+     their feet, the paddles held up in front of it. */
+  .vv-seats {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-rows: auto auto auto auto;
+    column-gap: 0.25rem;
+    margin-top: 1.75rem;
+  }
+  @media (min-width: 768px) {
+    .vv-seats {
+      column-gap: 1.25rem;
+      margin-top: 2.25rem;
+    }
+  }
+  .vv-seats::before {
+    content: '';
+    z-index: 2;
+    grid-row: 1;
+    grid-column: 1 / -1;
+    align-self: end;
+    height: clamp(0.4rem, 0.9vw, 0.6rem);
+    margin-inline: -0.25rem;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--color-ink) 12%, var(--color-card-2));
+  }
+  .vv-seat {
+    display: contents;
+  }
+  .vv-seat > * {
+    grid-column: var(--col);
+    justify-self: center;
+    text-align: center;
+  }
+  .vv-seat > .vv-portrait {
+    z-index: 1;
+    grid-row: 1;
+    width: min(100%, 10rem) !important;
+  }
+  .vv-seat > .vv-paddle {
+    --d: clamp(2.85rem, 6.2vw, 4.75rem);
+    z-index: 3;
+    grid-row: 2;
+    margin-top: calc(var(--d) * -0.42);
+  }
+  .vv-seat-name {
+    grid-row: 3;
+    max-width: 100%;
+    margin-top: 0.6rem;
+    font-size: clamp(0.7rem, 1.15vw, 0.95rem);
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .vv-seat-fix {
+    grid-row: 4;
+    min-height: 1.3em;
+    margin-top: 0.15rem;
+    color: var(--color-verm-text);
+    font-size: clamp(0.7rem, 1.05vw, 0.85rem);
+    font-weight: 800;
+  }
+  .vv-dash-note {
+    margin-top: 1rem;
+    padding: 0.9rem 0.25rem 0;
+    border-top: 1px solid var(--color-line);
+    color: var(--color-ink-mut);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .vv-dash-cells {
+    display: grid;
+  }
+  @media (min-width: 768px) {
+    .vv-dash-cells {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .vv-dash-cell {
+    padding: 1.35rem 1.4rem 1.4rem;
+  }
+  .vv-dash-cell + .vv-dash-cell {
+    border-top: 1px solid var(--color-line);
+  }
+  @media (min-width: 768px) {
+    .vv-dash-cell {
+      padding: 1.6rem 1.75rem 1.7rem;
+    }
+    .vv-dash-cell + .vv-dash-cell {
+      border-top: 0;
+      border-left: 1px solid var(--color-line);
+    }
+  }
+  .vv-dash-label {
+    color: var(--color-ink-mut);
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+  .vv-dash-figure {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-top: 0.55rem;
+    color: var(--color-ink);
+    font-size: clamp(2rem, 3vw, 2.5rem);
+    line-height: 1.05;
+  }
+  .vv-dash-unit {
+    color: var(--color-ink-mut);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .vv-dash-aside {
+    margin-top: 0.75rem;
+    color: var(--color-ink-mut);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .vv-tally {
+    display: block;
+    width: calc(var(--groups) * 2.35rem);
+    height: 2.2rem;
+    margin-top: 0.8rem;
+    overflow: visible;
+  }
+  .vv-tally path {
+    fill: none;
+    stroke: var(--color-ink-blue);
+    stroke-width: 2.3;
+    stroke-linecap: round;
+  }
+  .vv-tally-none {
+    display: block;
+    margin-top: 0.8rem;
+    color: var(--color-ink-mut);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  /* A ruler, and the week measured on it in blue ink. */
+  .vv-ruler {
+    position: relative;
+    height: 2.25rem;
+    margin-top: 1.15rem;
+  }
+  .vv-ruler-scale {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 0.8rem;
+    border-top: 1.5px solid var(--color-ink-faint);
+    border-right: 1.5px solid var(--color-ink-faint);
+    background:
+      repeating-linear-gradient(to right, var(--color-ink-faint) 0 1.5px, transparent 1.5px calc(100% / 6)) 0 0 / 100% 0.8rem no-repeat,
+      repeating-linear-gradient(to right, var(--color-ink-faint) 0 1px, transparent 1px calc(100% / 12)) 0 0 / 100% 0.4rem no-repeat;
+  }
+  .vv-ruler-ink {
+    position: absolute;
+    top: -2.5px;
+    left: 0;
+    width: calc(var(--to) * 100%);
+    height: 4px;
+    border-radius: 2px;
+    background: var(--color-ink-blue);
+  }
+  .vv-ruler-labels {
+    position: absolute;
+    top: 1.05rem;
+    right: 0;
+    left: 0;
+    display: flex;
+    justify-content: space-between;
+    color: var(--color-ink-mut);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+
+  .vv-dash-split {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 1024px) {
+    .vv-dash-split {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+  .vv-dash-card {
+    padding: 1.35rem 1.25rem 1.3rem;
+  }
+  @media (min-width: 768px) {
+    .vv-dash-card {
+      padding: 1.6rem 1.75rem 1.5rem;
+    }
+  }
+  /* Twelve weeks across the whole card: the columns share the width and each
+     day is a square of it, so the grid fills its sheet at any size. */
+  .vv-heat {
+    --g: clamp(0.18rem, 0.4vw, 0.3rem);
+    margin-top: 1.1rem;
+  }
+  .vv-heat-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: 1.2rem repeat(7, auto);
+    grid-template-columns: auto repeat(12, minmax(0, 1fr));
+    gap: var(--g);
+  }
+  .vv-heat-days,
+  .vv-heat-col {
+    display: contents;
+  }
+  /* The day names start under the month row. */
+  .vv-heat-days > :first-child {
+    grid-row-start: 2;
+  }
+  .vv-heat-days > span {
+    align-self: center;
+    margin-right: 0.3rem;
+    color: var(--color-ink-mut);
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+  .vv-heat-month {
+    color: var(--color-ink-mut);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.2rem;
+    white-space: nowrap;
+  }
+  .vv-heat-cell {
+    display: block;
+    width: 100%;
+    max-width: 2.6rem;
+    aspect-ratio: 1;
+    border-radius: 0.28rem;
+    box-shadow: inset 0 0 0 1px var(--color-rule);
+  }
+  .vv-heat-cell[data-level='1'] {
+    background: color-mix(in oklab, var(--color-ink-blue) 32%, var(--color-card));
+    box-shadow: none;
+  }
+  .vv-heat-cell[data-level='2'] {
+    background: color-mix(in oklab, var(--color-ink-blue) 64%, var(--color-card));
+    box-shadow: none;
+  }
+  .vv-heat-cell[data-level='3'] {
+    background: var(--color-ink-blue);
+    box-shadow: none;
+  }
+  .vv-heat-cell[data-future] {
+    box-shadow: none;
+  }
+  .vv-heat-cell[data-today] {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 1px;
+  }
+  .vv-heat-key {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 1rem;
+    color: var(--color-ink-mut);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .vv-heat-key .vv-heat-cell {
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 0.2rem;
+  }
+  .vv-heat-key span:first-child {
+    margin-right: 0.2rem;
+  }
+  .vv-heat-key span:last-child {
+    margin-left: 0.2rem;
+  }
+  .vv-register {
+    margin-top: 0.6rem;
+  }
+  .vv-register-row {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding-block: 0.75rem;
+    border-top: 1px solid var(--color-line);
+  }
+  .vv-register-row:first-child {
+    border-top: 0;
+  }
+  .vv-register-when {
+    flex: none;
+    color: var(--color-ink-mut);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+  /* A mark on a small coin: paper stays paper at night. */
+  .vv-coin {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 999px;
+    background: var(--vv-paper-obj);
+    box-shadow:
+      inset 0 0 0 2.5px color-mix(in oklab, var(--vv-paper-obj) 82%, var(--color-coal-2)),
+      0 1px 2px rgb(var(--vv-shadow) / 0.2);
+    color: var(--color-coal);
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  /* ── Use cases: the practice journal ────────────────────────────────── */
+
+  /* One wide sheet with a wide margin: the examiner's side, where the notes go. */
+  .vv-journal {
+    --margin-w: 6.25rem;
+    max-width: 64rem;
+    border: 1px solid var(--color-line);
+    border-radius: 1.25rem;
+    background-color: var(--color-card);
+    background-image: linear-gradient(
+      to right,
+      transparent calc(var(--margin-w) - 1px),
+      var(--color-margin) calc(var(--margin-w) - 1px) var(--margin-w),
+      transparent var(--margin-w)
+    );
+    box-shadow: var(--shadow-paper);
+  }
+  @media (min-width: 640px) {
+    .vv-journal {
+      --margin-w: 11rem;
+    }
+  }
+  .vv-entry {
+    display: grid;
+    grid-template-columns: var(--margin-w) minmax(0, 1fr);
+    border-top: 1px solid var(--color-rule);
+  }
+  .vv-entry:first-child {
+    border-top: 0;
+  }
+  .vv-entry-margin {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 1.4rem 0.4rem 1.35rem;
+    text-align: center;
+  }
+  .vv-entry-margin .vv-portrait {
+    width: clamp(3.75rem, 9vw, 6.5rem) !important;
+  }
+  .vv-entry-note {
+    max-width: 8.5rem;
+    color: var(--color-verm-text);
+    font-size: clamp(0.8rem, 1.3vw, 1.05rem);
+    font-weight: 800;
+    line-height: 1.25;
+    rotate: -3deg;
+  }
+  .vv-entry-body {
+    padding: 1.5rem 1.2rem 1.75rem 1.2rem;
+  }
+  @media (min-width: 640px) {
+    .vv-entry-body {
+      max-width: 44rem;
+      padding: 2.1rem 2.5rem 2.3rem 2.25rem;
+    }
+  }
+  /* Narrow phones: a slimmer margin, so the entry keeps a readable measure. */
+  @media (max-width: 479px) {
+    .vv-journal {
+      --margin-w: 4.6rem;
+    }
+    .vv-entry-margin {
+      padding-inline: 0.25rem;
+    }
+    .vv-entry-margin .vv-portrait {
+      width: 3.2rem !important;
+    }
+    .vv-entry-note {
+      max-width: 4.1rem;
+      font-size: 0.72rem;
+    }
+    .vv-entry-body {
+      padding: 1.35rem 1rem 1.5rem 0.95rem;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Fewer and gentler: strokes and faces appear, nothing travels. */
+  .vv-ink path,
+  .vv-rewrite-strike path {
+    animation: none;
+  }
+  .vv-nav-toggle > span {
+    transition: none;
+  }
+  .vv-peek-head,
+  .vv-ledge[data-pleased] .vv-peek-head,
+  .vv-ledge[data-frown] .vv-peek[data-axis='structure'] .vv-peek-head {
+    transform: none;
+    transition: none;
+    animation: none !important;
+  }
+  .vv-faq-a,
+  .vv-faq-toggle svg {
+    transition: none;
+  }
+  .vv-faq-a p,
+  .vv-faq-item[data-open] .vv-faq-a p {
+    transform: none;
+    transition: opacity 150ms ease;
+  }
+  .vv-inbox {
+    transition: box-shadow 200ms ease;
+  }
+  .vv-inbox:hover,
+  .vv-inbox:active {
+    transform: none;
+  }
+}

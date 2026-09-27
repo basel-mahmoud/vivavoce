@@ -1,52 +1,67 @@
-import type { Metadata } from 'next';
-import { PageHero } from '@/components/site/PageHero';
-import { WaitlistForm } from '@/components/site/WaitlistForm';
-import { Reveal } from '@/components/ui/Reveal';
+import Link from 'next/link';
+import { ArrowRight, Smartphone } from 'lucide-react';
+import { AdmitSlip } from '@/components/home/AdmitSlip';
+import { Stamp } from '@/components/ui/Stamp';
+import { pageMeta } from '@/lib/site';
 
-export const metadata: Metadata = {
-  title: 'Early access',
-  description:
-    'Join the VivaVoce early-access list. Students with upcoming exams first.',
-};
+export const metadata = pageMeta({
+  title: 'Get early access',
+  description: 'Join the VivaVoce early-access list. Students with upcoming exams first.',
+  path: '/waitlist',
+});
 
+// Only what is true today.
 const perks = [
-  'First access as spots open. Exam dates jump the queue.',
-  'Founding-user pricing, locked in for good.',
-  'A direct line to shape what gets built next.',
+  ['Exam dates jump the queue.', 'First access as spots open, soonest exams first.'],
+  ['The Android beta, today.', 'Install the current build while you wait for your spot.'],
+  ['A direct line.', 'Help shape what gets built next.'],
 ] as const;
 
 export default function WaitlistPage() {
   return (
-    <>
-      <PageHero
-        title="Get in before the exam does."
-        intro="VivaVoce is in private beta. Leave your email and we will bring you in as spots open."
-      />
-      <section className="bg-canvas text-ink">
-        <div className="mx-auto grid w-full max-w-[1360px] gap-10 px-4 pt-4 pb-20 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:gap-20">
-          <Reveal>
-            <ul className="flex flex-col gap-6">
-              {perks.map((perk) => (
-                <li key={perk} className="flex items-start gap-4">
-                  <span className="mt-2 h-1.5 w-8 shrink-0 bg-verm" />
-                  <p className="text-lg font-bold leading-snug">{perk}</p>
-                </li>
-              ))}
-            </ul>
-            <a
-              href="/download/apk"
-              className="pressable mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-ink px-6 font-bold text-paper transition-colors duration-150 hover:bg-[#2E2B27]"
-            >
-              Download the Android beta
-            </a>
-          </Reveal>
-          <Reveal delay={0.08}>
-            <div className="tile p-7 sm:p-10">
-              <WaitlistForm />
-            </div>
-          </Reveal>
+    <section aria-labelledby="wl-title" className="vv-wl mx-auto w-full max-w-[1360px] px-4 pb-16 sm:px-5 sm:pb-20">
+      <div className="vv-wl-grid">
+        <div className="vv-wl-copy">
+          {/* Set line by line, so the heading breaks the same way before and after its
+              typeface arrives and nothing below it jumps. */}
+          <h1 id="wl-title" className="vv-hero-title display">
+            <span className="block">Get in</span>
+            <span className="block">before the</span>
+            <span className="block">
+              exam <Stamp>does</Stamp>.
+            </span>
+          </h1>
+          <p className="vv-hero-intro">
+            VivaVoce is in private beta. Write your email on the slip, tear off the stub, and we will bring you in as
+            spots open.
+          </p>
         </div>
-      </section>
-    </>
+
+        <div className="vv-wl-slip">
+          <AdmitSlip size="page" fieldId="wl-email" />
+        </div>
+
+        <div className="vv-wl-more">
+          <ul className="vv-perks">
+            {perks.map(([lead, body]) => (
+              <li key={lead}>
+                <p className="text-lg font-black leading-snug">{lead}</p>
+                <p className="mt-1 leading-relaxed text-ink-mut">{body}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-1 text-[0.95rem] font-bold">
+            <a href="/download/apk" className="group inline-flex min-h-11 items-center gap-1.5">
+              <Smartphone size={16} aria-hidden className="text-ink-blue" />
+              <span className="link-quiet">Download the Android beta</span>
+            </a>
+            <Link href="/faq" className="group inline-flex min-h-11 items-center gap-1.5">
+              <span className="link-quiet">Questions first? Read the FAQ</span>
+              <ArrowRight size={15} aria-hidden className="text-ink-blue" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

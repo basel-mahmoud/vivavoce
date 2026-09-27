@@ -1,25 +1,45 @@
-import type { Metadata } from 'next';
+import { ArrowDown } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
-import { StepsStrip, DemoSection, WaitlistSection } from '@/components/marketing/sections';
+import { Round } from '@/components/home/Round';
+import { LiveEngine, WarmSections } from '@/components/home/lazy';
+import { Close } from '@/components/home/Closing';
+import { Deferred } from '@/components/home/Deferred';
+import { EnginePlaceholder } from '@/components/home/EnginePlaceholder';
+import { SectionBoundary } from '@/components/home/SectionBoundary';
+import { pageMeta } from '@/lib/site';
+// The live engine's code loads after the first screen; its styles must not wait for it.
+import '@/components/engine/engine.module.css';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'How it works',
   description:
     'Pick a mode, answer out loud, get marked on five axes with a stronger answer to steal from, then come back sharper.',
-};
+  path: '/how-it-works',
+});
 
 export default function HowItWorksPage() {
   return (
     <>
       <PageHero
-        title="Speak. Get marked. Come back sharper."
-        intro="No setup and no scheduling another person. The whole loop takes about a minute, and you can run it below right now."
-      />
-      <div className="-mt-10">
-        <StepsStrip />
-      </div>
-      <DemoSection />
-      <WaitlistSection />
+        title="A minute in the hot seat."
+        intro="No setup, and no one to schedule. Here is one round, moment by moment: they ask, you answer out loud, and five examiners mark it."
+        flush
+      >
+        <a href="#live" className="btn btn-primary btn-lg">
+          Answer a question
+          <ArrowDown size={17} aria-hidden />
+        </a>
+      </PageHero>
+      <Round />
+      <Deferred height="900px" className="pb-24 pt-10 sm:pb-32 sm:pt-16">
+        <SectionBoundary name="live engine" fallback={<EnginePlaceholder />}>
+          <LiveEngine />
+        </SectionBoundary>
+      </Deferred>
+      <Deferred height="1000px">
+        <Close />
+      </Deferred>
+      <WarmSections names={['engine']} />
     </>
   );
 }

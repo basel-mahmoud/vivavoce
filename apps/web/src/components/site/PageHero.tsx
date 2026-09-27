@@ -1,19 +1,56 @@
-import { Reveal } from '@/components/ui/Reveal';
+import type { ReactNode } from 'react';
+import { cn } from '@/lib/cn';
 
-/** Inner-page opener: one loud statement inside a tile. */
-export function PageHero({ title, intro }: { title: string; intro?: string }) {
+/**
+ * An inner page's opener, set like the top of an exam script: one heading,
+ * then a short intro. No eyebrow, no number, no chip, and at most one mark
+ * of the page's own: the examiner's tick in the margin (/faq), a correction
+ * in the heading (/use-cases), a stamp (/waitlist). The red-pen circle
+ * belongs to the home page alone. Two-tone headings (<Muted>) are kept for
+ * the two legal pages.
+ */
+export function PageHero({
+  title,
+  intro,
+  children,
+  flush = false,
+  margin,
+  figure,
+  className,
+}: {
+  title: ReactNode;
+  intro?: ReactNode;
+  children?: ReactNode;
+  /** The next section brings its own top padding: keep the bottom tight. */
+  flush?: boolean;
+  /** Something the examiner writes in the page's margin beside the heading (a tick). */
+  margin?: ReactNode;
+  /** The page's own exhibit, full width under the words (the panel on /features). */
+  figure?: ReactNode;
+  className?: string;
+}) {
   return (
-    <section className="mx-auto w-full max-w-[1360px] px-4 pb-3 pt-2 sm:px-6">
-      <Reveal>
-        <div className="tile p-7 sm:p-10">
-          <h1 className="display max-w-4xl text-[clamp(2.2rem,5vw,3.8rem)]">{title}</h1>
-          {intro && (
-            <p className="mt-5 max-w-2xl text-lg font-medium leading-relaxed text-ink-mut">
-              {intro}
-            </p>
-          )}
+    <section
+      className={cn('vv-hero mx-auto w-full max-w-[1360px] px-4 sm:px-5', className)}
+      data-flush={flush ? '' : undefined}
+      data-margin={margin ? '' : undefined}
+    >
+      {margin ? (
+        <div className="vv-hero-margin" aria-hidden="true">
+          {margin}
         </div>
-      </Reveal>
+      ) : null}
+      <div className="vv-hero-text">
+        <h1 className="vv-hero-title display">{title}</h1>
+        {intro ? <p className="vv-hero-intro">{intro}</p> : null}
+        {children ? <div className="vv-hero-actions">{children}</div> : null}
+      </div>
+      {figure ? <div className="vv-hero-figure">{figure}</div> : null}
     </section>
   );
+}
+
+/** The grey half of a two-tone heading: what follows the claim. Legal pages only. */
+export function Muted({ children }: { children: ReactNode }) {
+  return <span className="text-ink-mut">{children}</span>;
 }

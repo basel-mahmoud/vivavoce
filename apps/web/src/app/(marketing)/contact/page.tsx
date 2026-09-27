@@ -1,17 +1,19 @@
-import type { Metadata } from 'next';
+import Link from 'next/link';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
-import { Reveal } from '@/components/ui/Reveal';
-import { site } from '@/lib/site';
+import { pageMeta, site } from '@/lib/site';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'Contact',
-  description: 'Reach the VivaVoce team: support, security, and privacy.',
-};
+  description:
+    'Reach the VivaVoce team: support, security, and privacy.',
+  path: '/contact',
+});
 
 const channels = [
-  ['Support', 'Questions, feedback, or trouble with the app.', site.email],
-  ['Security', 'Report a vulnerability. We support coordinated disclosure.', 'security@vivavoce.app'],
-  ['Privacy', 'Data export, deletion, or any privacy request.', 'privacy@vivavoce.app'],
+  { title: 'Support', body: 'Questions, feedback, or trouble with the app.', email: site.email, main: true },
+  { title: 'Security', body: 'Report a vulnerability. We support coordinated disclosure.', email: 'security@vivavoce.app' },
+  { title: 'Privacy', body: 'Data export, deletion, or any privacy request.', email: 'privacy@vivavoce.app' },
 ] as const;
 
 export default function ContactPage() {
@@ -21,25 +23,27 @@ export default function ContactPage() {
         title="We read everything."
         intro="A small team that cares about getting this right. Pick the right inbox and you will hear back quickly."
       />
-      <section className="bg-canvas text-ink">
-        <div className="mx-auto w-full max-w-[1360px] px-4 pt-4 pb-20 sm:px-6">
-          <div className="flex max-w-2xl flex-col">
-            {channels.map(([title, body, email], i) => (
-              <Reveal key={title} delay={Math.min(i * 0.05, 0.15)}>
-                <div className="border-t border-line py-8 last:border-b">
-                  <h2 className="text-2xl font-black">{title}</h2>
-                  <p className="mt-2 leading-relaxed text-ink-mut">{body}</p>
-                  <a
-                    href={`mailto:${email}`}
-                    className="mt-3 inline-block font-bold text-verm underline decoration-2 underline-offset-4 hover:text-ink"
-                  >
-                    {email}
-                  </a>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
+      <section aria-label="Inboxes" className="mx-auto w-full max-w-[1360px] px-4 pb-24 sm:px-5 sm:pb-32">
+        <ul className="vv-inboxes">
+          {channels.map((c) => (
+            <li key={c.title} data-main={'main' in c ? '' : undefined}>
+              <a href={`mailto:${c.email}`} className="vv-inbox group">
+                <span className="vv-inbox-title">{c.title}</span>
+                <span className="vv-inbox-body">{c.body}</span>
+                <span className="vv-inbox-mail">
+                  <span className="link-quiet">{c.email}</span>
+                  <ArrowUpRight size={18} aria-hidden className="shrink-0" />
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-10 text-[0.95rem] font-bold">
+          <Link href="/faq" className="group inline-flex min-h-11 items-center gap-1.5">
+            <span className="link-quiet">Questions first? Read the FAQ</span>
+            <ArrowRight size={15} aria-hidden className="text-ink-blue" />
+          </Link>
+        </p>
       </section>
     </>
   );

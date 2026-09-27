@@ -1,0 +1,58 @@
+import { asset } from '@/lib/assets';
+import { cn } from '@/lib/cn';
+import styles from './room.module.css';
+
+/** Compact: phones and portrait tablets, the same test the camera and the layout use. */
+const COMPACT = '(max-width: 599px), (max-aspect-ratio: 21/20)';
+/** Portrait tablets: compact, but wide enough that the room sits well below a shorter caption. */
+const TABLET = '(min-width: 600px) and (max-aspect-ratio: 21/20)';
+const DARK = '(prefers-color-scheme: dark)';
+const DARK_COMPACT = `${DARK} and (max-width: 599px), ${DARK} and (max-aspect-ratio: 21/20)`;
+const DARK_TABLET = `${DARK} and ${TABLET}`;
+
+/** Rendered from the live scene by scripts/room/posters.mjs (see its header for provenance). */
+export const POSTERS = {
+  wide: { light: 'hero-light-1440', dark: 'hero-dark-1440', width: 1440, height: 900 },
+  compact: { light: 'hero-light-390', dark: 'hero-dark-390', width: 780, height: 1688 },
+  tablet: { light: 'hero-light-768', dark: 'hero-dark-768', width: 1152, height: 1536 },
+} as const;
+
+/** A poster file (versioned, so it is cached for a year). */
+const src = (name: string, type: 'avif' | 'webp') => asset(`/room/${name}.${type}`);
+
+export const POSTER_ALT =
+  'An example round: five examiners at a cobalt bench hold up their marks, 71, 66, 48, 62 and 54. Structure, the weakest at 48, leans in to ask the follow-up.';
+
+/**
+ * The first frame of the room as a still, painted at once under the hero's words and cross-faded
+ * to the live canvas when it is ready (Chrome never counts a full-viewport image as the largest
+ * contentful paint, so the words carry that, and they paint in the first frame). Without WebGL, or
+ * when the visitor saves data, it simply stays, under the same DOM captions. Art-directed per
+ * scheme and layout by media queries, so no script is involved.
+ */
+export function RoomPoster({ hidden }: { hidden: boolean }) {
+  const { wide, compact, tablet } = POSTERS;
+  return (
+    <picture>
+      <source media={DARK_TABLET} type="image/avif" srcSet={src(tablet.dark, 'avif')} width={tablet.width} height={tablet.height} />
+      <source media={DARK_TABLET} type="image/webp" srcSet={src(tablet.dark, 'webp')} width={tablet.width} height={tablet.height} />
+      <source media={TABLET} type="image/avif" srcSet={src(tablet.light, 'avif')} width={tablet.width} height={tablet.height} />
+      <source media={TABLET} type="image/webp" srcSet={src(tablet.light, 'webp')} width={tablet.width} height={tablet.height} />
+      <source media={DARK_COMPACT} type="image/avif" srcSet={src(compact.dark, 'avif')} width={compact.width} height={compact.height} />
+      <source media={DARK_COMPACT} type="image/webp" srcSet={src(compact.dark, 'webp')} width={compact.width} height={compact.height} />
+      <source media={COMPACT} type="image/avif" srcSet={src(compact.light, 'avif')} width={compact.width} height={compact.height} />
+      <source media={COMPACT} type="image/webp" srcSet={src(compact.light, 'webp')} width={compact.width} height={compact.height} />
+      <source media={DARK} type="image/avif" srcSet={src(wide.dark, 'avif')} />
+      <source media={DARK} type="image/webp" srcSet={src(wide.dark, 'webp')} />
+      <source type="image/avif" srcSet={src(wide.light, 'avif')} />
+      <img
+        src={src(wide.light, 'webp')}
+        width={wide.width}
+        height={wide.height}
+        alt={POSTER_ALT}
+        fetchPriority="high"
+        className={cn(styles.poster, hidden && 'opacity-0')}
+      />
+    </picture>
+  );
+}

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Examiner sprites</title>
+<link rel="icon" href="data:," />
+<!--
+  Review sheet for public/examiners/: every sprite on the light and the dark page canvas, with the
+  live marks set on the raised coins from rig.ts PORTRAIT_COINS. Driven by render.mjs sheet.
+-->
+<style>
+  @font-face { font-family: 'Archivo'; src: url(fonts/archivo-900.woff) format('woff'); font-weight: 900; }
+  @font-face { font-family: 'JetBrains Mono'; src: url(fonts/jetbrains-mono-700.woff) format('woff'); font-weight: 700; }
+  html, body { margin: 0; }
+  body { display: flex; width: max-content; font-family: system-ui, sans-serif; }
+  section { padding: 26px 30px 30px; background: #f3f5f8; color: #10131a; --mut: #556072; }
+  section.dark { background: #0c0e14; color: #eef1f6; --mut: #a4abbb; }
+  h2 { margin: 0 0 4px; font: 900 19px/1.1 Archivo, system-ui, sans-serif; letter-spacing: -0.01em; }
+  p { margin: 0 0 14px; font-size: 12.5px; color: var(--mut); }
+  table { border-collapse: collapse; }
+  th { font: 600 11.5px/1 system-ui, sans-serif; color: var(--mut); text-align: left; padding: 0 0 6px; }
+  th.row { padding: 0 10px 0 0; }
+  td { padding: 0; }
+  td img { display: block; width: 150px; height: 150px; }
+  .raised { display: flex; gap: 10px; margin-top: 20px; }
+  figure { margin: 0; position: relative; width: 186px; height: 232px; }
+  figure img { display: block; width: 100%; height: 100%; }
+  figcaption { font: 600 11.5px/1 system-ui, sans-serif; color: var(--mut); margin-top: 4px; }
+  .mark { position: absolute; transform: translate(-50%, -50%); font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #f6f6f3; line-height: 1; letter-spacing: -0.02em; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./three/build/three.module.js" } }
+</script>
+</head>
+<body>
+<script type="module">
+import { EXAMINERS, AXIS_NAME, PORTRAIT_STATES, PORTRAIT_COINS, portraitSrc, raisedSrc } from './lib/rig.js';
+
+const MARKS = { correctness: 71, clarity: 66, structure: 48, conciseness: 62, confidence: 54 };
+const make = (tag, props = {}) => Object.assign(document.createElement(tag), props);
+for (const scheme of ['light', 'dark']) {
+  const s = make('section', { className: scheme });
+  s.append(make('h2', { textContent: scheme === 'light' ? 'Day canvas #f3f5f8' : 'Night canvas #0c0e14' }));
+  s.append(make('p', { textContent: 'Head and shoulders, 360 x 360 (shown at 150). Raised: 480 x 600 (shown at 186), live marks set in the DOM.' }));
+  const t = make('table');
+  const hr = t.insertRow(); hr.append(make('th'));
+  for (const st of PORTRAIT_STATES) hr.append(make('th', { textContent: st }));
+  for (const k of EXAMINERS) {
+    const r = t.insertRow();
+    r.append(make('th', { className: 'row', textContent: AXIS_NAME[k] }));
+    for (const st of PORTRAIT_STATES) r.insertCell().append(make('img', { src: portraitSrc(k, st), alt: `${AXIS_NAME[k]}, ${st}` }));
+  }
+  s.append(t);
+  const row = make('div', { className: 'raised' });
+  for (const k of EXAMINERS) {
+    const f = make('figure');
+    f.append(make('img', { src: raisedSrc(k), alt: `${AXIS_NAME[k]} raising a mark` }));
+    const c = PORTRAIT_COINS[k];
+    if (c) {
+      const m = make('span', { className: 'mark', textContent: String(MARKS[k]) });
+      Object.assign(m.style, { left: `${c.x * 100}%`, top: `${c.y * 100}%`, fontSize: `${0.95 * c.r * 186}px` });
+      f.append(m);
+    }
+    f.append(make('figcaption', { textContent: AXIS_NAME[k] }));
+    row.append(f);
+  }
+  s.append(row);
+  document.body.append(s);
+}
+await document.fonts.load('700 20px "JetBrains Mono"');
+await document.fonts.load('900 19px Archivo');
+await Promise.all([...document.images].map((i) => i.decode().catch(() => null)));
+window.__stats = { images: document.images.length };
+document.body.dataset.done = '1';
+</script>
+</body>
+</html>

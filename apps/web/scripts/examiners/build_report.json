@@ -1,0 +1,722 @@
+{
+ "glb": "public/models/examiners.glb",
+ "bytes": 1059100,
+ "gzip": 510114,
+ "bytes_unpacked": 1525988,
+ "examiners": {
+  "Correctness": {
+   "shell": 10516,
+   "hands": 3032,
+   "paddle": 1120,
+   "total": 14668
+  },
+  "Clarity": {
+   "shell": 10438,
+   "hands": 3032,
+   "paddle": 1120,
+   "total": 14590
+  },
+  "Structure": {
+   "shell": 10714,
+   "hands": 3032,
+   "paddle": 1120,
+   "total": 14866
+  },
+  "Conciseness": {
+   "shell": 7902,
+   "hands": 3032,
+   "paddle": 1120,
+   "total": 12054
+  },
+  "Confidence": {
+   "shell": 10646,
+   "hands": 3032,
+   "paddle": 1120,
+   "total": 14798
+  }
+ },
+ "bench": 3600,
+ "rig": {
+  "Correctness": {
+   "seat": [
+    -1.7276,
+    0.0,
+    -0.6133
+   ],
+   "yaw": 0.2118,
+   "top": 1.3599999999999999,
+   "width": 1.26,
+   "head_pivot": [
+    0,
+    0.56,
+    0
+   ]
+  },
+  "Clarity": {
+   "seat": [
+    -0.9139,
+    0.0,
+    -0.8583
+   ],
+   "yaw": 0.11,
+   "top": 1.8,
+   "width": 0.94,
+   "head_pivot": [
+    0.0,
+    0.68,
+    0.0
+   ]
+  },
+  "Structure": {
+   "seat": [
+    0.0,
+    0.0,
+    -0.95
+   ],
+   "yaw": -0.0,
+   "top": 1.6400000000000001,
+   "width": 1.08,
+   "head_pivot": [
+    -0.035,
+    0.875,
+    0.0
+   ]
+  },
+  "Conciseness": {
+   "seat": [
+    0.8145,
+    0.0,
+    -0.8773
+   ],
+   "yaw": -0.0979,
+   "top": 2.4,
+   "width": 0.68,
+   "head_pivot": [
+    0.0,
+    1.04,
+    0.0
+   ]
+  },
+  "Confidence": {
+   "seat": [
+    1.6634,
+    0.0,
+    -0.6387
+   ],
+   "yaw": -0.2035,
+   "top": 1.068,
+   "width": 1.7284050082941413,
+   "head_pivot": [
+    0.0,
+    0.235,
+    0.0
+   ]
+  }
+ },
+ "visors": {
+  "Correctness": {
+   "halfWidth": 0.33,
+   "halfHeight": 0.152,
+   "radius": 0.082,
+   "centre": [
+    0.0,
+    0.8552,
+    0.454
+   ]
+  },
+  "Clarity": {
+   "halfWidth": 0.335,
+   "halfHeight": 0.183,
+   "radius": 0.14,
+   "centre": [
+    0.0,
+    1.2995,
+    0.4998
+   ]
+  },
+  "Structure": {
+   "halfWidth": 0.335,
+   "halfHeight": 0.148,
+   "radius": 0.072,
+   "centre": [
+    -0.035,
+    1.2311,
+    0.417
+   ]
+  },
+  "Conciseness": {
+   "halfWidth": 0.19,
+   "halfHeight": 0.145,
+   "radius": 0.078,
+   "centre": [
+    0.0,
+    1.3714,
+    0.2216
+   ]
+  },
+  "Confidence": {
+   "halfWidth": 0.42,
+   "halfHeight": 0.166,
+   "radius": 0.126,
+   "centre": [
+    0.0,
+    0.5233,
+    0.583
+   ]
+  }
+ },
+ "sockets": {
+  "Correctness": {
+   "L": {
+    "pos": [
+     -0.522,
+     0.29,
+     0.0
+    ],
+    "dir": [
+     -0.9421,
+     -0.2073,
+     0.2638
+    ]
+   },
+   "R": {
+    "pos": [
+     0.522,
+     0.29,
+     0.0
+    ],
+    "dir": [
+     0.9421,
+     -0.2073,
+     0.2638
+    ]
+   }
+  },
+  "Clarity": {
+   "L": {
+    "pos": [
+     -0.244,
+     0.545,
+     0.04
+    ],
+    "dir": [
+     -0.9428,
+     -0.0471,
+     0.33
+    ]
+   },
+   "R": {
+    "pos": [
+     0.244,
+     0.545,
+     0.04
+    ],
+    "dir": [
+     0.9428,
+     -0.0471,
+     0.33
+    ]
+   }
+  },
+  "Structure": {
+   "L": {
+    "pos": [
+     -0.408,
+     0.56,
+     0.0321
+    ],
+    "dir": [
+     -0.9407,
+     -0.1881,
+     0.2822
+    ]
+   },
+   "R": {
+    "pos": [
+     0.508,
+     0.56,
+     -0.0321
+    ],
+    "dir": [
+     0.9407,
+     -0.1881,
+     0.2822
+    ]
+   }
+  },
+  "Conciseness": {
+   "L": {
+    "pos": [
+     -0.2794,
+     0.56,
+     0.0
+    ],
+    "dir": [
+     -0.9407,
+     -0.1881,
+     0.2822
+    ]
+   },
+   "R": {
+    "pos": [
+     0.2794,
+     0.56,
+     0.0
+    ],
+    "dir": [
+     0.9407,
+     -0.1881,
+     0.2822
+    ]
+   }
+  },
+  "Confidence": {
+   "L": {
+    "pos": [
+     -0.7376,
+     0.12,
+     0.0
+    ],
+    "dir": [
+     -0.9567,
+     -0.0478,
+     0.287
+    ]
+   },
+   "R": {
+    "pos": [
+     0.7376,
+     0.12,
+     0.0
+    ],
+    "dir": [
+     0.9567,
+     -0.0478,
+     0.287
+    ]
+   }
+  }
+ },
+ "labels": {
+  "Correctness": {
+   "pos": [
+    -1.3161,
+    -0.15,
+    0.402
+   ],
+   "yaw": 0.385,
+   "curveRadius": 3.5045
+  },
+  "Clarity": {
+   "pos": [
+    -0.6962,
+    -0.32,
+    0.2154
+   ],
+   "yaw": 0.2,
+   "curveRadius": 3.5045
+  },
+  "Structure": {
+   "pos": [
+    0.0,
+    -0.15,
+    0.1455
+   ],
+   "yaw": -0.0,
+   "curveRadius": 3.5045
+  },
+  "Conciseness": {
+   "pos": [
+    0.6205,
+    -0.32,
+    0.2009
+   ],
+   "yaw": -0.178,
+   "curveRadius": 3.5045
+  },
+  "Confidence": {
+   "pos": [
+    1.2673,
+    -0.15,
+    0.3827
+   ],
+   "yaw": -0.37,
+   "curveRadius": 3.5045
+  }
+ },
+ "rest": {
+  "Correctness": {
+   "L": {
+    "pos": [
+     -0.2975,
+     0.1451,
+     0.4854
+    ],
+    "quat": [
+     -0.35154,
+     0.57801,
+     0.61353,
+     0.40731
+    ],
+    "curl": 1.0,
+    "flip": 3.141592653589793
+   },
+   "R": {
+    "pos": [
+     0.36,
+     0.1339,
+     0.6
+    ],
+    "quat": [
+     -0.04816,
+     0.59542,
+     0.79981,
+     0.05885
+    ],
+    "curl": 0.22
+   }
+  },
+  "Clarity": {
+   "L": {
+    "pos": [
+     -0.2975,
+     0.1451,
+     0.4854
+    ],
+    "quat": [
+     -0.35154,
+     0.57801,
+     0.61353,
+     0.40731
+    ],
+    "curl": 1.0,
+    "flip": 3.141592653589793
+   },
+   "R": {
+    "pos": [
+     0.36,
+     0.1339,
+     0.6
+    ],
+    "quat": [
+     -0.04816,
+     0.59542,
+     0.79981,
+     0.05885
+    ],
+    "curl": 0.22
+   }
+  },
+  "Structure": {
+   "L": {
+    "pos": [
+     -0.36,
+     0.1339,
+     0.6
+    ],
+    "quat": [
+     -0.04816,
+     -0.59542,
+     -0.79981,
+     0.05885
+    ],
+    "curl": 0.22
+   },
+   "R": {
+    "pos": [
+     0.2975,
+     0.1451,
+     0.4854
+    ],
+    "quat": [
+     -0.35154,
+     -0.57801,
+     -0.61353,
+     0.40731
+    ],
+    "curl": 1.0,
+    "flip": 3.141592653589793
+   }
+  },
+  "Conciseness": {
+   "L": {
+    "pos": [
+     -0.36,
+     0.1339,
+     0.6
+    ],
+    "quat": [
+     -0.04816,
+     -0.59542,
+     -0.79981,
+     0.05885
+    ],
+    "curl": 0.22
+   },
+   "R": {
+    "pos": [
+     0.2975,
+     0.1451,
+     0.4854
+    ],
+    "quat": [
+     -0.35154,
+     -0.57801,
+     -0.61353,
+     0.40731
+    ],
+    "curl": 1.0,
+    "flip": 3.141592653589793
+   }
+  },
+  "Confidence": {
+   "L": {
+    "pos": [
+     -0.36,
+     0.1339,
+     0.6
+    ],
+    "quat": [
+     -0.04816,
+     -0.59542,
+     -0.79981,
+     0.05885
+    ],
+    "curl": 0.22
+   },
+   "R": {
+    "pos": [
+     0.2975,
+     0.1451,
+     0.4854
+    ],
+    "quat": [
+     -0.35154,
+     -0.57801,
+     -0.61353,
+     0.40731
+    ],
+    "curl": 1.0,
+    "flip": 3.141592653589793
+   }
+  }
+ },
+ "arm": {
+  "radius": 0.04,
+  "rings": 18,
+  "sides": 12,
+  "ribs": 16,
+  "cuffDepth": 0.06,
+  "flare": 0.16,
+  "slack": 1.15,
+  "length": {
+   "Correctness": 0.9,
+   "Clarity": 0.98,
+   "Structure": 0.92,
+   "Conciseness": 0.94,
+   "Confidence": 0.98
+  }
+ },
+ "grip": [
+  0.0,
+  0.169,
+  -0.064
+ ],
+ "yd": 0.4,
+ "coin": {
+  "radius": 0.21,
+  "thickness": 0.046
+ },
+ "loupe": {
+  "lensY": 0.3,
+  "lensRadius": 0.126
+ },
+ "paddleSide": {
+  "Correctness": "L",
+  "Clarity": "L",
+  "Structure": "R",
+  "Conciseness": "R",
+  "Confidence": "R"
+ },
+ "bench_dims": {
+  "r_back": 4.1,
+  "depth": 0.62,
+  "top": 0.05,
+  "nose": 0.05,
+  "floor": -0.5,
+  "span": 0.56,
+  "recess": 0.025,
+  "arc_c": 3.6499999999999995,
+  "seat_r": 4.6,
+  "angles": [
+   -0.385,
+   -0.2,
+   0.0,
+   0.178,
+   0.37
+  ]
+ },
+ "parts": {
+  "Glaze_Clarity": 3528,
+  "Tier2_Structure": 2800,
+  "HeadShell_Confidence": 2304,
+  "BodyShell_Conciseness": 2112,
+  "BodyShell_Confidence": 2112,
+  "HeadShell_Conciseness": 2112,
+  "HeadShell_Correctness": 1848,
+  "BodyShell_Correctness": 1672,
+  "HeadShell_Structure": 1520,
+  "MittenL_Clarity": 1516,
+  "MittenL_Conciseness": 1516,
+  "MittenL_Confidence": 1516,
+  "MittenL_Correctness": 1516,
+  "MittenL_Structure": 1516,
+  "MittenR_Clarity": 1516,
+  "MittenR_Conciseness": 1516,
+  "MittenR_Confidence": 1516,
+  "MittenR_Correctness": 1516,
+  "MittenR_Structure": 1516,
+  "Headset_Confidence": 1500,
+  "BenchApron": 1260,
+  "BenchPaper": 1260,
+  "Collar_Clarity": 1260,
+  "Tier1_Structure": 1200,
+  "Coin_Clarity": 1120,
+  "Coin_Conciseness": 1120,
+  "Coin_Confidence": 1120,
+  "Coin_Correctness": 1120,
+  "Coin_Structure": 1120,
+  "BenchTop": 1080,
+  "Bisque_Clarity": 1080,
+  "Cushions_Confidence": 900,
+  "Arms_Clarity": 816,
+  "Arms_Conciseness": 816,
+  "Arms_Confidence": 816,
+  "Arms_Correctness": 816,
+  "Arms_Structure": 816,
+  "Glass_Clarity": 790,
+  "Glass_Conciseness": 790,
+  "Glass_Confidence": 790,
+  "Glass_Correctness": 790,
+  "Glass_Structure": 790,
+  "DialL_Correctness": 728,
+  "DialR_Correctness": 728,
+  "LoupeRim_Clarity": 700,
+  "NeedleMesh_Conciseness": 700,
+  "Bezel_Clarity": 504,
+  "Bezel_Conciseness": 504,
+  "Bezel_Confidence": 504,
+  "Bezel_Correctness": 504,
+  "Bezel_Structure": 504,
+  "HandleGrip_Correctness": 500,
+  "RimL_Correctness": 476,
+  "RimR_Correctness": 476,
+  "CupTrim_Confidence": 420,
+  "LoupeLens_Clarity": 400,
+  "Clip_Structure": 336,
+  "Board_Structure": 320,
+  "Boom_Confidence": 300,
+  "Mic_Confidence": 300,
+  "Tassel_Structure": 300,
+  "Insulator_Clarity": 280,
+  "LoupeHandle_Clarity": 260,
+  "Lip_Clarity": 252,
+  "Lip_Conciseness": 252,
+  "Lip_Confidence": 252,
+  "Lip_Correctness": 252,
+  "Lip_Structure": 252,
+  "FerruleL_Clarity": 224,
+  "FerruleL_Conciseness": 224,
+  "FerruleL_Confidence": 224,
+  "FerruleL_Correctness": 224,
+  "FerruleL_Structure": 224,
+  "FerruleR_Clarity": 224,
+  "FerruleR_Conciseness": 224,
+  "FerruleR_Confidence": 224,
+  "FerruleR_Correctness": 224,
+  "FerruleR_Structure": 224,
+  "BadgeClip_Correctness": 220,
+  "HandlePostL_Correctness": 204,
+  "HandlePostR_Correctness": 204,
+  "Button_Structure": 200,
+  "Badge_Correctness": 188,
+  "Cord_Structure": 188,
+  "Hub_Conciseness": 168,
+  "Tab0_Structure": 160,
+  "Tab1_Structure": 160,
+  "Tab2_Structure": 160,
+  "ClipWireL_Structure": 152,
+  "ClipWireR_Structure": 152,
+  "Bridge_Correctness": 128,
+  "Skull_Structure": 128,
+  "Spine_Structure": 128,
+  "TempleL_Correctness": 128,
+  "TempleR_Correctness": 128,
+  "Tip_Clarity": 120,
+  "Lanyard_Correctness": 72,
+  "BadgeLine0_Correctness": 2,
+  "BadgeLine1_Correctness": 2,
+  "BadgeLine2_Correctness": 2
+ },
+ "rest_contact": {
+  "Correctness": {
+   "L": [
+    0.0,
+    0.0
+   ],
+   "R": null
+  },
+  "Clarity": {
+   "L": [
+    0.0,
+    0.0
+   ],
+   "R": null
+  },
+  "Structure": {
+   "L": null,
+   "R": [
+    0.0,
+    0.0
+   ]
+  },
+  "Conciseness": {
+   "L": null,
+   "R": [
+    0.0,
+    0.0
+   ]
+  },
+  "Confidence": {
+   "L": null,
+   "R": [
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "meshes": 47,
+ "nodes": 123,
+ "materials": [
+  "ex_rubber",
+  "ex_fabric",
+  "ex_metal",
+  "ex_shell_correctness",
+  "ex_face_correctness",
+  "ex_lacquer",
+  "ex_coin",
+  "ex_face_clarity",
+  "ex_bisque",
+  "ex_shell_clarity",
+  "ex_lens",
+  "ex_shell_structure",
+  "ex_face_structure",
+  "ex_shell_conciseness",
+  "ex_face_conciseness",
+  "ex_shell_confidence",
+  "ex_face_confidence",
+  "ex_bench",
+  "ex_bench_paper"
+ ],
+ "build_s": 32.2
+}

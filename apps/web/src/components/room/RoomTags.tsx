@@ -1,0 +1,94 @@
+'use client';
+
+import { cn } from '@/lib/cn';
+import { AXES, ROUNDS, weakestIndex } from './data';
+import { TypeLine } from './TypeLine';
+import type { RoomOverlays, RoundState } from './Director';
+import styles from './room.module.css';
+
+const LISTENING = 'Go on. We are listening.';
+/** The longest line any note says: an unseen twin of the note sized to it is what the camera keeps room for. */
+const LONGEST = [...ROUNDS.flatMap((r) => [r.question, r.followUp]), LISTENING].reduce((a, b) => (b.length > a.length ? b : a));
+const TAG = 'absolute left-0 top-0 rounded-[0.9rem] border border-line bg-card px-3.5 pb-2.5 pt-2 shadow-paper';
+
+/**
+ * The room's words, as notes pinned above the panel (never over a face or a raised mark): the
+ * examiner's question or follow-up with a red-pen leader down to the speaker, the candidate's
+ * answer in blue ink in the same slot, and, while someone reaches for "Answer a question", the
+ * whole panel saying it is listening. The Director positions them every frame; React only changes
+ * their words when the phase does.
+ */
+export function RoomTags({
+  round,
+  still,
+  overlaysRef,
+}: {
+  round: RoundState;
+  /** Reduced motion or a paused room: the words are simply there, never typed. */
+  still: boolean;
+  overlaysRef: React.RefObject<RoomOverlays>;
+}) {
+  const outro = round.mode === 'outro';
+  const cue = round.mode === 'cue';
+  const script = ROUNDS[outro ? 0 : round.index % ROUNDS.length]!;
+  const asking = !outro && round.phase === 'ask';
+  const following = outro || round.phase === 'follow';
+  const speaker = cue ? -1 : asking ? script.asker : following ? weakestIndex(script.scores) : -1;
+  const words = cue ? LISTENING : asking ? script.question : following ? script.followUp : '';
+  const answering = round.mode === 'round' && (round.phase === 'listen' || round.phase === 'mark');
+
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-[6] overflow-hidden">
+      <div
+        ref={(el) => {
+          overlaysRef.current.tagSizer = el;
+        }}
+        className={cn(styles.tag, TAG, 'invisible')}
+      >
+        <p className="text-[0.72rem] font-bold">Structure, follow-up</p>
+        <p className={cn(styles.tagText, 'mt-0.5 font-bold leading-snug')}>{LONGEST}</p>
+      </div>
+      <div
+        ref={(el) => {
+          overlaysRef.current.leader = el;
+        }}
+        className="absolute left-0 top-0 h-px w-[1.5px] origin-top bg-verm-text opacity-0 transition-opacity duration-200"
+      />
+      <div
+        ref={(el) => {
+          overlaysRef.current.tag = el;
+        }}
+        className={cn(styles.tag, TAG, 'opacity-0 transition-opacity duration-200')}
+      >
+        {(speaker >= 0 || cue) && (
+          <>
+            <p className="text-[0.72rem] font-bold text-verm-text">
+              {cue ? 'The panel, listening' : `${AXES[speaker]!.label}${following ? ', follow-up' : ', asking'}`}
+            </p>
+            <p className={cn(styles.tagText, 'mt-0.5 font-bold leading-snug text-ink')}>
+              <TypeLine key={`${round.mode}-${round.index}-${round.phase}`} text={words} instant={still} cps={44} caret={false} />
+            </p>
+          </>
+        )}
+      </div>
+      <div
+        ref={(el) => {
+          overlaysRef.current.answer = el;
+        }}
+        className={cn(
+          styles.answer,
+          'absolute left-0 top-0 rounded-[0.9rem] border border-ink-blue/30 bg-card px-3.5 pb-2.5 pt-2 opacity-0 shadow-paper transition-opacity duration-200',
+        )}
+      >
+        {answering && (
+          <>
+            <p className="text-[0.72rem] font-bold text-ink-blue">You, answering</p>
+            <p className="mt-0.5 font-semibold leading-snug text-ink-blue">
+              <TypeLine key={`${round.index}-answer`} text={script.answer} instant={still} cps={40} />
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

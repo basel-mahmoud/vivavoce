@@ -1,0 +1,873 @@
+/*
+ * "Your turn". Two arrangements, switched by media queries (never by script), so the server and
+ * the client render the same markup:
+ *   phones and tablets: one column (the question, the panel and its board, the answer sheet),
+ *     with the answer key held at the bottom of the screen while the section is in view;
+ *   1024px and up: the candidate's desk on the left, the panel on the right, held on screen.
+ * Colours are tokens: blue ink is the candidate, red pen the examiners, butter the highlighter.
+ */
+
+.section {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'head' 'question' 'stage' 'sheet' 'controls';
+  padding: 5.75rem 1rem 0;
+}
+
+.head {
+  grid-area: head;
+  margin-bottom: 1.1rem;
+}
+.title {
+  font-size: clamp(2.6rem, 11vw, 3.5rem);
+}
+.lede {
+  margin-top: 0.7rem;
+  max-width: 30rem;
+  color: var(--color-ink-mut);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+/* ── The paper ─────────────────────────────────────────────────────────── */
+
+.questionArea {
+  grid-area: question;
+}
+.sheetArea {
+  grid-area: sheet;
+  margin-top: 1rem;
+}
+.sheet {
+  position: relative;
+  border: 1px solid var(--color-line);
+  background: var(--color-card);
+  box-shadow: var(--shadow-paper);
+}
+.sheetTop {
+  border-radius: 1.25rem;
+  padding: 0.7rem 0.9rem 1.05rem 1.15rem;
+}
+.sheetBottom {
+  --margin-x: 2.5rem;
+  overflow: hidden;
+  border-radius: 1.25rem;
+}
+.question {
+  font-size: clamp(1.22rem, 5.2vw, 1.45rem);
+  line-height: 1.22;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+
+.lines {
+  --rule-gap: 2rem;
+  --rule-offset: 0px;
+  position: relative;
+  padding: 0.3rem 1.1rem 1.9rem calc(var(--margin-x) + 0.8rem);
+  min-height: calc(var(--rule-gap) * 4 + 2.2rem);
+}
+.ink {
+  display: block;
+  width: 100%;
+  color: var(--color-ink-blue);
+  font-size: 1.08rem;
+  font-weight: 600;
+  line-height: var(--rule-gap);
+  letter-spacing: -0.004em;
+  overflow-wrap: anywhere;
+  --rp-on-highlight: var(--color-cobalt-deep);
+}
+/* The red pen's loop round a buried claim. The phrase stays on one line where it fits (and wraps
+   inside its loop on a narrow phone rather than running off the paper), with room inside the loop
+   for its first and last letters and outside it for the neighbouring words. */
+.claim {
+  display: inline-block;
+  max-width: calc(100% - 0.9em);
+  margin-inline: 0.45em;
+}
+.claim > :global(.vv-redpen-words) {
+  padding-inline: 0.3em;
+}
+.placeholder {
+  color: var(--color-ink-faint);
+  font-weight: 500;
+}
+.textarea {
+  min-height: calc(var(--rule-gap) * 4);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  resize: none;
+  field-sizing: content;
+  font-family: inherit;
+}
+.textarea::placeholder {
+  color: var(--color-ink-faint);
+  font-weight: 500;
+}
+.textarea:focus-visible {
+  outline: 2px solid var(--vv-focus);
+  outline-offset: 5px;
+  border-radius: 4px;
+}
+.marginMark {
+  position: absolute;
+  top: 0.3rem;
+  left: 0;
+  width: var(--margin-x);
+  color: var(--color-ink-faint);
+  font-size: 0.85rem;
+  line-height: var(--rule-gap);
+  text-align: center;
+}
+.count {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0.4rem;
+  color: var(--color-ink-faint);
+  font-size: 0.72rem;
+}
+/* The examiner's tally, written on the next rule. */
+.penNote {
+  color: var(--color-verm-text);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: var(--rule-gap);
+  text-align: right;
+  opacity: 0;
+  transition: opacity 360ms var(--ease-out);
+}
+.penNote[data-show] {
+  opacity: 1;
+  transition-delay: 700ms;
+}
+.comment {
+  padding: 0.1rem 1.1rem 0.2rem calc(var(--margin-x) + 0.8rem);
+  color: var(--color-verm-text);
+  font-size: 0.94rem;
+  font-weight: 600;
+  line-height: 1.5;
+  opacity: 0;
+  transition: opacity 360ms var(--ease-out);
+}
+.comment[data-show] {
+  opacity: 1;
+}
+
+/* "For the examiners": the box at the foot of every script. */
+.box {
+  margin: 0.55rem 0.8rem 0.8rem;
+  border: 1.5px solid color-mix(in oklab, var(--color-ink) 72%, transparent);
+  border-radius: 0.55rem;
+  overflow: hidden;
+}
+.boxTitle {
+  padding: 0.3rem 0.65rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--color-ink) 30%, transparent);
+  color: var(--color-ink-mut);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.boxGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+.boxCell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  border-right: 1px solid color-mix(in oklab, var(--color-ink) 22%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--color-ink) 22%, transparent);
+}
+.boxCell:nth-child(3n) {
+  border-right: 0;
+}
+.boxCell:nth-last-child(-n + 3) {
+  border-bottom: 0;
+}
+.boxCell dt {
+  padding: 0.28rem 0.4rem 0;
+  overflow: hidden;
+  color: var(--color-ink-mut);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.boxCell dd {
+  display: grid;
+  place-items: center;
+  height: 2.5rem;
+  margin: 0;
+}
+.boxMark {
+  color: var(--color-verm-text);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.boxNone {
+  padding-inline: 0.3rem;
+  color: var(--color-ink-faint);
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+}
+.boxTotal dt {
+  color: var(--color-ink);
+  font-weight: 800;
+}
+.boxTotal {
+  background: color-mix(in oklab, var(--color-card-2) 55%, transparent);
+}
+.guidance {
+  padding: 0.4rem 0.65rem 0.45rem;
+  border-top: 1px solid color-mix(in oklab, var(--color-ink) 30%, transparent);
+  color: var(--color-ink-mut);
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+@media (min-width: 480px) {
+  .boxGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .boxCell,
+  .boxCell:nth-child(3n) {
+    border-right: 1px solid color-mix(in oklab, var(--color-ink) 22%, transparent);
+    border-bottom: 0;
+  }
+  .boxCell:last-child {
+    border-right: 0;
+  }
+}
+
+/* ── The stage ─────────────────────────────────────────────────────────── */
+
+.stageArea {
+  grid-area: stage;
+  position: relative;
+  margin-top: 0.5rem;
+}
+.stageSticky {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.canvasBox {
+  position: relative;
+  height: min(27rem, calc(80vw + 4rem));
+  margin-inline: -1rem;
+}
+.canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 5%), linear-gradient(to bottom, transparent, #000 4%);
+  mask-image: linear-gradient(to right, transparent, #000 5%), linear-gradient(to bottom, transparent, #000 4%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  transition: opacity 700ms var(--ease-out);
+}
+.canvas[data-ready] {
+  opacity: 1;
+}
+
+/* The examiner's note over the 3D panel; the stage positions it every frame. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}
+.overlay[data-on] {
+  visibility: visible;
+}
+.tag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(18rem, calc(100% - 1.5rem));
+  padding: 0.5rem 0.9rem 0.65rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.9rem;
+  background: var(--color-card);
+  box-shadow: var(--shadow-paper);
+  opacity: 0;
+  transition: opacity 220ms var(--ease-out);
+}
+.tag[data-show] {
+  opacity: 1;
+}
+.leader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1.5px;
+  height: 1px;
+  transform-origin: top;
+  background: var(--color-verm-text);
+  opacity: 0;
+  transition: opacity 220ms var(--ease-out);
+}
+.leader[data-show] {
+  opacity: 1;
+}
+
+/* ── The portrait bench (no WebGL, reduced motion, and the canvas's poster) ── */
+
+.bench {
+  position: absolute;
+  inset: 0;
+  /* the lamp pool behind the panel runs wider than the bench: never past the screen's edge */
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4.75rem 1rem 0.6rem;
+  transition:
+    opacity 700ms var(--ease-out),
+    visibility 0s;
+}
+.bench[data-hidden] {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 700ms var(--ease-out),
+    visibility 0s 700ms;
+}
+/* The lamp pool the panel sits in. */
+.benchInner {
+  position: relative;
+  width: 100%;
+  max-width: 44rem;
+  margin-inline: auto;
+}
+.benchInner::before {
+  content: '';
+  position: absolute;
+  inset: -30% -8% 10%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--color-butter) 9%, transparent), transparent);
+  pointer-events: none;
+}
+/* Shoulder to shoulder, as they sit in the room: each seat is wider than a fifth and overlaps its
+   neighbours (the renders are transparent round each examiner), so the faces read larger. The
+   outer pair sit nearest, the middle furthest back, and whoever is hot comes to the front. */
+.seats {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+}
+.seat {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 26%;
+  justify-content: center;
+  /* let the portrait shrink to the seat (a flex item is otherwise as wide as its render) */
+  min-width: 0;
+  margin-inline: -3%;
+}
+.seat:nth-child(2),
+.seat:nth-child(4) {
+  z-index: 2;
+}
+.seat:nth-child(1),
+.seat:nth-child(5) {
+  z-index: 3;
+}
+.seat[data-hot] {
+  z-index: 4;
+}
+.seatFace {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  transition: transform 520ms var(--ease-out);
+}
+.seatHot {
+  transform: translateY(-0.35rem) scale(1.05);
+}
+.seatPaddle {
+  position: absolute;
+  z-index: 1;
+  top: -14%;
+  right: -4%;
+  opacity: 0;
+  transform: translateY(1.4rem) scale(0.96);
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 560ms var(--ease-out);
+  transition-delay: calc(var(--i) * 90ms);
+}
+.seatPaddle :global(.vv-paddle) {
+  --d: clamp(2.1rem, 6.6vw, 3.4rem);
+}
+.seat[data-up] .seatPaddle {
+  opacity: 1;
+  transform: none;
+}
+.benchFront {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: 100%;
+  margin: -0.35rem auto 0;
+  padding: 0.55rem 0.3rem 0.7rem;
+  border-radius: 0.7rem 0.7rem 1.2rem 1.2rem;
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--color-cobalt) 72%, var(--color-paper)) 0 0.3rem, var(--color-cobalt) 0.3rem);
+  box-shadow: var(--shadow-float);
+  color: var(--color-butter);
+  font-size: clamp(0.56rem, 1.9vw, 0.95rem);
+  font-weight: 900;
+  font-stretch: 112%;
+  letter-spacing: -0.01em;
+  text-align: center;
+  white-space: nowrap;
+}
+.benchFront > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.benchTag {
+  --seat: 2;
+  position: absolute;
+  z-index: 3;
+  bottom: calc(100% + 1.1rem);
+  left: clamp(min(8.5rem, 50%), calc((var(--seat) + 0.5) * 20%), calc(100% - min(8.5rem, 50%)));
+  width: min(17rem, calc(100% - 1rem));
+  padding: 0.5rem 0.9rem 0.65rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.9rem;
+  background: var(--color-card);
+  box-shadow: var(--shadow-paper);
+  opacity: 0;
+  translate: -50% 0;
+  transition: opacity 220ms var(--ease-out);
+}
+.benchTag[data-show] {
+  opacity: 1;
+}
+.benchLeader {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 1.5px;
+  height: 2.6rem;
+  background: var(--color-verm-text);
+}
+
+/* ── The rail: your voice becomes the mark disc; the board posts the verdict ── */
+
+.rail {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.6rem, 2.4vw, 1.4rem);
+  padding-top: 0.6rem;
+}
+.verdict {
+  min-width: 0;
+  flex: 1;
+}
+.board {
+  max-width: 25rem;
+}
+.fix {
+  max-width: 26rem;
+  margin-top: 0.55rem;
+  color: var(--color-ink);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.45;
+  opacity: 0;
+  transition: opacity 360ms var(--ease-out);
+}
+.fix[data-show] {
+  opacity: 1;
+  transition-delay: 500ms;
+}
+
+.disc {
+  position: relative;
+  flex: none;
+  width: clamp(7.5rem, 30vw, 12rem);
+  padding-bottom: 1.3rem;
+}
+.discSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 240 / 140;
+  overflow: visible;
+}
+.discCaption {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  color: var(--color-ink-mut);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.2rem;
+  text-align: center;
+  white-space: nowrap;
+}
+.wave {
+  fill: var(--color-ink-blue);
+  transition:
+    fill 420ms ease,
+    stroke 420ms ease;
+  stroke: transparent;
+  stroke-width: 1.4;
+}
+/* at rest (and while the browser asks for the mic) the band is a faint sample, not yet your voice */
+.disc[data-phase='idle'] .wave,
+.disc[data-phase='requesting'] .wave {
+  fill: color-mix(in oklab, var(--color-ink-blue) 32%, transparent);
+}
+.disc[data-phase='conferring'] .wave,
+.disc[data-phase='marked'] .wave {
+  fill: var(--color-ink);
+}
+.disc[data-stamped] .wave {
+  fill: var(--color-card);
+  stroke: var(--color-line);
+}
+.ring {
+  fill: none;
+  stroke: var(--color-verm-text);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 120px 70px;
+  transition: opacity 300ms var(--ease-out);
+}
+.disc[data-stamped] .ring {
+  opacity: 0;
+}
+.discLoader {
+  position: absolute;
+  top: calc(50% - 0.65rem);
+  left: 50%;
+  display: grid;
+  color: var(--color-canvas);
+  translate: -50% -50%;
+}
+/* The overall mark, rubber-stamped over the disc in the examiners' red. */
+.stamp {
+  position: absolute;
+  top: calc(50% - 0.65rem);
+  left: 50%;
+  width: 58%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+}
+.stampInk {
+  --stamp-ink: var(--color-verm-text);
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-content: center;
+  justify-items: center;
+  gap: 0.05rem;
+  border: max(3px, 0.22rem) solid currentColor;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--color-verm) 9%, var(--color-card));
+  box-shadow: inset 0 0 0 0.2rem var(--color-card), inset 0 0 0 0.32rem currentColor;
+}
+.stampMark {
+  font-size: clamp(1.6rem, 7vw, 2.55rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+.stampUnit {
+  font-size: clamp(0.46rem, 1.7vw, 0.62rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* ── The answer key ────────────────────────────────────────────────────── */
+
+.controls {
+  grid-area: controls;
+  z-index: 5;
+  margin-top: 1rem;
+}
+.keyRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem 0.9rem;
+}
+.key {
+  max-width: 100%;
+}
+/* the time budget fills in step with the clock under the disc, one second at a time: quiet paper
+   ink, a progress bar rather than a second colour on the key */
+.key {
+  --key-fill: color-mix(in oklab, var(--color-paper) 13%, transparent);
+}
+.key :global(.vv-key-fill) {
+  transition: transform 1s linear;
+}
+.hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 1.6rem;
+  margin-top: 0.6rem;
+  color: var(--color-ink-mut);
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+/* The page's own words when something did not work: marked with the highlighter. */
+.notice {
+  margin-top: calc(var(--show) * 0.6rem);
+  color: var(--color-coal);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.notice:not(:empty) {
+  display: inline;
+  padding: 0.12em 0.35em;
+  background: var(--color-butter);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* Phones: the words being heard, above the panel. */
+.liveTag {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  /* the key stays under the thumb while the section is on screen */
+  .controls {
+    position: sticky;
+    bottom: 0;
+    margin: 1rem -1rem 0;
+    padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-line);
+    background: var(--color-canvas);
+  }
+  .keyRow {
+    flex-wrap: nowrap;
+  }
+  .afterMarking {
+    flex: none;
+  }
+  .key {
+    --key-w: 0px;
+    --key-h: 3.3rem;
+    --key-travel: 5px;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 1.05rem;
+  }
+  .side {
+    flex: none;
+  }
+  .hint {
+    min-height: 0;
+    margin-top: 0.45rem;
+    font-size: 0.8rem;
+  }
+  .hint[data-quiet] {
+    display: none;
+  }
+  /* the notice rides in the thumb bar: keep it compact */
+  .notice {
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+  .liveTag {
+    position: absolute;
+    z-index: 3;
+    top: 0.6rem;
+    left: 1rem;
+    right: 1rem;
+    display: block;
+    padding: 0.45rem 0.85rem 0.6rem;
+    border: 1px solid color-mix(in oklab, var(--color-ink-blue) 30%, transparent);
+    border-radius: 0.9rem;
+    background: var(--color-card);
+    box-shadow: var(--shadow-paper);
+    opacity: 0;
+    transition: opacity 220ms var(--ease-out);
+    pointer-events: none;
+  }
+  .liveTag[data-show] {
+    opacity: 1;
+  }
+}
+
+.short {
+  display: none;
+}
+@media (max-width: 479px) {
+  .long {
+    display: none !important;
+  }
+  .short {
+    display: inline;
+  }
+  /* the disc is at its smallest here: a larger stamp keeps "Overall" inside its ring, legibly */
+  .stamp {
+    width: 68%;
+  }
+  .stampUnit {
+    font-size: 0.52rem;
+  }
+  /* Five names do not fit five narrow seats: stagger them over two rows, the way the panel's own
+     bench is inlaid, so each name can run wider than its seat instead of being cut short. */
+  .benchFront {
+    row-gap: 0.05rem;
+    font-size: 0.7rem;
+  }
+  .benchFront > span {
+    grid-row: 1;
+    justify-self: center;
+    width: max-content;
+    overflow: visible;
+  }
+  .benchFront > span:nth-child(1) {
+    grid-column: 1;
+    justify-self: start;
+  }
+  .benchFront > span:nth-child(2) {
+    grid-row: 2;
+    grid-column: 2;
+  }
+  .benchFront > span:nth-child(3) {
+    grid-column: 3;
+  }
+  .benchFront > span:nth-child(4) {
+    grid-row: 2;
+    grid-column: 4;
+  }
+  .benchFront > span:nth-child(5) {
+    grid-column: 5;
+    justify-self: end;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .section {
+    padding-inline: 1.5rem;
+  }
+  .canvasBox {
+    height: min(30rem, calc(60vw + 4rem));
+    margin-inline: -1.5rem;
+  }
+  .controls {
+    margin-inline: -1.5rem;
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section {
+    grid-template-columns: minmax(0, 43fr) minmax(0, 57fr);
+    grid-template-rows: auto auto auto 1fr;
+    grid-template-areas: 'head stage' 'question stage' 'sheet stage' 'controls stage';
+    column-gap: clamp(1rem, 2.4vw, 2.5rem);
+    min-height: 100svh;
+    padding: 0 0 0 clamp(2rem, 4.4vw, 4rem);
+  }
+  .head {
+    padding-top: 5.9rem;
+    margin-bottom: 1.25rem;
+  }
+  .title {
+    font-size: clamp(3rem, 4.4vw, 4.2rem);
+  }
+  .lede {
+    font-size: 1.05rem;
+  }
+  .sheetTop {
+    border-bottom: 0;
+    border-radius: 1.25rem 1.25rem 0 0;
+    padding: 0.8rem 1rem 0.9rem 1.25rem;
+  }
+  .sheetArea {
+    margin-top: 0;
+  }
+  .sheetBottom {
+    border-top: 1px dashed color-mix(in oklab, var(--color-ink) 18%, transparent);
+    border-radius: 0 0 1.25rem 1.25rem;
+  }
+  .question {
+    font-size: clamp(1.3rem, 1.75vw, 1.6rem);
+  }
+  .controls {
+    margin-top: 1.25rem;
+    padding-bottom: 2.5rem;
+  }
+  .stageArea {
+    margin-top: 0;
+  }
+  .stageSticky {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    min-height: 40rem;
+    padding: 5rem clamp(1.5rem, 4vw, 4rem) 2rem 0;
+  }
+  .canvasBox {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    margin: 0 calc(-1 * clamp(1.5rem, 4vw, 4rem)) 0 0;
+  }
+  .bench {
+    padding: 6.5rem 3rem 1.25rem 1.5rem;
+  }
+  .benchInner {
+    max-width: 48rem;
+  }
+  /* The stage above fills whatever height the rail leaves it: the rail must not grow when the
+     marks arrive, or the panel would jump smaller at the climax. The advice under the board keeps
+     three lines of room from the start, and the rail's items hang from its top. */
+  .rail {
+    align-items: flex-start;
+    padding-top: 0.9rem;
+  }
+  .fix {
+    min-height: calc(3 * 1.45em);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seatPaddle,
+  .seatFace {
+    transform: none;
+    transition: opacity 200ms var(--ease-out);
+  }
+  .seatHot {
+    transform: none;
+  }
+  .canvas,
+  .bench {
+    transition-duration: 200ms;
+  }
+  .key :global(.vv-key-fill) {
+    transition: none;
+  }
+}

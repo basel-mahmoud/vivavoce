@@ -1,60 +1,65 @@
-import type { Metadata } from 'next';
 import { PageHero } from '@/components/site/PageHero';
-import { RadarTile, StreakTile, TranscriptTile } from '@/components/board/LiveTiles';
-import { DemoSection, WaitlistSection } from '@/components/marketing/sections';
+import { PanelOfMarks } from '@/components/site/PanelOfMarks';
+import { AxesIndex } from '@/components/home/AxesIndex';
+import { Interrupts } from '@/components/home/Interrupts';
+import { LiveEngine, Modes, WarmSections } from '@/components/home/lazy';
+import { Close } from '@/components/home/Closing';
+import { Deferred } from '@/components/home/Deferred';
+import { EnginePlaceholder } from '@/components/home/EnginePlaceholder';
+import { SectionBoundary } from '@/components/home/SectionBoundary';
+import { pageMeta } from '@/lib/site';
+// The live engine's code loads after the first screen; its styles must not wait for it.
+import '@/components/engine/engine.module.css';
 
-export const metadata: Metadata = {
+export const metadata = pageMeta({
   title: 'Features',
   description:
     'A five-axis marking scheme, six practice modes, a resilient voice engine, and progress that remembers your weak spots.',
-};
+  path: '/features',
+});
 
-const MODES = [
-  ['Mock Viva', 'A chained examiner. Every follow-up targets your weakest axis.'],
-  ['Interview', 'Behavioural and role questions, scored on STAR structure.'],
-  ['Quick Question', 'One question, one answer, instant marks. The warm-up.'],
-  ['Flash Recall', 'Rapid recall, spaced around the things you keep missing.'],
-  ['Explain It', 'Teach it simply or you do not own it. Marked on clarity.'],
-  ['Rapid Fire', 'A countdown per question. Composure is the skill.'],
-] as const;
+/** The example round the whole site marks: Structure is the one to fix first. */
+const EXAMPLE = { correctness: 71, clarity: 66, structure: 48, conciseness: 62, confidence: 54 } as const;
 
 export default function FeaturesPage() {
   return (
     <>
       <PageHero
         title="Everything between knowing it and saying it well."
-        intro="The gap between knowledge and delivery is real, trainable, and worth closing before the room is watching. That gap is the whole product."
+        intro="Five examiners mark every spoken answer, each on one thing. Closing the gap between knowing it and saying it well is the whole product."
+        flush
+        figure={
+          <figure className="vv-hero-panel">
+            <PanelOfMarks averages={EXAMPLE} deal />
+            <figcaption className="vv-hero-panel-note">
+              <span className="sr-only">
+                The panel&apos;s marks for one example answer: Correctness 71, Clarity 66, Structure 48, Conciseness
+                62, Confidence 54. Structure is the one to fix first.{' '}
+              </span>
+              Example round. Scores are guidance, not grades.
+            </figcaption>
+          </figure>
+        }
       />
-
-      <section className="mx-auto w-full max-w-[1360px] px-4 pb-3 sm:px-6">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-9">
-          <div className="lg:col-span-3">
-            <RadarTile />
-          </div>
-          <div className="lg:col-span-4">
-            <TranscriptTile />
-          </div>
-          <div className="md:col-span-2 lg:col-span-2">
-            <StreakTile />
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-[1360px] px-4 py-3 sm:px-6">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {MODES.map(([name, blurb]) => (
-            <div key={name} className="tile tile-lift p-6">
-              <h3 className="text-xl font-black">{name}</h3>
-              <p className="mt-2 text-[0.95rem] leading-relaxed text-ink-mut">{blurb}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="pt-6">
-        <DemoSection />
-      </div>
-      <WaitlistSection />
+      {/* Below the panel, each section renders on the server and hydrates as it comes near. */}
+      <Deferred height="2600px">
+        <AxesIndex />
+      </Deferred>
+      <Deferred height="760px">
+        <Interrupts />
+      </Deferred>
+      <Deferred height="1000px">
+        <Modes />
+      </Deferred>
+      <Deferred height="900px" className="pb-24 sm:pb-32">
+        <SectionBoundary name="live engine" fallback={<EnginePlaceholder />}>
+          <LiveEngine />
+        </SectionBoundary>
+      </Deferred>
+      <Deferred height="1000px">
+        <Close />
+      </Deferred>
+      <WarmSections names={['modes', 'engine']} />
     </>
   );
 }

@@ -10,8 +10,9 @@ interviews, and presentations until they feel familiar.
 ### Live
 
 - 🌐 **Website + live demo:** https://vivavoce-kappa.vercel.app
-  — the landing page is a board of live product tiles; try the real marking
-  engine (speak or type an answer, no account needed).
+  — the landing page is a 3D viva room: a panel of five examiners, one per
+  scoring axis, walked through by scroll. Then try the real marking engine
+  (speak or type an answer, no account needed).
 - 📱 **Android beta (APK):** https://vivavoce-kappa.vercel.app/download/apk
 - 🔌 **API health:** https://vivavoce-kappa.vercel.app/api/v1/health
 
@@ -60,9 +61,12 @@ site's waitlist, and lets the mobile app talk to one versioned origin. See
    steal from — plus a follow-up aimed at your weakest point.
 4. Weak areas resurface on a schedule; progress and streaks track over time.
 
-Design system: **"The Practice Room"** — a bento board of live tiles on a warm
-porcelain canvas, flat ink / vermilion / cobalt blocks, Archivo Black display,
-JetBrains Mono for marks. See [DESIGN.md](DESIGN.md).
+Web design system: **"The Viva Room"** — the site seen from the hot seat: a
+react-three-fiber panel of five clay examiners behind a cobalt bench on a
+porcelain canvas, flat ink / vermilion / cobalt / butter fields, Archivo
+Black expanded display, JetBrains Mono for marks, a lights-off dark scheme.
+The mobile app still follows the previous "Practice Room" tokens. See
+[DESIGN.md](DESIGN.md).
 
 ## Quick start
 
