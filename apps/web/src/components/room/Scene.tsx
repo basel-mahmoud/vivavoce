@@ -59,6 +59,10 @@ function guessTier(): Tier {
   return coarse || narrow || cores <= 2 ? 1 : 2;
 }
 
+// On desktop tiers, fetch the post chain as soon as this module runs (on desktops the page takes
+// the room's code while the cast downloads), not when the canvas mounts.
+if (typeof window !== 'undefined' && guessTier() > 1) void loadPost();
+
 function forcedTier() {
   return process.env.NODE_ENV !== 'production' && new URLSearchParams(window.location.search).has('tier');
 }

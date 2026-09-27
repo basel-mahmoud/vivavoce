@@ -20,6 +20,11 @@ import styles from './room.module.css';
 
 const Scene = dynamic(() => import('./Scene'), { ssr: false });
 
+/** Desktops (the same test as the room's tier guess): enough headroom to take the room's code early. */
+function roomyDevice() {
+  return !window.matchMedia('(pointer: coarse)').matches && window.innerWidth >= 768 && (navigator.hardwareConcurrency ?? 4) > 2;
+}
+
 const SCORES = ROUNDS[0]!.scores;
 const WEAKEST = weakestIndex(SCORES);
 
@@ -60,7 +65,9 @@ function useReduce(): boolean {
  * seconds), so the poster and the words are what the page paints first. The room's downloads (the
  * cast, its maps and label fonts) start as soon as the page has hydrated, wherever the browser has
  * WebGL at all: the network is free by then, and they arrive while the room's code does instead of
- * after it. Whether this device really gives the page a context is asked in the idle moment itself,
+ * after it. On desktops the code itself is fetched then too (and run as it lands), so the idle
+ * moment finds it ready; phones fetch it in the idle moment, keeping their main thread for the
+ * reader. Whether this device really gives the page a context is asked in the idle moment itself,
  * in a task of its own (making a context is not free), never while hydrating.
  */
 function useLiveRoom(): boolean {
@@ -69,6 +76,7 @@ function useLiveRoom(): boolean {
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
     if (connection?.saveData || typeof WebGLRenderingContext === 'undefined') return;
     prefetchRoom();
+    if (roomyDevice()) void import('./Scene').catch(() => {});
     let idle = 0;
     let timer = 0;
     const go = () => {
