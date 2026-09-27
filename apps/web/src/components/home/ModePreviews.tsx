@@ -94,7 +94,7 @@ function Scribble({ variant }: { variant: 0 | 1 }) {
 }
 
 export function MockVivaPreview({ running }: PreviewProps) {
-  const { beat } = useBeat(running, CHAIN_STEPS, { rest: 2200 });
+  const { beat } = useBeat(running, CHAIN_STEPS, { rest: 2200, loop: false });
 
   // The notes are drawn with anime.js, stroke by stroke, as each follow-up lands.
   const { root: host, scope } = useAnimeScope<HTMLDivElement>(({ scope: self, root }) => {
@@ -109,10 +109,11 @@ export function MockVivaPreview({ running }: PreviewProps) {
         if (b < at) utils.set(paths, { draw: '0 0' });
         else if (b > at || still) utils.set(paths, { draw: '0 1' });
         else
+          // One quick scribble: each stroke starts 80 ms after the last (the house stagger).
           animeAnimate(paths, {
             draw: ['0 0', '0 1'],
-            duration: 520,
-            delay: stagger(360, { start: 380 }),
+            duration: 560,
+            delay: stagger(80, { start: 380 }),
             ease: ANIME_EASE.inOut,
           });
       });
@@ -164,7 +165,7 @@ const STAR = [
 const STAR_STEPS = [1000, 800, 800, 900, 3200] as const;
 
 export function InterviewPreview({ running, dealt }: PreviewProps) {
-  const { beat } = useBeat(running, STAR_STEPS, { rest: 1600 });
+  const { beat } = useBeat(running, STAR_STEPS, { rest: 1600, loop: false });
   const reduce = useReducedMotion() ?? false;
   return (
     <div className="flex h-full flex-col justify-start gap-5">
@@ -238,7 +239,7 @@ const QUICK_MARKS = [86, 88, 74, 91, 58] as const;
 const QUICK_STEPS = [900, 1300, 1900, 3000] as const;
 
 export function QuickPreview({ running }: PreviewProps) {
-  const { beat } = useBeat(running, QUICK_STEPS, { rest: 1400 });
+  const { beat } = useBeat(running, QUICK_STEPS, { rest: 1400, loop: false });
   const weakest = QUICK_MARKS.indexOf(Math.min(...QUICK_MARKS) as (typeof QUICK_MARKS)[number]);
   return (
     <div className="flex h-full flex-col justify-start gap-4">
@@ -261,6 +262,7 @@ export function QuickPreview({ running }: PreviewProps) {
               tone={i === weakest ? 'verm' : 'paper'}
               size="sm"
               handle={false}
+              backMark="?"
               delay={i * 90}
               className="vv-quick-paddle"
             />
@@ -293,7 +295,7 @@ const RATINGS = [
 const FLASH_STEPS = [1600, 1500, 1500] as const;
 
 export function FlashPreview({ running }: PreviewProps) {
-  const { beat, round } = useBeat(running, FLASH_STEPS, { rest: 200 });
+  const { beat, round } = useBeat(running, FLASH_STEPS, { rest: 200, loop: false });
   // Once someone flips or rates a card, the demo stops playing itself.
   const [own, setOwn] = useState<{ card: number; flipped: boolean; rated: string | null } | null>(null);
   const auto = { card: round % FLASH.length, flipped: beat >= 1, rated: beat >= 2 ? 'good' : null };
@@ -389,15 +391,14 @@ export function ExplainPreview({ running, dealt }: PreviewProps) {
     setImproved((was) => (was === next ? was : next));
   });
 
-  // It wipes across by itself (dwelling so each answer can be read) until
-  // someone takes hold of it.
+  // It wipes across once by itself, dwelling on your answer first, and rests on
+  // the improved one; after that the rule is yours to drag.
   useEffect(() => {
     if (!sweep) return;
-    const ctrl = animate(pct, [100, 100, 0, 0, 100, 100], {
-      duration: 9.4,
-      times: [0, 0.24, 0.39, 0.76, 0.91, 1],
-      ease: ['linear', EASE.inOut, 'linear', EASE.inOut, 'linear'],
-      repeat: Infinity,
+    const ctrl = animate(pct, [100, 100, 0], {
+      duration: 3.6,
+      times: [0, 0.6, 1],
+      ease: ['linear', EASE.inOut],
     });
     return () => ctrl.stop();
   }, [sweep, pct]);
@@ -454,12 +455,19 @@ export function ExplainPreview({ running, dealt }: PreviewProps) {
       </motion.div>
       <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-sm font-black">Clarity</span>
+        {/* Both are the examiner's marks, in red pen; the gain is the candidate's, in blue ink. */}
         <Marks
           value={improved ? 81 : 52}
           play="instant"
-          className={cn('text-xl', improved ? 'text-pass' : 'text-verm-text')}
+          className="text-xl text-verm-text"
           label={improved ? 'Clarity 81, the improved answer' : 'Clarity 52, your answer'}
         />
+        <span
+          className={cn('marks text-sm font-bold text-ink-blue transition-opacity duration-200', improved ? 'opacity-100' : 'opacity-0')}
+          aria-hidden="true"
+        >
+          +29
+        </span>
         <span className="text-sm font-medium text-ink-mut">Same idea, no jargon, no hedges.</span>
       </p>
     </div>
@@ -478,9 +486,10 @@ const RAPID_SECONDS = 8;
 const RAPID_STEPS = [...Array.from({ length: RAPID_SECONDS }, () => 1000), 1100] as const;
 
 export function RapidPreview({ running }: PreviewProps) {
-  const { beat, round } = useBeat(running, RAPID_STEPS, { rest: 0, still: 3 });
+  // One question against the clock, then the next one waits, its clock full.
+  const { beat, round, finished } = useBeat(running, RAPID_STEPS, { rest: 1100, loop: false, still: 0 });
   const left = Math.max(0, RAPID_SECONDS - beat);
-  const q = round % RAPID.length;
+  const q = (round + (finished ? 1 : 0)) % RAPID.length;
   const time = beat >= RAPID_SECONDS;
   return (
     <div className="flex h-full flex-col justify-start gap-4">

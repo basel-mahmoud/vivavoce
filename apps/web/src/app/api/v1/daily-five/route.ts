@@ -115,7 +115,7 @@ export async function POST() {
 
   if (generated) prompts.push(...generated.questions.slice(0, need));
   if (prompts.length === 0) {
-    return fail('ai_unavailable', 'Your Daily 5 is not ready — try again in a moment.', 503);
+    return fail('ai_unavailable', 'Your Daily 5 is not ready. Try again in a moment.', 503);
   }
 
   const [deckRow] = await db

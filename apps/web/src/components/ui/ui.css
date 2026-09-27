@@ -7,8 +7,12 @@
 @layer components {
   /* ── RedPen ─────────────────────────────────────────────────────────── */
 
+  /* Positioned, so each mark's drawing is placed against its own words, never
+     against a far ancestor whose containment can change (a section laid out
+     on approach, a print layout), which would carry the strokes away. */
   .vv-redpen {
     --rp-color: var(--color-verm-text);
+    position: relative;
   }
   .vv-redpen[data-tone='bright'] {
     --rp-color: var(--color-verm);
@@ -23,14 +27,30 @@
   .vv-redpen > svg.rough-annotation {
     color: var(--rp-color);
   }
-  /* Butter never flips, so highlighted words take a brand ink that reads on
-   * it in both schemes: coal, or cobalt-deep for the candidate's blue ink
-   * (set --rp-on-highlight on an ancestor). */
+  /* The highlighter: a band of butter swept behind the words, overshooting
+   * both ends (padding, taken back by a negative margin so nothing moves)
+   * and repeated on every line the phrase wraps to. Butter never flips, so
+   * the words on it take a brand ink that reads in both schemes: coal, or
+   * cobalt-deep for the candidate's blue ink (set --rp-on-highlight on an
+   * ancestor). The ink turns once the band is mostly under it. */
   .vv-redpen[data-mark='highlight'] > .vv-redpen-words {
-    transition: color var(--rp-ms, 600ms) linear;
+    margin-inline: -0.16em;
+    padding-inline: 0.16em;
+    border-radius: 0.14em;
+    background-image: linear-gradient(var(--color-butter), var(--color-butter));
+    background-position: 0 55%;
+    background-repeat: no-repeat;
+    background-size: 0% 86%;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    transition:
+      background-size var(--rp-ms, 600ms) var(--ease-out),
+      color 160ms linear;
   }
   .vv-redpen[data-mark='highlight'][data-drawn] > .vv-redpen-words {
+    background-size: 100% 86%;
     color: var(--rp-on-highlight, var(--color-coal));
+    transition-delay: 0ms, calc(var(--rp-ms, 600ms) * 0.3);
   }
 
   /* ── Marks ──────────────────────────────────────────────────────────── */
@@ -52,21 +72,34 @@
   .vv-flapboard[data-size='lg'] {
     --flap-max: 46px;
   }
-  .vv-flapboard-face {
+  /* The board's frame: the flaps, and anything printed on the frame above them. */
+  .vv-flapboard-frame {
     /* cols cells, 0.1 gaps and 0.5 padding each side, never wider than the container */
     --cell: min(var(--flap-max), calc(100cqi / (var(--cols) * 1.1 + 0.9)));
     display: inline-flex;
     flex-direction: column;
-    gap: calc(var(--cell) * 0.2);
+    max-width: 100%;
     padding: calc(var(--cell) * 0.5);
     border-radius: calc(var(--cell) * 0.36);
     background: var(--color-coal);
     box-shadow: var(--shadow-paper);
   }
   @media (prefers-color-scheme: dark) {
-    .vv-flapboard-face {
+    .vv-flapboard-frame {
       box-shadow: inset 0 0 0 1px var(--color-line);
     }
+  }
+  .vv-flapboard-face {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--cell) * 0.2);
+  }
+  /* Painted on the frame, sized to the flaps; it never widens the board. */
+  .vv-flapboard-head {
+    width: 0;
+    min-width: 100%;
+    margin-bottom: calc(var(--cell) * 0.42);
+    color: var(--color-paper);
   }
   .vv-flap-row {
     display: flex;
@@ -208,20 +241,17 @@
     --stamp-ink: var(--color-ink);
   }
   .vv-stamp-slot {
-    display: inline-grid;
+    display: inline-block;
     vertical-align: baseline;
-  }
-  .vv-stamp-slot > * {
-    grid-area: 1 / 1;
-  }
-  .vv-stamp-sizer {
-    visibility: hidden;
   }
   .vv-stamp-live {
     position: relative;
     display: inline-flex;
     align-items: baseline;
-    justify-self: start;
+  }
+  /* The headline's full stop sits right against the stamp's edge, on the baseline. */
+  .vv-stamp-suffix {
+    margin-left: 0.03em;
   }
   .vv-stamp-box {
     display: inline-block;
@@ -234,11 +264,23 @@
   /* Rubber-stamp ink: flat colour that does not quite take everywhere. */
   .vv-stamp-ink {
     color: var(--stamp-ink);
-    transform-origin: 50% 60%;
+    transform-origin: 50% 50%;
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -11 7.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -11 7.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
     -webkit-mask-size: 220px 220px;
     mask-size: 220px 220px;
+  }
+
+  /* A single stamp, pressed once on arrival (Stamp). */
+  .vv-stamp-once {
+    rotate: -2.5deg;
+    animation: vv-stamp-once 460ms var(--ease-out) 260ms both;
+  }
+  @keyframes vv-stamp-once {
+    from {
+      scale: 1.07;
+      rotate: -5deg;
+    }
   }
 
   /* ── Keycap ─────────────────────────────────────────────────────────── */
@@ -364,14 +406,15 @@
 
   /* ── Paddle ─────────────────────────────────────────────────────────── */
 
+  /* A paper coin: white by day, lamp-lit at night like the other paper on the desk. */
   .vv-paddle {
     --d: 5rem;
     --t: calc(var(--d) * 0.075);
-    --face: var(--color-paper);
-    --bevel: color-mix(in oklab, var(--color-paper) 88%, var(--color-coal-2));
-    --rim: color-mix(in oklab, var(--color-paper) 70%, var(--color-coal-2));
-    --back: color-mix(in oklab, var(--color-paper) 94%, var(--color-coal-2));
-    --back-ink: color-mix(in oklab, var(--color-coal) 72%, var(--color-paper));
+    --face: var(--vv-paper-obj);
+    --bevel: color-mix(in oklab, var(--vv-paper-obj) 88%, var(--color-coal-2));
+    --rim: color-mix(in oklab, var(--vv-paper-obj) 70%, var(--color-coal-2));
+    --back: color-mix(in oklab, var(--vv-paper-obj) 94%, var(--color-coal-2));
+    --back-ink: color-mix(in oklab, var(--color-coal) 72%, var(--vv-paper-obj));
     --numeral: var(--color-coal);
     --stick: var(--color-coal);
     display: inline-flex;
@@ -463,17 +506,23 @@
     letter-spacing: -0.03em;
     line-height: 1;
   }
-  .vv-paddle-axis {
-    max-width: 76%;
-    overflow: hidden;
-    color: var(--back-ink);
-    font-size: max(0.5rem, calc(var(--d) * 0.105));
+  /* The back: the axis name minted round the top of the coin. */
+  .vv-paddle-legend {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: var(--back-ink);
+    font-size: 10.5px;
     font-weight: 800;
-    letter-spacing: 0.08em;
-    text-align: center;
-    text-overflow: ellipsis;
     text-transform: uppercase;
-    white-space: nowrap;
+  }
+  .vv-paddle-backmark {
+    color: var(--back-ink);
+    font-size: calc(var(--d) * 0.34);
+    font-weight: 900;
+    line-height: 1;
   }
   .vv-paddle-handle {
     position: relative;
@@ -512,13 +561,14 @@
     width: 100%;
     max-width: 36rem;
     color: var(--color-coal);
-    /* Masks cut the paper, so the shadow has to follow its alpha. */
-    filter: drop-shadow(0 0 0.6px rgb(var(--vv-shadow) / 0.28))
-      drop-shadow(0 12px 18px rgb(var(--vv-shadow) / 0.14));
+    /* Masks cut the paper, so the shadow has to follow its alpha. Kept short
+       and soft, so a punched hole shows the desk, not a grey dimple. */
+    filter: drop-shadow(0 0 0.6px rgb(var(--vv-shadow) / 0.26))
+      drop-shadow(0 9px 14px rgb(var(--vv-shadow) / 0.1));
   }
   @media (prefers-color-scheme: dark) {
     .vv-ticket {
-      filter: drop-shadow(0 14px 22px rgb(var(--vv-shadow) / 0.5));
+      filter: drop-shadow(0 12px 20px rgb(var(--vv-shadow) / 0.45));
     }
   }
   .vv-ticket[data-stub='butter'] {
@@ -559,7 +609,7 @@
     flex: 1 1 auto;
     min-width: 0;
     border-radius: var(--radius) 0 0 var(--radius);
-    background: var(--color-paper);
+    background: var(--vv-paper-obj);
     -webkit-mask-image:
       radial-gradient(circle var(--notch) at 100% 0, transparent 96%, #000),
       radial-gradient(circle var(--notch) at 100% 100%, transparent 96%, #000),
@@ -585,7 +635,8 @@
     font: inherit;
     text-align: center;
     cursor: grab;
-    touch-action: none;
+    /* A thumb swiping up or down scrolls the page; sideways is a pull. */
+    touch-action: pan-y;
     transform-origin: 0 calc(100% - var(--notch));
     filter: drop-shadow(
       calc(var(--open, 0) * 3px) calc(var(--open, 0) * 5px) calc(var(--open, 0) * 7px)
@@ -602,6 +653,7 @@
   }
   .vv-ticket[data-phase='pulling'] .vv-ticket-stub {
     cursor: grabbing;
+    touch-action: none;
   }
   .vv-ticket[data-phase='falling'] .vv-ticket-stub {
     cursor: default;
@@ -620,8 +672,69 @@
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
+    gap: 0.75rem;
     min-width: 0;
-    padding: 1.1rem 0.5rem 1rem 0.75rem;
+    padding: 1.1rem 0.45rem 1rem 0.7rem;
+  }
+  /* The stub's print, all in the field's own ink at full strength. */
+  .vv-stub-admit {
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    line-height: 1.35;
+    text-transform: uppercase;
+  }
+  .vv-stub-cta {
+    font-size: 1.06rem;
+    font-weight: 900;
+    line-height: 1.12;
+  }
+  .vv-stub-tear {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  /* The scissors on the perforation: out once the slip is filled in, and
+     they travel down the seam while a mouse points at the stub. */
+  .vv-ticket-snip {
+    position: absolute;
+    top: calc(var(--notch) + 0.2rem);
+    right: var(--stub-w);
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 999px;
+    background: var(--vv-paper-obj);
+    box-shadow: 0 0 0 1.5px var(--stub-bg);
+    color: var(--stub-bg);
+    opacity: 0;
+    translate: 50% 0;
+    rotate: 90deg;
+    pointer-events: none;
+    transition:
+      opacity 180ms ease,
+      translate 620ms var(--ease-out);
+  }
+  .vv-ticket[data-ready] .vv-ticket-snip {
+    opacity: 1;
+  }
+  .vv-ticket:not([data-phase='intact']) .vv-ticket-snip {
+    opacity: 0;
+    transition-duration: 120ms;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .vv-ticket[data-phase='intact'] .vv-ticket-stub:hover + .vv-ticket-snip {
+      opacity: 1;
+      translate: 50% 3.25rem;
+    }
   }
 
   /* ── Loader ─────────────────────────────────────────────────────────── */
@@ -688,10 +801,16 @@
     height: 100%;
     object-fit: contain;
     object-position: 50% 100%;
-    transition: opacity 220ms var(--ease-out);
   }
-  .vv-portrait-img[data-entering] {
-    opacity: 0;
+  /* Swapping faces: the new one is underneath at full strength; the old one
+     on top fades out once the new has loaded (a keyframe, so it always runs). */
+  .vv-portrait-old[data-leaving] {
+    animation: vv-portrait-leave 220ms var(--ease-out) forwards;
+  }
+  @keyframes vv-portrait-leave {
+    to {
+      opacity: 0;
+    }
   }
   .vv-silhouette {
     position: absolute;
@@ -757,6 +876,19 @@
   .vv-key-cap,
   .vv-key[data-pressed] .vv-key-cap {
     transition: none;
+  }
+
+  .vv-stamp-once {
+    animation: none;
+  }
+  .vv-redpen[data-mark='highlight'] > .vv-redpen-words {
+    transition: none;
+  }
+  .vv-ticket-snip {
+    transition: opacity 180ms ease;
+  }
+  .vv-ticket[data-phase='intact'] .vv-ticket-stub:hover + .vv-ticket-snip {
+    translate: 50% 0;
   }
 
   /* Paddles swap faces with a fade instead of turning over. */

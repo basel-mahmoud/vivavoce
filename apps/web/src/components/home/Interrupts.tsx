@@ -25,10 +25,11 @@ function Hedge({ children }: { children: string }) {
 }
 
 /**
- * Examiners do not wait for a ramble to end. While it is on screen the
- * examiners' follow-ups land on a hedged answer one after another, and the
- * hedges in it wobble. Off screen everything stops; reduced motion shows
- * the three cards already down and the words still.
+ * Examiners do not wait for a ramble to end. When it comes on screen the
+ * examiners' follow-ups land on a hedged answer one after another while the
+ * hedges in it wobble, once; then the cards stay down and the words go still.
+ * Off screen everything stops; reduced motion shows the three cards already
+ * down and the words still.
  */
 export function Interrupts({ className }: { className?: string }) {
   const uid = useId();
@@ -37,18 +38,34 @@ export function Interrupts({ className }: { className?: string }) {
   const stage = useRef<HTMLDivElement>(null);
   const onScreen = useSeen(stage, '0px 0px -15% 0px');
   const running = onScreen && visible && !reduce;
-  const { beat, round } = useBeat(running, STEPS, { rest: 700 });
+  // One round, then the three cards stay down and the words stay still.
+  const { beat, round } = useBeat(running, STEPS, { rest: 700, loop: false });
   const down = running ? beat : FOLLOW_UPS.length;
+  const wobble = running && beat < FOLLOW_UPS.length;
 
   return (
     <section
       aria-labelledby={`${uid}-title`}
       className={cn('vv-interrupts mx-auto w-full max-w-[1360px] px-3 py-10 sm:px-5 sm:py-16', className)}
     >
-      <div className="tile tile-ink grid gap-12 rounded-field px-5 py-10 sm:p-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16 lg:p-16">
+      {/* The cards land and leave inside the tile: nothing may widen a phone's page. */}
+      <div className="tile tile-ink grid gap-12 overflow-clip rounded-field px-5 py-10 sm:p-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16 lg:p-16">
         <div className="lg:pt-4">
-          <h2 id={`${uid}-title`} className="display text-[clamp(2.3rem,4.6vw,4rem)] text-paper">
-            It interrupts, <span className="text-paper-mut">like the room will.</span>
+          {/* The examiner cuts into the heading itself: a red caret between two
+              words, and the question written over it. */}
+          <h2 id={`${uid}-title`} className="display vv-int-title text-[clamp(2.3rem,4.6vw,4rem)] text-paper">
+            It interrupts,{' '}
+            <span className="whitespace-nowrap">
+              like the
+              <span className="vv-caret" aria-hidden="true">
+                <span className="vv-caret-ask">Why?</span>
+                <svg className="vv-caret-mark" viewBox="0 0 24 16" focusable="false">
+                  <path d="M2 14 L12 3 L22 14" />
+                </svg>
+              </span>{' '}
+              room
+            </span>{' '}
+            will.
           </h2>
           <p className="mt-6 max-w-md text-lg font-medium leading-relaxed text-paper-mut">
             Examiners do not wait politely for a ramble to end. Neither does VivaVoce: it stops you where the
@@ -56,7 +73,7 @@ export function Interrupts({ className }: { className?: string }) {
           </p>
         </div>
 
-        <div ref={stage} className="vv-int-stage" data-wobble={running ? '' : undefined}>
+        <div ref={stage} className="vv-int-stage" data-wobble={wobble ? '' : undefined}>
           <svg className="absolute h-0 w-0" aria-hidden="true" focusable="false">
             <defs>
               {[0, 1, 2, 3, 4].map((i) => (

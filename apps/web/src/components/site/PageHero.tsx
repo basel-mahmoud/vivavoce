@@ -1,37 +1,56 @@
-import { RiseText } from '@/components/ui/RiseText';
+import type { ReactNode } from 'react';
+import { cn } from '@/lib/cn';
 
 /**
- * Inner-page opener: one loud statement on the canvas, clear of the floating
- * nav. Words rise in sequence; wrap one word in *asterisks* for the chip.
+ * An inner page's opener, set like the top of an exam script: one heading,
+ * then a short intro. No eyebrow, no number, no chip, and at most one mark
+ * of the page's own: the examiner's tick in the margin (/faq), a correction
+ * in the heading (/use-cases), a stamp (/waitlist). The red-pen circle
+ * belongs to the home page alone. Two-tone headings (<Muted>) are kept for
+ * the two legal pages.
  */
 export function PageHero({
   title,
   intro,
   children,
+  flush = false,
+  margin,
+  figure,
+  className,
 }: {
-  title: string;
-  intro?: string;
-  children?: React.ReactNode;
+  title: ReactNode;
+  intro?: ReactNode;
+  children?: ReactNode;
+  /** The next section brings its own top padding: keep the bottom tight. */
+  flush?: boolean;
+  /** Something the examiner writes in the page's margin beside the heading (a tick). */
+  margin?: ReactNode;
+  /** The page's own exhibit, full width under the words (the panel on /features). */
+  figure?: ReactNode;
+  className?: string;
 }) {
-  const words = title.split(' ').length;
   return (
-    <section className="mx-auto w-full max-w-[1360px] px-4 pb-12 pt-32 sm:px-5 sm:pb-16 sm:pt-40">
-      <h1 className="display max-w-6xl text-[clamp(2.6rem,6.2vw,5.4rem)] leading-[1]">
-        <RiseText text={title} />
-      </h1>
-      {intro && (
-        <p
-          className="rise mt-7 max-w-2xl text-lg font-medium leading-relaxed text-ink-mut sm:text-xl"
-          style={{ '--i': words } as React.CSSProperties}
-        >
-          {intro}
-        </p>
-      )}
-      {children && (
-        <div className="rise mt-8" style={{ '--i': words + 1 } as React.CSSProperties}>
-          {children}
+    <section
+      className={cn('vv-hero mx-auto w-full max-w-[1360px] px-4 sm:px-5', className)}
+      data-flush={flush ? '' : undefined}
+      data-margin={margin ? '' : undefined}
+    >
+      {margin ? (
+        <div className="vv-hero-margin" aria-hidden="true">
+          {margin}
         </div>
-      )}
+      ) : null}
+      <div className="vv-hero-text">
+        <h1 className="vv-hero-title display">{title}</h1>
+        {intro ? <p className="vv-hero-intro">{intro}</p> : null}
+        {children ? <div className="vv-hero-actions">{children}</div> : null}
+      </div>
+      {figure ? <div className="vv-hero-figure">{figure}</div> : null}
     </section>
   );
+}
+
+/** The grey half of a two-tone heading: what follows the claim. Legal pages only. */
+export function Muted({ children }: { children: ReactNode }) {
+  return <span className="text-ink-mut">{children}</span>;
 }

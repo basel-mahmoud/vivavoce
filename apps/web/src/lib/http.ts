@@ -42,7 +42,7 @@ export const errors = {
   notFound: () => fail('not_found', 'Not found', 404),
   conflict: (msg = 'Already exists') => fail('conflict', msg, 409),
   tooMany: (resetMs: number) =>
-    fail('rate_limited', 'Too many requests — please slow down', 429, {
+    fail('rate_limited', 'Too many requests. Please slow down.', 429, {
       headers: { 'retry-after': String(Math.ceil(resetMs / 1000)) },
     }),
   server: () => fail('server_error', 'Something went wrong on our end', 500),

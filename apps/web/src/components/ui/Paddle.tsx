@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import { useAnimate, useReducedMotion } from 'motion/react';
 import { EASE } from '@/lib/motion';
 import { Marks } from './Marks';
@@ -22,6 +22,11 @@ export interface PaddleProps {
   delay?: number;
   /** Show the handle. */
   handle?: boolean;
+  /**
+   * Printed large on the back instead of the axis name, for a panel that
+   * names its paddles beside them (the Quick Question preview shows "?").
+   */
+  backMark?: string;
   onRevealed?: () => void;
   className?: string;
 }
@@ -43,6 +48,7 @@ export function Paddle({
   size = 'md',
   delay = 0,
   handle = true,
+  backMark,
   onRevealed,
   className,
 }: PaddleProps) {
@@ -52,6 +58,7 @@ export function Paddle({
   const [mark, setMark] = useState(revealed ? value : 0);
   const first = useRef(true);
   const done = useRef(onRevealed);
+  const arc = useId();
 
   useEffect(() => {
     done.current = onRevealed;
@@ -140,7 +147,25 @@ export function Paddle({
             <span key={z} className="vv-paddle-rim" style={{ '--z': z } as CSSProperties} />
           ))}
           <span className="vv-paddle-face vv-paddle-back">
-            <span className="vv-paddle-axis">{label}</span>
+            {backMark ? (
+              <span className="vv-paddle-backmark">{backMark}</span>
+            ) : (
+              // The axis name minted round the top of the coin, like a legend: never cut short.
+              <svg className="vv-paddle-legend" viewBox="0 0 100 100">
+                <path id={arc} d="M 20 52 A 30 30 0 0 1 80 52" fill="none" />
+                <text>
+                  <textPath
+                    href={`#${arc}`}
+                    startOffset="50%"
+                    textAnchor="middle"
+                    textLength={Math.min(90, Math.max(46, label.length * 8.2))}
+                    lengthAdjust="spacing"
+                  >
+                    {label}
+                  </textPath>
+                </text>
+              </svg>
+            )}
           </span>
           <span className="vv-paddle-face vv-paddle-front">
             <Marks value={mark} play="instant" duration={760} className="vv-paddle-mark" />

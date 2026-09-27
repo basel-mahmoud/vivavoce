@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import '../components/ui/ui.css';
 @import '../components/home/home.css';
+@import '../components/site/site.css';
 
 /*
  * "The exam script": VivaVoce web theme v6.
@@ -18,7 +19,7 @@
  * paper with the desk lamp on.
  *
  * Themed tokens (--vv-*) flip with the scheme; brand tokens (coal, paper,
- * verm, cobalt, butter, pass) never do, so a vermilion or butter field always
+ * verm, cobalt, butter) never do, so a vermilion or butter field always
  * carries coal text and a cobalt field always carries paper text.
  */
 
@@ -46,6 +47,10 @@
   --vv-scroll-thumb-hover: #8f99ab;
   /* A coal field: print by day; at night a well below the canvas. */
   --vv-coal-field: #10131a;
+  /* Paper lying on the desk (slips, the panel's note, the admission ticket).
+     By day it is the sheet itself; at night it is lamp-lit, a step below
+     white, so the examiners' faces stay the brightest thing on the page. */
+  --vv-paper-obj: #fdfdfe;
 
   /* Motion: durations. Curves live in @theme below. */
   --dur-press: 160ms;
@@ -75,6 +80,7 @@
     --vv-scroll-thumb: #2e3547;
     --vv-scroll-thumb-hover: #454f66;
     --vv-coal-field: #080a0f;
+    --vv-paper-obj: #e4e2dc;
     color-scheme: dark;
   }
 }
@@ -106,9 +112,10 @@
   --color-cobalt-lift: #8391ff;
   --color-butter: #ffc838;
   --color-line-dark: rgb(253 253 254 / 0.16);
-
-  /* Semantics. */
-  --color-pass: #2c7a4b;
+  /* Paper objects on the desk: white by day, lamp-lit at night. For utilities
+     (bg-paper-obj) only: a production build drops inline theme variables that
+     only the imported stylesheets read, so those read --vv-paper-obj. */
+  --color-paper-obj: var(--vv-paper-obj);
 
   --font-sans: var(--font-archivo), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, 'SF Mono', monospace;
@@ -138,6 +145,9 @@
     background-color: var(--color-canvas);
     accent-color: var(--color-cobalt);
     scrollbar-color: var(--vv-scroll-thumb) var(--color-canvas);
+    /* Nothing may widen a phone's layout viewport (a torn slip, a stamp
+       landing): the fixed nav would stretch with it and lose its menu. */
+    overflow-x: clip;
   }
   @media (prefers-reduced-motion: no-preference) {
     html {
@@ -166,7 +176,10 @@
     background-color: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
-    letter-spacing: -0.008em;
+    /* Archivo's space is narrow (0.18em): open it a touch so running words
+       never touch. Tracking stays neutral; only display type tightens. */
+    letter-spacing: 0;
+    word-spacing: 0.06em;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeLegibility;
@@ -199,6 +212,11 @@
   :where(a, summary, button):focus-visible {
     border-radius: 6px;
   }
+  /* Whatever takes focus is scrolled clear of the fixed nav above and of the
+     room's pinned ruler below, never under them (WCAG 2.4.11). */
+  :where(a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])) {
+    scroll-margin-block: 5.75rem 4.75rem;
+  }
 
   a {
     color: inherit;
@@ -212,6 +230,13 @@
   textarea,
   select {
     caret-color: var(--color-ink-blue);
+  }
+  /* The browser resets spacing on controls: keys and fields keep the page's. */
+  button,
+  input,
+  select,
+  textarea {
+    word-spacing: inherit;
   }
   ::placeholder {
     color: var(--color-ink-faint);
@@ -238,6 +263,8 @@
     font-weight: 900;
     font-stretch: 118%;
     letter-spacing: -0.028em;
+    /* The expanded black face brings its own wide space. */
+    word-spacing: 0.02em;
     line-height: 0.94;
   }
 
@@ -585,12 +612,13 @@
     animation: vv-stamp 300ms var(--ease-out) both;
   }
 
-  /* Headline words rising into focus. CSS, so it plays before hydration. */
+  /* Headline words rising into focus. CSS, so it plays before hydration.
+     The words are on the page from the first frame (only focus and height
+     move), so the headline paints, and counts as painted, at once. */
   @keyframes vv-rise {
     from {
-      opacity: 0;
-      transform: translate3d(0, 0.42em, 0);
-      filter: blur(8px);
+      transform: translate3d(0, 0.3em, 0);
+      filter: blur(7px);
     }
   }
   @keyframes vv-fade {
@@ -600,8 +628,8 @@
   }
   .rise {
     display: inline-block;
-    animation: vv-rise 760ms var(--ease-out) both;
-    animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+    animation: vv-rise 700ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 55ms);
   }
   .rise-chip {
     display: inline-block;
@@ -679,58 +707,6 @@
       transform: translate3d(-50%, 0, 0);
     }
   }
-
-  /* ── Long-form content ────────────────────────────────────────────────── */
-
-  .prose-vv {
-    color: var(--color-ink-mut);
-    font-size: 1.0625rem;
-    line-height: 1.75;
-    max-width: 68ch;
-  }
-  .prose-vv > * + * {
-    margin-top: 1.15rem;
-  }
-  .prose-vv h2 {
-    color: var(--color-ink);
-    font-size: 1.6rem;
-    font-weight: 900;
-    font-stretch: 112%;
-    letter-spacing: -0.015em;
-    line-height: 1.1;
-    margin-top: 3rem;
-  }
-  .prose-vv h3 {
-    color: var(--color-ink);
-    font-size: 1.15rem;
-    font-weight: 800;
-    margin-top: 2rem;
-  }
-  .prose-vv a {
-    color: var(--color-ink);
-    text-decoration: underline;
-    text-decoration-color: color-mix(in oklab, var(--color-ink-blue) 55%, transparent);
-    transition: text-decoration-color var(--dur-hover) ease;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .prose-vv a:hover {
-      text-decoration-color: var(--color-ink-blue);
-    }
-  }
-  .prose-vv strong {
-    color: var(--color-ink);
-    font-weight: 700;
-  }
-  .prose-vv ul {
-    list-style: disc;
-    padding-left: 1.3rem;
-  }
-  .prose-vv li {
-    margin-top: 0.45rem;
-  }
-  .prose-vv li::marker {
-    color: var(--color-ink-faint);
-  }
 }
 
 /* Tabular figures in the current face, for counts that are not marks. */
@@ -770,7 +746,7 @@
     display: none;
   }
   .rise {
-    animation: vv-fade 400ms ease both;
+    animation: none;
   }
   .rise-chip {
     animation: vv-fade 400ms ease both;
@@ -795,22 +771,66 @@
   }
 }
 
-/* FAQ disclosure: animate to auto height where the browser supports it. */
+/* Animate to and from auto sizes where the browser supports it. */
 :root {
   interpolate-size: allow-keywords;
 }
-.faq details::details-content {
-  block-size: 0;
-  overflow: hidden;
-  transition:
-    block-size 320ms var(--ease-out),
-    content-visibility 320ms allow-discrete;
+
+/*
+ * Sections below the first screen are laid out and painted only as they
+ * come near the viewport. The browser remembers each one's real height once
+ * seen; --defer-h is the first guess. Paint containment clips at the
+ * padding box, so a deferred section keeps its props inside its padding.
+ */
+.vv-defer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--defer-h, 900px);
 }
-.faq details[open]::details-content {
-  block-size: auto;
+
+/* Windows High Contrast and other forced palettes: keys keep an outline,
+   marks keep their strokes, and nothing important hides in a background. */
+@media (forced-colors: active) {
+  .btn,
+  .vv-chip,
+  .vv-faq-toggle,
+  .vv-room-sign,
+  .vv-ticket-stub,
+  .vv-mode-tab[aria-selected='true'] {
+    border: 1px solid ButtonText;
+  }
+  .vv-ticket-stub {
+    forced-color-adjust: none;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+  .vv-redpen > svg.rough-annotation,
+  .vv-tick path,
+  .vv-ink path {
+    forced-color-adjust: none;
+    color: Highlight;
+    stroke: Highlight;
+  }
+  .vv-redpen[data-mark='highlight'] > .vv-redpen-words {
+    forced-color-adjust: none;
+    background: Mark;
+    color: MarkText;
+  }
+  .vv-flap {
+    forced-color-adjust: none;
+  }
 }
-@media (prefers-reduced-motion: reduce) {
-  .faq details::details-content {
-    transition: none;
+
+/* Asked for more contrast: grey text steps up to the ink. */
+@media (prefers-contrast: more) {
+  :root {
+    --vv-ink-mut: var(--vv-ink);
+    --vv-line: color-mix(in oklab, var(--vv-ink) 45%, var(--vv-canvas));
+  }
+}
+
+/* Paper is paper: every deferred section prints. */
+@media print {
+  .vv-defer {
+    content-visibility: visible;
   }
 }

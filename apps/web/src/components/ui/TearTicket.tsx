@@ -2,10 +2,14 @@
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { animate, motion, useMotionValue, useReducedMotion, useTransform, type MotionStyle } from 'motion/react';
+import { Scissors } from 'lucide-react';
 import { EASE, SPRING } from '@/lib/motion';
 import { cn } from '@/lib/cn';
 
 export type StubTone = 'cobalt' | 'butter' | 'paper';
+
+/** How a refused tear was attempted: the parent says why, and may move focus. */
+export type TearAttempt = 'pull' | 'press' | 'keyboard';
 
 export interface TearTicketProps {
   /** The slip itself. It stays when the stub is gone. */
@@ -20,6 +24,14 @@ export interface TearTicketProps {
   /** Controlled: the stub is already off. Remount the ticket to put a stub back. */
   torn?: boolean;
   defaultTorn?: boolean;
+  /**
+   * Asked the moment a tear begins (a pull starts, the stub is pressed). Say
+   * false and the stub stays put; `onRefused` is told how it was tried.
+   */
+  canTear?: () => boolean;
+  onRefused?: (attempt: TearAttempt) => void;
+  /** The slip is filled in: the stub gives a small tug to say it will come off. */
+  ready?: boolean;
   /** Called once the stub is off. Focus has moved to the slip; move it on if you like. */
   onTear?: () => void;
   className?: string;
@@ -33,10 +45,13 @@ const FOLLOW = 0.82;
 const GRAVITY = 2600;
 /** The drop: a small hop up (px/s), a drift (px/s), and when it fades (s). */
 const DROP = { hop: -120, drift: 70, hold: 0.14, fade: 0.42 } as const;
+/** A pull starts only after this much travel, and only if it runs more across than down. */
+const SLOP = 8;
 
 type Phase = 'intact' | 'pulling' | 'falling' | 'torn';
 
 interface Drag {
+  id: number;
   hx: number;
   hy: number;
   a0: number;
@@ -46,13 +61,15 @@ interface Drag {
 }
 
 /**
- * An ADMIT ONE slip with a perforated stub. Pull the stub away (it pivots on
- * the last fibre at the foot of the perforation, so the tear runs down from
- * the top) or press it: Enter, Space or a click tears it cleanly. Past the
- * tear point it comes off in your hand and drops; let go early and it
- * springs back. The perforation is real: body and stub are cut with
- * half-holes that meet as holes, so the torn edge keeps its bite. Reduced
- * motion: pressing the stub removes it with a fade; no pull, no drop.
+ * An ADMIT ONE slip with a perforated stub. Pull the stub away sideways (it
+ * pivots on the last fibre at the foot of the perforation, so the tear runs
+ * down from the top) or press it: Enter, Space, a click or a tap tears it
+ * cleanly. Past the tear point it comes off in your hand and drops; let go
+ * early and it springs back. A thumb swiping up or down over the stub
+ * scrolls the page like anywhere else: only a sideways pull tears. The
+ * perforation is real: body and stub are cut with half-holes that meet as
+ * holes, so the torn edge keeps its bite. Reduced motion: pressing the stub
+ * removes it with a fade; no pull, no drop.
  */
 export function TearTicket({
   children,
@@ -62,6 +79,9 @@ export function TearTicket({
   tornMessage = 'Stub torn off.',
   torn,
   defaultTorn = false,
+  canTear,
+  onRefused,
+  ready = false,
   onTear,
   className,
 }: TearTicketProps) {
@@ -85,6 +105,22 @@ export function TearTicket({
   const open = useTransform(theta, [0, TEAR_AT], [0, 1]);
 
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
+
+  // Filled in: one small tug on the perforation, the way you test a ticket before tearing it.
+  const wasReady = useRef(ready);
+  useEffect(() => {
+    const was = wasReady.current;
+    wasReady.current = ready;
+    if (!ready || was || reduce || phase !== 'intact' || busy.current) return;
+    const tug = animate(theta, [0, 5, 0], { duration: 0.72, times: [0, 0.38, 1], ease: [EASE.out, EASE.inOut] });
+    return () => tug.stop();
+  }, [ready, reduce, phase, theta]);
+
+  const allowed = (attempt: TearAttempt) => {
+    if (!canTear || canTear()) return true;
+    onRefused?.(attempt);
+    return false;
+  };
 
   const finish = () => {
     const hadFocus = stubEl.current !== null && document.activeElement === stubEl.current;
@@ -115,12 +151,13 @@ export function TearTicket({
   };
 
   /** Keyboard, click or tap: tear it cleanly from the top down. */
-  const tearCleanly = () => {
+  const tearCleanly = (attempt: TearAttempt) => {
     if (phase !== 'intact' || busy.current) return;
+    if (!allowed(attempt)) return;
     busy.current = true;
     if (reduce) {
       setInner('falling');
-      void animate(fade, 0, { duration: 0.2, ease: 'easeOut' }).then(finish);
+      void animate(fade, 0, { duration: 0.2, ease: EASE.out }).then(finish);
       return;
     }
     setInner('pulling');
@@ -138,6 +175,7 @@ export function TearTicket({
     const hx = r.left;
     const hy = r.bottom - notch;
     drag.current = {
+      id: e.pointerId,
       hx,
       hy,
       a0: Math.atan2(e.clientY - hy, e.clientX - hx),
@@ -145,16 +183,27 @@ export function TearTicket({
       y0: e.clientY,
       moved: false,
     };
-    el.setPointerCapture(e.pointerId);
   };
 
   const onPointerMove = (e: ReactPointerEvent<HTMLButtonElement>) => {
     const d = drag.current;
-    if (!d || busy.current) return;
+    if (!d || busy.current || e.pointerId !== d.id) return;
     if (!d.moved) {
-      if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 6) return;
-      d.moved = true;
+      const dx = e.clientX - d.x0;
+      const dy = e.clientY - d.y0;
+      if (Math.hypot(dx, dy) < SLOP) return;
+      // Up or down is a scroll (the page takes it); only a sideways pull tears.
+      if (Math.abs(dy) >= Math.abs(dx)) {
+        drag.current = null;
+        return;
+      }
       dragged.current = true;
+      if (!allowed('pull')) {
+        drag.current = null;
+        return;
+      }
+      d.moved = true;
+      stubEl.current?.setPointerCapture(e.pointerId);
       setInner('pulling');
     }
     const a = Math.atan2(e.clientY - d.hy, e.clientX - d.hx);
@@ -177,37 +226,61 @@ export function TearTicket({
     animate(theta, 0, SPRING.physical);
   };
 
+  // A mouse resting on the stub lifts it a hair off the perforation.
+  const lift = (to: number) => {
+    if (reduce || phase !== 'intact' || busy.current || drag.current?.moved) return;
+    animate(theta, to, { duration: 0.22, ease: EASE.out });
+  };
+
   const gone = phase === 'torn';
   const stubStyle: MotionStyle = { rotate: theta, x, y, opacity: fade, '--open': open } as MotionStyle;
 
   return (
-    <div className={cn('vv-ticket', className)} data-phase={phase} data-stub={stubTone}>
+    <div
+      className={cn('vv-ticket', className)}
+      data-phase={phase}
+      data-stub={stubTone}
+      data-ready={ready ? '' : undefined}
+    >
       <motion.div ref={body} tabIndex={-1} className="vv-ticket-body" style={{ x: recoil }}>
         {children}
       </motion.div>
       {gone ? null : (
-        <motion.button
-          ref={stubEl}
-          type="button"
-          className="vv-ticket-stub"
-          aria-label={tearLabel}
-          aria-disabled={phase === 'falling' ? true : undefined}
-          style={stubStyle}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerEnd}
-          onPointerCancel={onPointerEnd}
-          onClick={() => {
-            // A pull that ended short is not a click.
-            if (dragged.current) {
-              dragged.current = false;
-              return;
-            }
-            tearCleanly();
-          }}
-        >
-          <span className="vv-ticket-stub-face">{stub}</span>
-        </motion.button>
+        <>
+          <motion.button
+            ref={stubEl}
+            type="button"
+            className="vv-ticket-stub"
+            aria-label={tearLabel}
+            aria-disabled={phase === 'falling' ? true : undefined}
+            style={stubStyle}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerEnd}
+            onPointerCancel={onPointerEnd}
+            onPointerEnter={(e) => {
+              if (e.pointerType === 'mouse') lift(1.6);
+            }}
+            onPointerLeave={(e) => {
+              if (e.pointerType === 'mouse' && !drag.current?.moved) lift(0);
+            }}
+            onClick={(e) => {
+              // A pull that ended short (or was refused) is not a click.
+              if (dragged.current) {
+                dragged.current = false;
+                return;
+              }
+              // detail 0: Enter or Space on the focused stub.
+              tearCleanly(e.detail === 0 ? 'keyboard' : 'press');
+            }}
+          >
+            <span className="vv-ticket-stub-face">{stub}</span>
+          </motion.button>
+          {/* Scissors wait on the perforation, and start down it when the stub is pointed at. */}
+          <span className="vv-ticket-snip" aria-hidden="true">
+            <Scissors size={15} strokeWidth={2.4} />
+          </span>
+        </>
       )}
       <p className="sr-only" aria-live="polite">
         {gone ? tornMessage : ''}

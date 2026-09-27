@@ -39,43 +39,62 @@ export function usePageVisible() {
 }
 
 export interface BeatOptions {
-  /** Pause after the last beat before starting over, in ms. */
+  /** Pause after the last beat before starting over (or before resting), in ms. */
   rest?: number;
   /** Start over after the rest. */
   loop?: boolean;
-  /** The beat shown while not running. Defaults to the last (the complete state). */
+  /**
+   * How many rounds to play before holding still for good (WCAG 2.2.2: a
+   * demo that plays by itself stops on its own). Defaults to one round when
+   * `loop` is false, and no limit when it is true.
+   */
+  rounds?: number;
+  /** The beat shown while not running or when finished. Defaults to the last (the complete state). */
   still?: number;
 }
 
 /**
  * Steps through a short scripted sequence while `running`: beat i lasts
- * `steps[i]` ms, then after a rest the round starts over. While not running
- * (off screen, not the card in front, reduced motion) it shows a still beat,
- * the complete state by default, so a preview is never caught half-built.
- * Mount it already running to start from the first beat.
+ * `steps[i]` ms, then after a rest the next round starts, until `rounds`
+ * rounds have played. While not running (off screen, not the card in front,
+ * reduced motion), before its first run and once it has finished, it shows a
+ * still beat, the complete state by default, so a preview is never caught
+ * half-built. It starts from the first beat the first time it runs; remount
+ * it (a new key) to play it again.
  */
 export function useBeat(running: boolean, steps: readonly number[], options: BeatOptions = {}) {
   const { rest = 1800, loop = true } = options;
+  const rounds = options.rounds ?? (loop ? Infinity : 1);
   const last = steps.length - 1;
   const still = options.still ?? last;
-  const [state, setState] = useState(() => ({ beat: running ? 0 : still, round: 0 }));
+  // beat -1: not started yet.
+  const [state, setState] = useState(() => ({ beat: running ? 0 : -1, round: 0, finished: false }));
 
   useEffect(() => {
-    if (!running) return;
+    if (!running || state.finished) return;
+    if (state.beat < 0) {
+      const t = window.setTimeout(() => setState({ beat: 0, round: 0, finished: false }), 0);
+      return () => window.clearTimeout(t);
+    }
     const atEnd = state.beat >= last;
-    if (atEnd && !loop) return;
+    const final = atEnd && state.round + 1 >= rounds;
     const wait = atEnd ? rest : (steps[state.beat] ?? 1000);
     const t = window.setTimeout(
       () =>
         setState((s) =>
-          s.beat >= last ? { beat: 0, round: s.round + 1 } : { beat: s.beat + 1, round: s.round },
+          s.beat < last
+            ? { ...s, beat: s.beat + 1 }
+            : final
+              ? { ...s, finished: true }
+              : { beat: 0, round: s.round + 1, finished: false },
         ),
       wait,
     );
     return () => window.clearTimeout(t);
-  }, [running, state.beat, last, loop, rest, steps]);
+  }, [running, state.beat, state.round, state.finished, last, rounds, rest, steps]);
 
-  return running ? state : { beat: still, round: state.round };
+  const resting = !running || state.beat < 0 || state.finished;
+  return resting ? { beat: still, round: state.round, finished: state.finished } : state;
 }
 
 /**

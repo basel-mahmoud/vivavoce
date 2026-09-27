@@ -78,7 +78,7 @@ export function staggerDelay(i: number, step: number = DURATION.stagger, cap: nu
 }
 
 /** What reduced motion gets instead of travel: opacity only, quick. */
-export const FADE: Transition = { duration: DURATION.fade, ease: 'easeOut' };
+export const FADE: Transition = { duration: DURATION.fade, ease: EASE.out };
 
 /**
  * Reduced-motion aware choices. Reduced means fewer and gentler, not zero:

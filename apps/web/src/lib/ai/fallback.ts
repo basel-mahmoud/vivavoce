@@ -86,7 +86,7 @@ export function heuristicEvaluation(
         ? 'We could not detect any speech. Try recording again in a quieter spot.'
         : 'Heuristic review while AI coaching is unavailable: based on length, pacing, and filler words. Full coaching will appear once the evaluator is back.',
     strengths:
-      conciseness > 70 ? ['Low filler-word rate — your delivery was clean.'] : [],
+      conciseness > 70 ? ['Low filler-word rate: your delivery was clean.'] : [],
     improvements:
       fillerRate > 0.04
         ? ['Cut filler words ("um", "like") to sound more decisive.']
