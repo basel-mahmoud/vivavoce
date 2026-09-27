@@ -109,10 +109,11 @@ export function MockVivaPreview({ running }: PreviewProps) {
         if (b < at) utils.set(paths, { draw: '0 0' });
         else if (b > at || still) utils.set(paths, { draw: '0 1' });
         else
+          // One quick scribble: each stroke starts 80 ms after the last (the house stagger).
           animeAnimate(paths, {
             draw: ['0 0', '0 1'],
-            duration: 520,
-            delay: stagger(360, { start: 380 }),
+            duration: 560,
+            delay: stagger(80, { start: 380 }),
             ease: ANIME_EASE.inOut,
           });
       });
@@ -454,12 +455,19 @@ export function ExplainPreview({ running, dealt }: PreviewProps) {
       </motion.div>
       <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-sm font-black">Clarity</span>
+        {/* Both are the examiner's marks, in red pen; the gain is the candidate's, in blue ink. */}
         <Marks
           value={improved ? 81 : 52}
           play="instant"
-          className={cn('text-xl', improved ? 'text-pass' : 'text-verm-text')}
+          className="text-xl text-verm-text"
           label={improved ? 'Clarity 81, the improved answer' : 'Clarity 52, your answer'}
         />
+        <span
+          className={cn('marks text-sm font-bold text-ink-blue transition-opacity duration-200', improved ? 'opacity-100' : 'opacity-0')}
+          aria-hidden="true"
+        >
+          +29
+        </span>
         <span className="text-sm font-medium text-ink-mut">Same idea, no jargon, no hedges.</span>
       </p>
     </div>
