@@ -491,7 +491,8 @@ export default function EngineStage({ cueRef, meterRef, overlaysRef, dark, activ
         <Cyclorama dark={dark} shadows={shadows} focusRef={focusRef} maskRef={maskRef} />
         {!shadows && <ContactBlot dark={dark} />}
         <Lamp dark={dark} />
-        <Panel channelsRef={channelsRef} dark={dark} shadows={shadows} onReady={onCast} />
+        {/* stepped frames are already on the round's (possibly slowed) clock: the cast takes them as they come */}
+        <Panel channelsRef={channelsRef} dark={dark} shadows={shadows} onReady={onCast} timeScale={stepping ? 1 : undefined} />
         <Reveal ready={panel && post} onReady={onReady} />
         {process.env.NODE_ENV !== 'production' && <DrawCounter tier={tier} />}
         {process.env.NODE_ENV !== 'production' && stepping && <Stepper />}

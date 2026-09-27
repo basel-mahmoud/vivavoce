@@ -14,6 +14,12 @@ export interface PanelProps {
   shadows: boolean;
   /** Called once the cast is on screen with every mark and label set. */
   onReady?: (cast: Cast) => void;
+  /**
+   * Development review only: how fast the cast's clock runs against the frames it is given.
+   * Defaults to the page's `?timescale`; a stage that steps its own frames on a slowed clock
+   * passes 1, since its steps are already in slow time.
+   */
+  timeScale?: number;
 }
 
 /** Longest step the animation takes in one frame, so a stalled tab resumes calmly. */
@@ -24,7 +30,7 @@ const MAX_STEP = 0.1;
  * detail maps load (wrap it in Suspense). Reusable: any director that writes PanelChannels can
  * drive it, in this room or in a second, lighter canvas.
  */
-export function Panel({ channelsRef, dark, shadows, onReady }: PanelProps) {
+export function Panel({ channelsRef, dark, shadows, onReady, timeScale }: PanelProps) {
   const gltf = useLoader(GLTFLoader, MODEL_URL);
   const textures = useLoader(THREE.TextureLoader, DETAIL_URLS);
   const maps = useMemo(() => detailMaps(textures), [textures]);
@@ -32,7 +38,7 @@ export function Panel({ channelsRef, dark, shadows, onReady }: PanelProps) {
   const [initialScheme] = useState<'light' | 'dark'>(dark ? 'dark' : 'light');
   const cast = useMemo(() => buildCast(gltf.scene, maps, initialScheme), [gltf, maps, initialScheme]);
   const time = useRef(0);
-  const scale = useRef(devTimeScale());
+  const scale = useRef(timeScale ?? devTimeScale());
 
   useLayoutEffect(() => cast.setScheme(dark ? 'dark' : 'light'), [cast, dark]);
   useLayoutEffect(() => cast.setShadows(shadows), [cast, shadows]);
