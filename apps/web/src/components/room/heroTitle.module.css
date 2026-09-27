@@ -1,0 +1,198 @@
+/*
+ * The promise as a crescendo (HeroTitle.tsx). Sized from the column it is set in (--hero-col, set
+ * by the room's captions and by the still hero for each of their layouts) and line one's measured
+ * width, so both lines fill the column at every width, "loud" never past 6rem (--hero-max caps it
+ * lower on short screens). Motion is CSS only and composited: it plays before hydration, starts
+ * from a legible frame, waits for the display face (--vv-type-play and --vv-type-skip, set by the
+ * font gate in the root layout) and reduced motion gets the settled frame.
+ */
+
+.title {
+  --col: var(--hero-col, min(100vw - 2rem, 38rem));
+  --max: var(--hero-max, 6rem);
+  /* line one's advance at full voice, in ems of "loud" (HeroTitle.tsx's WIDTH) */
+  --w1: 5.774;
+  /* the size of "loud", with 2.5% to spare for screens that round each glyph to whole pixels */
+  --fs: min(var(--max), var(--col) / (var(--w1) * 1.025));
+  margin: 0;
+  color: var(--color-ink);
+  font-size: var(--fs);
+  font-kerning: normal;
+  line-height: 0.86;
+}
+.top {
+  display: grid;
+  width: max-content;
+}
+.loud {
+  display: block;
+  white-space: nowrap;
+}
+
+/* One setting per word, each a step louder than the one before: size, weight and width. Each word
+   keeps its own trailing space, so the gaps grow with the voice too. */
+.word,
+.run {
+  display: inline-block;
+  animation-duration: 600ms;
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+  animation-play-state: var(--vv-type-play, running);
+}
+.word {
+  letter-spacing: -0.02em;
+  white-space: pre;
+  /* the word's own baseline (Archivo: ascent 0.878, descent 0.21, in a 0.86 line) */
+  transform-origin: 0 0.764em;
+  animation-name: swell;
+  animation-delay: var(--vv-type-skip, var(--d));
+}
+/* Size (in ems of "loud"), weight and width, set plainly per word. Every word starts at the same
+   whisper, 0.9 of "Say" (--k of its own size), and swells to its level as the voice reaches it
+   (--d). */
+.w1 {
+  --k: 0.9;
+  --d: 120ms;
+  font-size: 0.62em;
+  font-weight: 400;
+  font-stretch: 86%;
+}
+.w2 {
+  --k: 0.775;
+  --d: 280ms;
+  font-size: 0.72em;
+  font-weight: 560;
+  font-stretch: 96%;
+}
+.w3 {
+  --k: 0.6565;
+  --d: 360ms;
+  font-size: 0.85em;
+  font-weight: 760;
+  font-stretch: 110%;
+}
+.w4 {
+  --k: 0.558;
+  --d: 650ms;
+  font-size: 1em;
+  font-weight: 900;
+  font-stretch: 125%;
+}
+@keyframes swell {
+  from {
+    transform: scale(var(--k));
+  }
+}
+/* The rest of the line rides on each word: pulled back by what that word's whisper saves (its
+   advance times 1 - --k, in ems of "loud") and let out as it swells, on the same timing. */
+.run {
+  animation-name: push;
+  animation-delay: var(--vv-type-skip, var(--d));
+}
+.r2 {
+  --pull: -0.0992;
+  --d: 120ms;
+}
+.r3 {
+  --pull: -0.1094;
+  --d: 280ms;
+}
+.r4 {
+  --pull: -0.5627;
+  --d: 360ms;
+}
+@keyframes push {
+  from {
+    transform: translateX(calc(var(--pull) * var(--fs)));
+  }
+}
+
+/* The voice: the paper's faint rule is the silence, and the blue ink rises off it. Its centre sits
+   0.19em under line one's baseline and it swells up to 0.13em either way, clear of the "y" in "Say"
+   (whose syllable has fallen away by then). */
+.voice {
+  position: relative;
+  display: block;
+  width: 0;
+  min-width: 100%;
+  height: 0.26em;
+  margin-top: -0.036em;
+  background: linear-gradient(var(--color-rule), var(--color-rule)) 0 50% / 100% max(1px, 0.012em) no-repeat;
+}
+/* It plays left to right at the speed of speech: the window slides in from the left while the
+   trace slides the other way, so the ink stays put and is uncovered (two composited slides). */
+.window {
+  position: absolute;
+  inset: -0.1em 0;
+  overflow: hidden;
+  animation: uncover 1000ms linear both;
+  animation-delay: var(--vv-type-skip, 120ms);
+  animation-play-state: var(--vv-type-play, running);
+}
+@keyframes uncover {
+  from {
+    transform: translateX(-100%);
+  }
+}
+.trace {
+  position: absolute;
+  top: 0.1em;
+  left: 0;
+  width: 100%;
+  height: 0.26em;
+  overflow: visible;
+  /* then the voice peaks once as "loud" lands, and settles */
+  animation:
+    hold 1000ms linear both,
+    peak 440ms var(--ease-out) both;
+  animation-delay: var(--vv-type-skip, 120ms), var(--vv-type-skip, 1040ms);
+  animation-play-state: var(--vv-type-play, running);
+}
+@keyframes hold {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes peak {
+  35% {
+    scale: 1 1.24;
+  }
+}
+.trace path {
+  fill: var(--color-ink-blue);
+}
+
+/* "before it counts.": firm, black, and exactly as long as line one (its ink ends where "loud"
+   does). Its baseline sits 0.98em under line one's, so the voice keeps closer to the words it is. */
+.firm {
+  display: block;
+  margin-top: 0.122em;
+  font-size: 0.6914em;
+  font-weight: 900;
+  font-stretch: 100%;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Light on the night paper: one weight step more where the type is thin. */
+@media (prefers-color-scheme: dark) {
+  .w1 {
+    font-weight: 440;
+  }
+  .w2 {
+    font-weight: 590;
+  }
+}
+
+.still :is(.word, .run, .window, .trace) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .word,
+  .run,
+  .window,
+  .trace {
+    animation: none;
+  }
+}
