@@ -228,8 +228,8 @@ export function Riser({ dark, shadows }: { dark: boolean; shadows: boolean }) {
     return g;
   }, []);
   const material = useMemo(() => {
-    // night: blue-black like the paper, so the warm lamp lifts it to a neutral dark, never to wood
-    const m = new THREE.MeshStandardMaterial({ color: dark ? '#0b0e19' : '#a3abb8', roughness: dark ? 0.94 : 0.82, envMapIntensity: dark ? 0.6 : 1 });
+    // night: a cool blue-black like the paper, so the warm lamp lifts it to a neutral dark, never to wood
+    const m = new THREE.MeshStandardMaterial({ color: dark ? '#080d22' : '#a3abb8', roughness: dark ? 0.94 : 0.82, envMapIntensity: dark ? 0.6 : 1 });
     const feet = FOOTPRINTS.map((p) => new THREE.Vector4(p[0], p[1], p[2], p[3]));
     m.onBeforeCompile = (sh) => {
       sh.uniforms.uFeet = { value: feet };

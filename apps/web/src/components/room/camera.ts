@@ -327,9 +327,10 @@ export function makeShots(aspect: number, insets: Insets, width = Infinity): Sho
   // The bench's front edge at the floor: compact layouts keep the whole bench above the slip, so
   // no inlay is ever cut mid-word by the paper.
   const bench = compact ? [V(0, -0.5, 0.18), V(-1.84, -0.5, 0.71), V(1.84, -0.5, 0.71)] : [];
-  // Outro: the marked panel, a little higher, the bench top in view.
+  // Outro: the marked panel, a little higher, the bench top in view. It stands on its region's
+  // floor (on phones, just above the candidate's slip), the examiner's note over it.
   const outroPts = [...cast(-0.1), ...coinsHero.flatMap((c) => coinPoints(c)), ...bench];
-  const outro = frame(outroPts, V(0, 0.95, -0.5), V(0.02, 0.2, 1), aspect, R.outro, compact ? 30 : 23, compact ? 'center' : 'bottom');
+  const outro = frame(outroPts, V(0, 0.95, -0.5), V(0.02, 0.2, 1), aspect, R.outro, compact ? 30 : 23, 'bottom');
   // Hand-off: paddles down, the five turn to you; the camera settles in closer on the faces.
   const handoff = frame(
     [...EXAMINERS.flatMap((k) => headPoints(k, 1.3, 2.6, 2.2)), ...cast(0.2), ...bench],
@@ -338,6 +339,7 @@ export function makeShots(aspect: number, insets: Insets, width = Infinity): Sho
     aspect,
     R.handoff,
     compact ? 26 : 20,
+    compact ? 'bottom' : 'center',
   );
 
   const poses: Record<ShotName, Pose> = {
