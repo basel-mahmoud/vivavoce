@@ -94,6 +94,13 @@ export interface BootConfig {
   smoothNeed: number;
   smoothFloor: number;
   smoothCap: number;
+  /**
+   * Before the portal the overlay's own frames must flow: steady frames needed, and the longest
+   * wait for them, before a full ending and before a quick one (ms).
+   */
+  flowNeed: number;
+  flowCap: number;
+  flowCapQuick: number;
   /** The portal's length, and its length after a skip (ms). */
   portalMs: number;
   quickMs: number;
@@ -251,8 +258,18 @@ export function bootController(
     d.head.appendChild(s);
     return s;
   };
-  // the page holds still underneath (the gutter keeps its width, so nothing reflows at the end)
-  const lock = sheet('html{overflow:hidden;scrollbar-gutter:stable}');
+  // the page holds still underneath. Where scrollbars take room the gutter keeps the page's width,
+  // so nothing reflows (and the room's canvas never resizes) as the lock goes; where they overlay
+  // the page or are hidden, a gutter would be the only thing to change width at the end
+  const bar = attempt(() => {
+    const p = d.createElement('div');
+    p.style.cssText = 'position:absolute;top:-999px;width:99px;height:99px;overflow:scroll;visibility:hidden';
+    d.body.appendChild(p);
+    const room = p.offsetWidth - p.clientWidth;
+    p.remove();
+    return room;
+  }, 1);
+  const lock = sheet(`html{overflow:hidden${bar > 0 ? ';scrollbar-gutter:stable' : ''}}`);
   // the hero's crescendo holds its first frame (the font gate defers to this while it shows). Set on
   // the heading alone, so letting it go mid-portal restyles that heading, not the whole page.
   const type = sheet('[data-crescendo]{--vv-type-play:paused}');
@@ -295,14 +312,33 @@ export function bootController(
   let line = -1;
   let lineAt = 0;
   let smooth: Smoothness = { run: 0, vsync: 0, ok: false };
+  // the overlay's own frames before the portal (see the frame loop), and the shortest frame it has
+  // seen: the display's refresh, near enough
+  let flow: Smoothness | null = null;
+  let flowFrom = 0;
+  let fastest = 0;
   let last = start;
   api.drawn = () => shown;
 
+  // the room has nothing left to prove under the overlay: it may rest until the page is back
+  let hushed = false;
+  const hush = () => {
+    if (hushed) return;
+    hushed = true;
+    api.quiet = !still;
+    emit('quiet');
+  };
+  // a skip or the longest wait: the page comes back now, by the quick ending. The room stops
+  // drawing behind its poster, so a weak GPU spends those frames on the ending instead.
+  const hurry = (why: string) => {
+    quick = forced = true;
+    log(why);
+    hush();
+  };
   const INPUTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
   const onInput = () => {
     if (now() - start < cfg.skipAfter || quick || phase === 'portal' || phase === 'done') return;
-    quick = forced = true;
-    log('skip');
+    hurry('skip');
   };
   const setLine = (i: number) => {
     if (i === line) return;
@@ -314,15 +350,6 @@ export function bootController(
   };
   // the line the load has earned: the page set out, the panel's downloads in
   const stage = () => (still ? 0 : critical() ? 2 : M.app!.done && M.font!.done ? 1 : 0);
-  // the room has nothing left to prove under the overlay: it may rest until the page is back. The
-  // portal then waits two frames, so a slow GPU has worked through the room's last ones first.
-  let hushed = -1;
-  const hush = () => {
-    if (hushed >= 0) return;
-    hushed = 0;
-    api.quiet = !still;
-    emit('quiet');
-  };
   const finish = () => {
     if (phase === 'done') return;
     phase = 'done';
@@ -370,6 +397,7 @@ export function bootController(
     // real time, so a slow frame rate never slows the drawing; a long stall eases in over a few frames
     const dt = Math.min(250, Math.max(0, t - last));
     last = t;
+    if (dt > 0) fastest = fastest > 0 ? Math.min(fastest, dt) : dt;
     if (watchFrom >= 0 && !smooth.ok) {
       smooth = steady(smooth, dt, cfg.smoothNeed, cfg.smoothFloor);
       if (smooth.ok) log('smooth');
@@ -386,8 +414,11 @@ export function bootController(
         return finish();
       }
       const target = forced ? 1 : progress(M, now());
-      // once everything is in, the last stretch is drawn briskly rather than eased out
-      shown = ease(shown, target, dt / 1000, 0.3, quick ? 5 : cfg.rate, target >= 1 ? 0.9 : 0.1);
+      // once everything is in, the last stretch is drawn briskly rather than eased out; a quick
+      // ending draws what is left in one stroke of about a quarter second
+      shown = quick
+        ? ease(shown, 1, dt / 1000, 0.12, 5, 2.4)
+        : ease(shown, target, dt / 1000, 0.3, cfg.rate, target >= 1 ? 0.9 : 0.1);
       vPath.style.strokeDasharray = `${Math.max(0.01, shown * cfg.drawn).toFixed(2)} 200`;
       const s = stage();
       // each line stays long enough to read; the first waits for the entrance and the face
@@ -400,7 +431,16 @@ export function bootController(
       }
     } else if (phase === 'wait' && (forced || still || smooth.ok) && now() - start >= cfg.min - (quick ? cfg.quickMs : cfg.portalMs)) {
       hush();
-      if (hushed++ >= 2) {
+      // The portal opens on frames that flow. A GPU can still owe the room frames it queued before
+      // it rested (a slow one, seconds of them), and the portal's first frames would wait behind
+      // them: so a few steady frames at the display's own rate first, or the wait gives up.
+      if (!flow) {
+        flow = { run: 0, vsync: fastest, ok: false };
+        flowFrom = now();
+      } else flow = steady(flow, dt, cfg.flowNeed, cfg.smoothFloor);
+      const open = flow.ok || now() - flowFrom >= (quick ? cfg.flowCapQuick : cfg.flowCap);
+      if (open) {
+        if (!flow.ok) log('flow-cap');
         phase = 'portal';
         log('portal');
         ending().portal(ctx());
@@ -414,12 +454,9 @@ export function bootController(
   /* ── Skip, the longest wait, a return from the back/forward cache ───── */
 
   for (const t of INPUTS) w.addEventListener(t, onInput, { capture: true, passive: true });
-  // the longest wait: the page comes back now, by the quick ending (the room joins it when it can)
+  // the longest wait (the room joins the page when it can)
   w.setTimeout(() => {
-    if (phase !== 'portal' && phase !== 'done') {
-      forced = quick = true;
-      log('max');
-    }
+    if (phase !== 'portal' && phase !== 'done' && !quick) hurry('max');
   }, cfg.max);
   w.addEventListener('pageshow', (e) => {
     if (e.persisted && api.showing) finish();
@@ -458,6 +495,9 @@ export function bootScript({ key, face }: { key: string; face: string }): string
     smoothNeed: 16,
     smoothFloor: 24,
     smoothCap: 1500,
+    flowNeed: 3,
+    flowCap: 1500,
+    flowCapQuick: 600,
     portalMs: 820,
     quickMs: 520,
     // the check is 63.79 long: the print stops a unit short of the tip's blue

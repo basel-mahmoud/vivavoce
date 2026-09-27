@@ -75,11 +75,25 @@ describe('boot script', () => {
     expect(document.body.firstElementChild?.tagName).toBe('VV-BOOT');
     expect(overlay()?.getAttribute('aria-hidden')).toBe('true');
     expect(boot()).toMatchObject({ showing: true, held: true, why: 'first' });
-    expect(headStyles()).toContain('html{overflow:hidden;scrollbar-gutter:stable}');
+    expect(headStyles()).toContain('html{overflow:hidden}');
     // the hold on the crescendo sits on its heading, so letting it go restyles that heading alone
     expect(headStyles()).toContain('[data-crescendo]{--vv-type-play:paused}');
     // it loads the display face by its first family only
     expect(faceLoads).toHaveBeenCalledWith("900 1em 'Archivo'");
+  });
+
+  it('keeps the scrollbar gutter only where scrollbars take room', () => {
+    // scrollbars that take room: the gutter stays, so the page keeps its width as the lock goes
+    setup();
+    const outer = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(99);
+    const inner = vi.spyOn(Element.prototype, 'clientWidth', 'get').mockReturnValue(84);
+    run(script);
+    outer.mockRestore();
+    inner.mockRestore();
+    expect(headStyles()).toContain('html{overflow:hidden;scrollbar-gutter:stable}');
+    // and the probe is gone: the overlay is still the body's first element
+    expect(document.body.firstElementChild?.tagName).toBe('VV-BOOT');
+    expect(document.body.querySelectorAll('div[style]')).toHaveLength(0);
   });
 
   it('stays away on a repeat visit, and says the page is revealed', async () => {
@@ -187,6 +201,40 @@ describe('boot script', () => {
     expect(b.times.portal).toBeGreaterThanOrEqual(2050 - 820);
   });
 
+  it('opens the portal on frames that flow, and gives up waiting for them in time', async () => {
+    const raf = window.requestAnimationFrame;
+    try {
+      for (const owed of [0, 250, 2000]) {
+        setup({ url: '/?intro=1' });
+        // the overlay's frames: 16ms apart, until the room rests; then a GPU that still owes the
+        // room's queued frames holds them at 300ms for `owed` ms, and they flow again
+        let crawlUntil = -1;
+        window.requestAnimationFrame = ((cb: FrameRequestCallback) =>
+          setTimeout(() => cb(performance.now()), performance.now() < crawlUntil ? 300 : 16)) as unknown as typeof requestAnimationFrame;
+        run(script);
+        installOutro();
+        const b = boot()!;
+        b.on('quiet', () => (crawlUntil = performance.now() + owed));
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+        b.mark('app');
+        b.still('test');
+        await vi.advanceTimersByTimeAsync(6000);
+        const t = b.times;
+        const wait = t.portal! - Math.max(t.quiet!, t.stamped!);
+        if (owed === 0) expect(wait).toBeLessThan(100);
+        // it waits the crawl out, then opens after a few steady frames
+        if (owed === 250) expect(wait).toBeGreaterThanOrEqual(250);
+        if (owed === 250) expect(t['flow-cap']).toBeUndefined();
+        // a crawl that outlasts the wait: the portal opens anyway at the cap
+        if (owed === 2000) expect(t['flow-cap']).toBeDefined();
+        if (owed === 2000) expect(wait).toBeLessThanOrEqual(1500 + 320);
+        expect(t.done).toBeDefined();
+      }
+    } finally {
+      window.requestAnimationFrame = raf;
+    }
+  });
+
   it('waits for the page and its poster alone when the room will not go live', async () => {
     setup();
     run(script);
@@ -204,14 +252,23 @@ describe('boot script', () => {
   it('reveals the page anyway at its longest wait, and remembers nothing until the room loads', async () => {
     setup();
     run(script);
+    installOutro();
     const b = boot()!;
+    const quiet = vi.fn();
+    b.on('quiet', quiet);
     document.dispatchEvent(new Event('DOMContentLoaded'));
-    await vi.advanceTimersByTimeAsync(10_000);
+    await vi.advanceTimersByTimeAsync(10_900);
     expect(b.times.done).toBeUndefined();
-    await vi.advanceTimersByTimeAsync(2000);
+    expect(quiet).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(150);
     expect(b.times.max).toBeGreaterThanOrEqual(11_000);
-    // by the quick ending: the page is back within a second or so of the longest wait
-    expect(b.times.done).toBeLessThanOrEqual(12_300);
+    // the room rests at once, so a weak GPU spends its frames on the ending
+    expect(b.quiet).toBe(true);
+    expect(quiet).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(2000);
+    // by the quick ending, stamp and portal: the page is back within a second of the longest wait
+    expect(b.times.done! - b.times.max!).toBeLessThanOrEqual(1000);
+    expect(b.quiet).toBe(false);
     expect(localStorage.getItem(BOOT_STORE)).toBeNull();
     b.mark('app');
     for (const name of ['code', 'model', 'textures', 'labels', 'compile', 'ready']) b.mark(name);
@@ -228,6 +285,7 @@ describe('boot script', () => {
     await vi.advanceTimersByTimeAsync(700);
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
     expect(b.times.skip).toBeGreaterThanOrEqual(800);
+    expect(b.quiet).toBe(true);
     await vi.advanceTimersByTimeAsync(1600);
     expect(b.times.done).toBeDefined();
     expect(b.times.done! - b.times.skip!).toBeLessThan(1600);
