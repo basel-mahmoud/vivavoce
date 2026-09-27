@@ -473,6 +473,31 @@
   white-space: nowrap;
 }
 
+/* Windows high contrast: the ruler's ticks are painted boxes, so they keep their ink. */
+@media (forced-colors: active) {
+  .rule,
+  .tick {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+  .minor {
+    forced-color-adjust: none;
+    background-image: repeating-linear-gradient(to right, CanvasText 0 1px, transparent 1px 2.5%);
+    opacity: 1;
+  }
+  .needle,
+  [aria-current] > .tick {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+  .pause[aria-pressed='true'] {
+    forced-color-adjust: none;
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
 @media (min-width: 640px) {
   .captions {
     padding-inline: 1.5rem;

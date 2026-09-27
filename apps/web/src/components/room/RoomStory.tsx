@@ -6,7 +6,7 @@ import { motion, useMotionValueEvent, useScroll, useTransform, type MotionValue 
 import { Pause } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { AXES, ROUNDS, weakestIndex } from './data';
-import { HERO_END, OUTRO, beatAt, marksAt, ramp } from './story';
+import { BEATS, HERO_END, OUTRO, beatAt, marksAt, ramp } from './story';
 import { HeroCopy, MarginNote, OutroCaption } from './RoomCaptions';
 import { ScriptSlip } from './ScriptSlip';
 import { Ruler } from './Ruler';
@@ -18,7 +18,13 @@ import styles from './room.module.css';
 
 const Scene = dynamic(() => import('./Scene'), { ssr: false });
 
-const WEAKEST = weakestIndex(ROUNDS[0]!.scores);
+const SCORES = ROUNDS[0]!.scores;
+const WEAKEST = weakestIndex(SCORES);
+
+/** What a screen reader hears when the ruler brings an examiner's note on stage. */
+const NOTE_SAID = AXES.map(
+  (a, i) => `${a.label}, example mark ${SCORES[i]}${i === WEAKEST ? ', the one to fix first' : ''}. ${a.ask}`,
+);
 
 /* ── Environment probes (server snapshots keep hydration identical) ──── */
 
@@ -141,6 +147,8 @@ export function RoomStory() {
   const [failed, setFailed] = useState(false);
   // "Pause the room": the example round and the panel's idle life stop (WCAG 2.2.2)
   const [paused, setPaused] = useState(false);
+  const [said, setSaid] = useState('');
+  const sayTimer = useRef(0);
   const [active, setActive] = useState(true);
   const [inHero, setInHero] = useState(true);
   const [beat, setBeat] = useState(-1);
@@ -232,6 +240,8 @@ export function RoomStory() {
     return () => ro.disconnect();
   }, [outro]);
 
+  useEffect(() => () => window.clearTimeout(sayTimer.current), []);
+
   const playing = ready && active && inHero && pageVisible && !reduce && !paused;
   const onReady = useCallback(() => setReady(true), []);
   const onFail = useCallback(() => {
@@ -264,6 +274,16 @@ export function RoomStory() {
       window.scrollTo({ top: top + p * travel, behavior: reduce ? 'auto' : 'smooth' });
     },
     [reduce],
+  );
+  // a key on the ruler: take the story there, then say which note is on stage (focus stays on the key)
+  const onKey = useCallback(
+    (i: number) => {
+      jump(BEATS[i]!);
+      window.clearTimeout(sayTimer.current);
+      setSaid('');
+      sayTimer.current = window.setTimeout(() => setSaid(NOTE_SAID[i]!), reduce ? 80 : 900);
+    },
+    [jump, reduce],
   );
   // focus never lands on a faded caption: bring its stop on stage first
   const toHero = useCallback(() => {
@@ -319,6 +339,18 @@ export function RoomStory() {
           <div data-cap="hero" className={styles.heroCap}>
             <HeroCopy progress={scrollYProgress} onFocusBack={toHero} onListen={onListen} />
           </div>
+          {/* the five notes, for screen readers: the visible ones appear only as the scroll reaches them */}
+          <div className="sr-only">
+            <p>In the example round, five examiners mark one spoken answer:</p>
+            <ol>
+              {AXES.map((a, i) => (
+                <li key={a.key}>
+                  {a.label}, example mark {SCORES[i]}
+                  {i === WEAKEST ? ', the one to fix first' : ''}. {a.ask} {a.line}
+                </li>
+              ))}
+            </ol>
+          </div>
           <div className={styles.script}>
             <div className={styles.notes}>
               {AXES.map((a, i) => (
@@ -335,7 +367,10 @@ export function RoomStory() {
             </div>
           </div>
         </div>
-        <Ruler progress={scrollYProgress} current={beat} onJump={jump} />
+        <Ruler progress={scrollYProgress} current={beat} onJump={onKey} />
+        <p aria-live="polite" className="sr-only">
+          {said}
+        </p>
         <motion.div
           ref={(el) => {
             overlaysRef.current.guide = el;
