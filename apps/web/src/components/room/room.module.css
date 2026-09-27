@@ -557,6 +557,14 @@
   }
 }
 
+/* Under 380px wide the guidance line and the pause key share the bottom edge only a size down. */
+@media (max-width: 379px) {
+  .guideNote {
+    padding-inline: 0.3rem;
+    font-size: 0.68rem;
+  }
+}
+
 /* The narrowest short phones (360 wide): both keys still fit their row inside the gutters. */
 @media (max-width: 379px) and (max-height: 760px) {
   .heroKeys {
