@@ -117,6 +117,9 @@ export function AnswerSheet({ id, state, pen, clock, reduce, speechReady, onType
             {state.interim ? <span className="opacity-70"> {state.interim}</span> : null}
             {listening ? <span className="caret ml-0.5" aria-hidden /> : null}
           </>
+        ) : phase === 'requesting' ? (
+          // the browser is still asking for the microphone: nothing is being heard yet
+          'Allow the microphone, then speak. Your words appear here in blue ink.'
         ) : listening ? (
           'Listening. Your words appear here in blue ink.'
         ) : speechReady ? (
