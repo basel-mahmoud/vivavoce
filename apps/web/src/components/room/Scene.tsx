@@ -274,7 +274,8 @@ export default function Scene({ progress, active, playing, reduce, dark, insets,
       gl={{
         antialias: startTier === 1,
         alpha: false,
-        powerPreference: 'high-performance',
+        // a marketing page never wakes the discrete GPU of a dual-GPU laptop
+        powerPreference: 'default',
         toneMapping: THREE.NeutralToneMapping,
         preserveDrawingBuffer: reduce,
       }}

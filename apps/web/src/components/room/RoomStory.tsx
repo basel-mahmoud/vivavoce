@@ -64,6 +64,32 @@ function useReduce(): boolean {
   return useSyncExternalStore(subscribeReduce, () => window.matchMedia(REDUCE).matches, () => false);
 }
 
+/**
+ * Whether to start the live room at all, and when: never without WebGL or when the visitor asks
+ * to save data, and otherwise only after the first paint, once the browser is idle (or within two
+ * seconds), so the poster and the words are what the page paints first.
+ */
+function useLiveRoom(webgl: boolean | null): boolean {
+  const [start, setStart] = useState(false);
+  useEffect(() => {
+    if (webgl !== true) return;
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    if (connection?.saveData) return;
+    let idle = 0;
+    let timer = 0;
+    const frame = requestAnimationFrame(() => {
+      if (typeof window.requestIdleCallback === 'function') idle = window.requestIdleCallback(() => setStart(true), { timeout: 2000 });
+      else timer = window.setTimeout(() => setStart(true), 300);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (idle) window.cancelIdleCallback(idle);
+      window.clearTimeout(timer);
+    };
+  }, [webgl]);
+  return start;
+}
+
 function subscribeVisibility(cb: () => void) {
   document.addEventListener('visibilitychange', cb);
   return () => document.removeEventListener('visibilitychange', cb);
@@ -107,6 +133,7 @@ export function RoomStory() {
   const reduce = useReduce();
   const dark = useDark();
   const webgl = useWebGL();
+  const live = useLiveRoom(webgl);
   const pageVisible = usePageVisible();
   const [ready, setReady] = useState(false);
   // a live room that failed (a chunk, the model, the WebGL context) hands back to its poster for good
@@ -245,7 +272,7 @@ export function RoomStory() {
     <section ref={section} aria-label="VivaVoce, the viva room" data-ready={ready ? 'true' : undefined} className="relative h-[520svh]">
       <div className={styles.stage}>
         <RoomPoster hidden={ready} />
-        {webgl === true && !failed && (
+        {live && !failed && (
           <div data-room-canvas className={cn(styles.layer, 'transition-opacity duration-700 ease-out', ready ? 'opacity-100' : 'opacity-0')}>
             <SceneBoundary onError={onFail}>
               <Scene

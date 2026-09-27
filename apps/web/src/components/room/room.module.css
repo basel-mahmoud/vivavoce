@@ -49,6 +49,64 @@
   transition: height 400ms var(--ease-out);
 }
 
+/* ── The first viewport's copy ────────────────────────────────────────── */
+
+/* Words rise into focus: transform and blur only, never from transparent, so every word is
+   painted (and counted as the largest paint) in the very first frame. */
+@keyframes rise {
+  from {
+    transform: translate3d(0, 0.3em, 0);
+    filter: blur(6px);
+  }
+}
+.rise,
+.riseBlock {
+  animation: rise 560ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 35ms);
+}
+.rise {
+  display: inline-block;
+}
+.heroTitle {
+  font-size: clamp(2.45rem, 10.4vw, 4.4rem);
+}
+.heroLead {
+  margin-top: 1rem;
+  max-width: 30rem;
+  font-size: 1.02rem;
+  line-height: 1.625;
+}
+.heroKeys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+@media (max-width: 639px) {
+  .heroKey {
+    height: 3rem;
+    padding-inline: 1rem;
+    font-size: 0.94rem;
+  }
+}
+@media (max-width: 389px) {
+  .heroKey {
+    padding-inline: 0.75rem;
+    font-size: 0.88rem;
+  }
+}
+@media (min-width: 640px) {
+  .heroLead {
+    margin-top: 1.5rem;
+    font-size: 1.2rem;
+  }
+  .heroKeys {
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+}
+
 /* ── Captions ─────────────────────────────────────────────────────────── */
 
 .captions {
@@ -473,6 +531,9 @@
   .rulerName {
     display: inline;
   }
+  .heroTitle {
+    font-size: clamp(2.4rem, 4vw, 4.6rem);
+  }
 }
 
 /* Short wide screens: the note and the slip share the height. */
@@ -490,6 +551,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .rise,
+  .riseBlock {
+    animation: none;
+  }
   .slipArrow[data-drawn] path {
     transition: none;
   }
