@@ -15,8 +15,8 @@ vv-boot {
   /* print and blue ink on the paper: the icon's own on the day's paper, lifted on the night's */
   --vvb-ink: #161412;
   --vvb-blue: #2e45ff;
-  /* one phrase of the voice: "Say it out loud", then a breath */
-  --vvb-cycle: 2300ms;
+  /* one phrase of the voice, "Say it out loud", then a breath */
+  --vvb-cycle: 2100ms;
   --vvb-voice: 420ms;
   position: fixed;
   inset: 0;
@@ -97,79 +97,100 @@ vv-boot.vvb-open {
     transform: scale(0);
   }
 }
-/* The tip sounds each syllable: a small push out, bigger for each louder word. */
+/* The tip sounds each syllable (at 0, 200, 400 and 640ms of the phrase): a small push out, bigger
+   for each louder word. */
 @keyframes vvb-speak {
   0%,
   100% {
     transform: scale(1);
     animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
   }
-  1.6% {
+  1.9% {
     transform: scale(1.045);
     animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
   }
-  5.5% {
+  7% {
     transform: scale(1);
     animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
   }
-  8.1% {
+  11.4% {
     transform: scale(1.055);
     animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
   }
-  12% {
+  16.5% {
     transform: scale(1);
     animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
   }
-  14.6% {
+  21% {
     transform: scale(1.07);
     animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
   }
-  20% {
+  27% {
     transform: scale(1);
     animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
   }
-  25.4% {
-    transform: scale(1.11);
+  33% {
+    transform: scale(1.12);
     animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
   }
-  36% {
+  46% {
     transform: scale(1);
   }
 }
 
-/* The voice: one arc off the tip per syllable, each travelling further and brighter than the last. */
+/* The voice: each syllable sends the icon's pair of arcs off the tip, a short quick pulse for "Say",
+   "it" and "out", each reaching a little further, and a long one for "loud" that carries past where
+   the icon's arcs sit. Short enough apart to read as four words, not one swell. */
 .vvb-ripple {
   transform-origin: 64% 42%;
   opacity: 0;
-  animation: vvb-ripple var(--vvb-cycle) cubic-bezier(0.18, 0.7, 0.3, 1) calc(var(--vvb-voice) + var(--at)) infinite;
+  animation: vvb-ripple var(--vvb-cycle) cubic-bezier(0.16, 0.72, 0.3, 1) calc(var(--vvb-voice) + var(--at)) infinite;
 }
 .vvb-r1 {
   --at: 0ms;
-  --to: 0.86;
-  --peak: 0.42;
+  --to: 0.9;
+  --peak: 0.5;
 }
 .vvb-r2 {
-  --at: 150ms;
-  --to: 0.96;
-  --peak: 0.52;
+  --at: 200ms;
+  --to: 0.98;
+  --peak: 0.58;
 }
 .vvb-r3 {
-  --at: 300ms;
-  --to: 1.12;
-  --peak: 0.66;
+  --at: 400ms;
+  --to: 1.1;
+  --peak: 0.72;
 }
 .vvb-r4 {
-  --at: 540ms;
-  --to: 1.42;
-  --peak: 0.9;
+  --at: 640ms;
+  --to: 1.5;
+  --peak: 0.95;
+  animation-name: vvb-ripple-loud;
 }
 @keyframes vvb-ripple {
   0% {
-    transform: scale(0.52);
+    transform: scale(0.55);
     opacity: 0;
   }
-  4% {
+  3% {
     opacity: var(--peak);
+  }
+  26%,
+  100% {
+    transform: scale(var(--to));
+    opacity: 0;
+  }
+}
+@keyframes vvb-ripple-loud {
+  0% {
+    transform: scale(0.55);
+    opacity: 0;
+  }
+  3% {
+    opacity: var(--peak);
+  }
+  12% {
+    opacity: calc(var(--peak) * 0.8);
   }
   44%,
   100% {
