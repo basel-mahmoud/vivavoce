@@ -1,6 +1,6 @@
 import { ArrowDown } from 'lucide-react';
-import { Muted, PageHero } from '@/components/site/PageHero';
-import { Loop } from '@/components/home/Loop';
+import { PageHero } from '@/components/site/PageHero';
+import { Round } from '@/components/home/Round';
 import { LiveEngine } from '@/components/engine/LiveEngine';
 import { Close } from '@/components/home/Closing';
 import { pageMeta } from '@/lib/site';
@@ -16,12 +16,8 @@ export default function HowItWorksPage() {
   return (
     <>
       <PageHero
-        title={
-          <>
-            Speak. Get marked. <Muted>Come back sharper.</Muted>
-          </>
-        }
-        intro="No setup and no scheduling another person. The whole loop takes about a minute, and you can run it below right now."
+        title="A minute in the hot seat."
+        intro="No setup and no scheduling another person. Here is one example round, moment by moment: they ask, you answer out loud, five examiners mark it, and the weakest mark comes straight back at you."
         flush
       >
         <a href="#live" className="btn btn-primary btn-lg">
@@ -29,8 +25,8 @@ export default function HowItWorksPage() {
           <ArrowDown size={17} aria-hidden />
         </a>
       </PageHero>
-      <Loop showHeading={false} className="pt-14 sm:pt-20" />
-      <div className="pb-24 sm:pb-32">
+      <Round />
+      <div className="pb-24 pt-10 sm:pb-32 sm:pt-16">
         <LiveEngine />
       </div>
       <Close />

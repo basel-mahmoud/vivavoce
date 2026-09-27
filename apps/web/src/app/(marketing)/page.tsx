@@ -1,7 +1,6 @@
 import { RoomStory } from '@/components/room/RoomStory';
 import { LiveEngine } from '@/components/engine/LiveEngine';
 import { Modes } from '@/components/home/Modes';
-import { Loop } from '@/components/home/Loop';
 import { Subjects } from '@/components/home/Subjects';
 import { Rooms } from '@/components/home/Rooms';
 import { Close, Privacy } from '@/components/home/Closing';
@@ -27,10 +26,7 @@ export default function HomePage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* If the live room fails (model, code or WebGL), its still takes its place. */}
       <SectionBoundary name="room" fallback={<StaticHero />}>
         <RoomStory />
@@ -39,9 +35,6 @@ export default function HomePage() {
         <SectionBoundary name="live engine" fallback={<EnginePlaceholder />}>
           <LiveEngine />
         </SectionBoundary>
-      </Deferred>
-      <Deferred height="700px">
-        <Loop />
       </Deferred>
       <Deferred height="1000px">
         <Modes />
