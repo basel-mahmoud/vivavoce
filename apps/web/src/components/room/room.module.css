@@ -70,6 +70,12 @@
 .heroTitle {
   font-size: clamp(2.45rem, 10.4vw, 4.4rem);
 }
+/* The red pen loops "before" by its ink, cap height to baseline, not by the line box, so the loop
+   stays clear of the line above and the one below. */
+.heroTitle :global(.vv-redpen[data-mark='circle'] > .vv-redpen-words) {
+  display: inline-block;
+  line-height: 0.74em;
+}
 .heroLead {
   margin-top: 1rem;
   max-width: 30rem;
@@ -183,6 +189,15 @@
   font-size: 1.04rem;
   font-weight: 800;
   line-height: 1.45;
+}
+/* At night the highlighter is butter under the lamp, dimmed into the paper, and the words stay in
+   the night's ink: the hand's ragged band can stop short of a letter or run past it and every
+   letter still reads (coal words would vanish off the band on the dark page). */
+@media (prefers-color-scheme: dark) {
+  .noteAsk :global(.vv-redpen[data-mark='highlight']) {
+    --rp-color: color-mix(in srgb, var(--color-butter) 42%, var(--color-canvas));
+    --rp-on-highlight: var(--color-ink);
+  }
 }
 .noteLine {
   grid-area: line;
@@ -379,15 +394,15 @@
   container-type: inline-size;
 }
 
-/* A key reads as its examiner's name where five names fit (the ruler is at least 32rem long),
-   and as the mark otherwise; the accessible name always carries both. */
+/* A key reads as its examiner's name where five names fit with room between them (the ruler is
+   at least 28rem long), and as the mark otherwise; the accessible name always carries both. */
 .rulerMark {
   font-size: 0.86rem;
 }
 .rulerName {
   display: none;
 }
-@container (min-width: 32rem) {
+@container (min-width: 28rem) {
   .rulerMark {
     display: none;
   }
@@ -501,6 +516,12 @@
 @media (min-width: 640px) {
   .captions {
     padding-inline: 1.5rem;
+  }
+}
+/* portrait tablets set the promise large: the red-pen loop around "before" needs its margin */
+@media (min-width: 640px) and (max-aspect-ratio: 21/20) {
+  .heroCap {
+    padding-left: 0.5rem;
   }
 }
 

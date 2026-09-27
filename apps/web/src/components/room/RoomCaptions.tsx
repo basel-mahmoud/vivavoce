@@ -75,7 +75,7 @@ export function HeroCopy({
         </span>
         <span className="block">
           <Rise i={4}>
-            <RedPen mark="circle" play="manual" show={fontsReady} delay={700}>
+            <RedPen mark="circle" play="manual" show={fontsReady} delay={700} iterations={1}>
               before
             </RedPen>
           </Rise>{' '}
