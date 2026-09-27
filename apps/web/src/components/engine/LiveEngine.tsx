@@ -124,6 +124,29 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
     const t = window.setTimeout(() => setAsk(null), ((speakDuration(QUESTIONS[ask.q]!) + ASK_HOLD) * 1000) / stageScale());
     return () => window.clearTimeout(t);
   }, [ask]);
+
+  // The verdict board turns its first words in as it arrives on screen. It mounts turning (off
+  // screen, unseen) and mounts again the first time it arrives, so the arrival never rests on the
+  // board's own in-view reveal: that reads only the first of a batch of observer entries, and a
+  // busy page (or a restored scroll) that batches "off screen" with "arrived" left it blank for good.
+  const boardBox = useRef<HTMLDivElement>(null);
+  const [boardTake, setBoardTake] = useState(0);
+  useEffect(() => {
+    const el = boardBox.current;
+    if (!el) return;
+    let away = false;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => !e.isIntersecting)) away = true;
+        if (!entries[entries.length - 1]?.isIntersecting) return;
+        io.disconnect();
+        if (away) setBoardTake(1);
+      },
+      { rootMargin: '0px 0px -8% 0px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   const next = useCallback(() => {
     dispatch({ type: 'next' });
     setAsk((a) => ({ q: (questionRef.current + 1) % QUESTIONS.length, n: (a?.n ?? 1) + 1 }));
@@ -440,8 +463,18 @@ export function LiveEngine({ id = 'live' }: { id?: string }) {
                       : 'Your voice'
               }
             />
-            <div className={styles.verdict}>
-              <SplitFlap rows={board.rows} label={board.label} play="inview" size="md" columns={BOARD_COLUMNS} lines={2} flips={4} className={styles.board} />
+            <div ref={boardBox} className={styles.verdict}>
+              <SplitFlap
+                key={boardTake}
+                rows={board.rows}
+                label={board.label}
+                play="mount"
+                size="md"
+                columns={BOARD_COLUMNS}
+                lines={2}
+                flips={4}
+                className={styles.board}
+              />
               <p className={styles.fix} data-show={marked && b.board ? '' : undefined}>
                 {marked ? (result.improvement ?? result.summary) : ''}
               </p>
