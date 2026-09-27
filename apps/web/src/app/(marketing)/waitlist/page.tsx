@@ -22,8 +22,14 @@ export default function WaitlistPage() {
     <section aria-labelledby="wl-title" className="vv-wl mx-auto w-full max-w-[1360px] px-4 pb-16 sm:px-5 sm:pb-20">
       <div className="vv-wl-grid">
         <div className="vv-wl-copy">
+          {/* Set line by line, so the heading breaks the same way before and after its
+              typeface arrives and nothing below it jumps. */}
           <h1 id="wl-title" className="vv-hero-title display">
-            Get in before the exam <Stamp>does</Stamp>.
+            <span className="block">Get in</span>
+            <span className="block">before the</span>
+            <span className="block">
+              exam <Stamp>does</Stamp>.
+            </span>
           </h1>
           <p className="vv-hero-intro">
             VivaVoce is in private beta. Write your email on the slip, tear off the stub, and we will bring you in as
