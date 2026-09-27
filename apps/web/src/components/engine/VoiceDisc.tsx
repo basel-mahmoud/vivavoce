@@ -78,25 +78,32 @@ export function VoiceDisc({ phase, subscribe, reduce, overall, stamped, caption,
   const disc = useRef<SVGPathElement>(null);
   const flat = useRef<SVGPathElement>(null);
   const ring = useRef<SVGCircleElement>(null);
-  const shape = useRef<'band' | 'disc'>('band');
+  // what the drawing holds: the resting phrase, the live voice, or the mark disc
+  const shape = useRef<'rest' | 'voice' | 'disc'>('rest');
   const levels = useRef(new Float32Array(HISTORY));
 
   // listening: the band follows the voice, every frame, straight into the DOM
   useEffect(() => {
     const el = wave.current;
     if (!el || phase !== 'listening') return;
-    shape.current = 'band';
+    shape.current = 'voice';
     utils.remove(el);
     const lv = levels.current;
+    let calm = 0;
+    let last = performance.now();
     return subscribe((m) => {
       if (reduce) {
-        lv.fill(m.level);
+        // the thickness only, and slowly: the band breathes with the voice rather than flickering
+        const now = performance.now();
+        calm += (m.level - calm) * (1 - Math.exp(-(now - last) / 400));
+        last = now;
+        lv.fill(calm);
         el.setAttribute('d', band(lv, HISTORY, AMP * 0.7));
       } else el.setAttribute('d', band(m.history, HISTORY));
     });
   }, [phase, subscribe, reduce]);
 
-  // stopping: collapse into the disc; resetting: open back out into the resting phrase
+  // stopping: collapse into the disc; otherwise open back out into the resting phrase
   useEffect(() => {
     const el = wave.current;
     const target = disc.current;
@@ -108,8 +115,10 @@ export function VoiceDisc({ phase, subscribe, reduce, overall, stamped, caption,
       shape.current = 'disc';
       if (reduce) el.setAttribute('d', DISC);
       else anim = animate(el, { d: svg.morphTo(target, 0.5), duration: 560 / stageScale(), ease: ANIME_EASE.inOut });
-    } else if (!toDisc && phase !== 'listening' && shape.current === 'disc') {
-      shape.current = 'band';
+    } else if (!toDisc && phase !== 'listening' && shape.current !== 'rest') {
+      // started over after marking, or a take that ended unmarked (too short, nothing heard,
+      // cancelled): the drawing settles back into the resting phrase
+      shape.current = 'rest';
       if (reduce) el.setAttribute('d', REST_BAND);
       else anim = animate(el, { d: svg.morphTo(line, 0.5), duration: 380 / stageScale(), ease: ANIME_EASE.out });
     }
