@@ -148,9 +148,10 @@ function stamp(ctx: OutroContext) {
     'ease-out',
     'none',
   );
-  // on the square the strokes take the icon's own colours (on night paper they were lifted)
-  play(q('.vvb-icon'), [{ opacity: 0 }, { opacity: 1 }], 60, hit);
-  play(draw, [{ opacity: 1 }, { opacity: 0 }], 60, hit + 30);
+  // on the square the strokes take the icon's own colours (on night paper they were lifted): a cut
+  // on the frame of contact, hidden in the impact, never a fade through grey
+  play(q('.vvb-icon'), [{ opacity: 0 }, { opacity: 1 }], 1, hit);
+  play(draw, [{ opacity: 1 }, { opacity: 0 }], 1, hit);
   // a beat on the finished mark before the portal
   window.setTimeout(ctx.stamped, hit + (quick ? give * 0.4 : give + 80));
 }
