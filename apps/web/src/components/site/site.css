@@ -516,6 +516,21 @@
       font-size: 0.75rem;
     }
   }
+  /* The narrowest phones: every signed line still reads in full. */
+  @media (max-width: 379px) {
+    .vv-note {
+      padding-right: 0.75rem;
+    }
+    .vv-note-sig {
+      gap: 0.5rem;
+    }
+    .vv-note-line {
+      font-size: 0.85rem;
+    }
+    .vv-note-name {
+      font-size: 0.66rem;
+    }
+  }
 
   .vv-foot-links {
     display: grid;
@@ -1726,6 +1741,25 @@
     .vv-entry-body {
       max-width: 44rem;
       padding: 2.1rem 2.5rem 2.3rem 2.25rem;
+    }
+  }
+  /* Narrow phones: a slimmer margin, so the entry keeps a readable measure. */
+  @media (max-width: 479px) {
+    .vv-journal {
+      --margin-w: 4.6rem;
+    }
+    .vv-entry-margin {
+      padding-inline: 0.25rem;
+    }
+    .vv-entry-margin .vv-portrait {
+      width: 3.2rem !important;
+    }
+    .vv-entry-note {
+      max-width: 4.1rem;
+      font-size: 0.72rem;
+    }
+    .vv-entry-body {
+      padding: 1.35rem 1rem 1.5rem 0.95rem;
     }
   }
 }
