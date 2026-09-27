@@ -7,8 +7,12 @@
 @layer components {
   /* ── RedPen ─────────────────────────────────────────────────────────── */
 
+  /* Positioned, so each mark's drawing is placed against its own words, never
+     against a far ancestor whose containment can change (a section laid out
+     on approach, a print layout), which would carry the strokes away. */
   .vv-redpen {
     --rp-color: var(--color-verm-text);
+    position: relative;
   }
   .vv-redpen[data-tone='bright'] {
     --rp-color: var(--color-verm);
