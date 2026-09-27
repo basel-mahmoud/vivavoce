@@ -57,22 +57,26 @@ function useReduce(): boolean {
 /**
  * Whether to start the live room at all, and when: never without WebGL or when the visitor asks
  * to save data, and otherwise only after the first paint, once the browser is idle (or within two
- * seconds), so the poster and the words are what the page paints first. WebGL is probed here, after
- * hydration, not while hydrating. The room's downloads (the cast, its maps and label fonts) start as
- * soon as the page has hydrated: the network is free by then, and they arrive while the room's code
- * does instead of after it.
+ * seconds), so the poster and the words are what the page paints first. The room's downloads (the
+ * cast, its maps and label fonts) start as soon as the page has hydrated, wherever the browser has
+ * WebGL at all: the network is free by then, and they arrive while the room's code does instead of
+ * after it. Whether this device really gives the page a context is asked in the idle moment itself,
+ * in a task of its own (making a context is not free), never while hydrating.
  */
 function useLiveRoom(): boolean {
   const [start, setStart] = useState(false);
   useEffect(() => {
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-    if (connection?.saveData || !hasWebGL()) return;
+    if (connection?.saveData || typeof WebGLRenderingContext === 'undefined') return;
     prefetchRoom();
     let idle = 0;
     let timer = 0;
+    const go = () => {
+      if (hasWebGL()) setStart(true);
+    };
     const frame = requestAnimationFrame(() => {
-      if (typeof window.requestIdleCallback === 'function') idle = window.requestIdleCallback(() => setStart(true), { timeout: 2000 });
-      else timer = window.setTimeout(() => setStart(true), 300);
+      if (typeof window.requestIdleCallback === 'function') idle = window.requestIdleCallback(go, { timeout: 2000 });
+      else timer = window.setTimeout(go, 300);
     });
     return () => {
       cancelAnimationFrame(frame);
