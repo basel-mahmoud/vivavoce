@@ -23,11 +23,20 @@ export function DocToc({ items }: { items: readonly DocHeading[] }) {
       for (const h of heads) if (h.getBoundingClientRect().top <= line) current = h.id;
       setActive(current);
     };
-    // Headings crossing the line are the only moments the answer can change.
-    const io = new IntersectionObserver(pick, { rootMargin: '0px 0px -68% 0px' });
-    heads.forEach((h) => io.observe(h));
+    // Headings crossing the line are the only moments the answer can change; a jump
+    // (Home, a link, a restored scroll) can skip the line altogether, so headings
+    // entering or leaving the window are asked too.
+    const line = new IntersectionObserver(pick, { rootMargin: '0px 0px -68% 0px' });
+    const view = new IntersectionObserver(pick);
+    heads.forEach((h) => {
+      line.observe(h);
+      view.observe(h);
+    });
     pick();
-    return () => io.disconnect();
+    return () => {
+      line.disconnect();
+      view.disconnect();
+    };
   }, [items]);
 
   return (
