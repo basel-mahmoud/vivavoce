@@ -1,4 +1,4 @@
-import { z } from '@/lib/zod-client';
+import * as z from '@/lib/zod-client';
 import type { DemoData } from './engine';
 
 /**

@@ -1,14 +1,13 @@
 import { RoomStory } from '@/components/room/RoomStory';
-import { LiveEngine } from '@/components/engine/LiveEngine';
-import { Modes } from '@/components/home/Modes';
-import { Subjects } from '@/components/home/Subjects';
-import { Rooms } from '@/components/home/Rooms';
+import { LiveEngine, Modes, Rooms, Subjects, WarmSections } from '@/components/home/lazy';
 import { Close, Privacy } from '@/components/home/Closing';
 import { Deferred } from '@/components/home/Deferred';
 import { EnginePlaceholder } from '@/components/home/EnginePlaceholder';
 import { SectionBoundary } from '@/components/home/SectionBoundary';
 import { StaticHero } from '@/components/home/StaticHero';
 import { pageMeta, site } from '@/lib/site';
+// The live engine's code loads after the first screen; its styles must not wait for it.
+import '@/components/engine/engine.module.css';
 
 export const metadata = pageMeta({ description: site.description, path: '/' });
 
@@ -51,6 +50,7 @@ export default function HomePage() {
       <Deferred height="1000px">
         <Close />
       </Deferred>
+      <WarmSections names={['engine', 'modes', 'subjects', 'rooms']} />
     </>
   );
 }

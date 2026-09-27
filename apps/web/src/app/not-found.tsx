@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Nav } from '@/components/site/Nav';
 import { MotionProvider } from '@/components/site/MotionProvider';
-import { NotOnThePaper } from '@/components/site/NotOnThePaper';
+import { NotOnThePaperLazy } from '@/components/site/NotOnThePaperLazy';
 
 // Next marks 404 responses noindex by itself.
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export default function NotFound() {
     <MotionProvider>
       <Nav markCurrent={false} />
       <main id="main" tabIndex={-1} className="outline-none">
-        <NotOnThePaper />
+        <NotOnThePaperLazy />
       </main>
     </MotionProvider>
   );

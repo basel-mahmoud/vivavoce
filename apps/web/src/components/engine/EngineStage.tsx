@@ -14,6 +14,7 @@ import { HERO_COINS, HERO_COINS_COMPACT, bodyPoints, coinPoints, coinVec, frame,
 import { EXAMINERS, SEATS, VISORS } from '@/components/room/examiners/rig';
 import { verdictFace } from '@/components/room/data';
 import type { DofState } from '@/components/room/Director';
+import { precompile } from '@/components/room/compile';
 import { ASK_HOLD, BEAT, beatsAt, conferProgress, speakDuration, speechEnvelope } from './choreo';
 import type { Meter } from './useMicMeter';
 import { holdStageClock, stageNow, type StageCue, type StageOverlays } from './stage';
@@ -392,18 +393,17 @@ function DrawCounter({ tier }: { tier: Tier }) {
   return null;
 }
 
-/** Counts rendered frames once the panel (and post) are ready, then reveals the canvas. */
+/**
+ * Counts rendered frames once the panel (and post) are ready, then reveals the canvas. The cast's
+ * programs are compiled before it is drawn (StagePanel) and the set's in the frames before this.
+ */
 function Reveal({ ready, onReady }: { ready: boolean; onReady: () => void }) {
-  const gl = useThree((s) => s.gl);
-  const scene = useThree((s) => s.scene);
-  const camera = useThree((s) => s.camera);
   const frames = useRef(-1);
   const done = useRef(false);
   useEffect(() => {
     if (!ready) return;
-    gl.compile(scene, camera);
     frames.current = 0;
-  }, [ready, gl, scene, camera]);
+  }, [ready]);
   useFrame(() => {
     if (done.current || frames.current < 0) return;
     frames.current += 1;
@@ -413,6 +413,16 @@ function Reveal({ ready, onReady }: { ready: boolean; onReady: () => void }) {
     }
   });
   return null;
+}
+
+/** The panel, its programs compiled (in the variant the frames use) before it is first drawn. */
+function StagePanel(props: Omit<React.ComponentProps<typeof Panel>, 'prepare'> & { viaComposer: boolean }) {
+  const { viaComposer, ...rest } = props;
+  const gl = useThree((s) => s.gl);
+  const camera = useThree((s) => s.camera);
+  const scene = useThree((s) => s.scene);
+  const prepare = useCallback((root: THREE.Object3D) => precompile(gl, root, camera, scene, viaComposer), [gl, camera, scene, viaComposer]);
+  return <Panel {...rest} prepare={prepare} />;
 }
 
 export interface EngineStageProps {
@@ -465,8 +475,14 @@ export default function EngineStage({ cueRef, meterRef, overlaysRef, dark, activ
       dpr={DPR[tier]}
       frameloop={active && !stepping ? 'always' : 'never'}
       camera={{ fov: 22, near: 0.25, far: 140, position: [0, 2.2, 12] }}
-      gl={{ antialias: tier === 1, alpha: false, powerPreference: 'high-performance', toneMapping: THREE.NeutralToneMapping }}
-      onCreated={({ gl }) => gl.setClearColor(dark ? CANVAS.dark : CANVAS.light, 1)}
+      // as in the room: a marketing page never wakes the discrete GPU of a dual-GPU laptop (the switch
+      // itself stalls the page, and the room's context would move with it)
+      gl={{ antialias: tier === 1, alpha: false, powerPreference: 'default', toneMapping: THREE.NeutralToneMapping }}
+      onCreated={({ gl }) => {
+        gl.setClearColor(dark ? CANVAS.dark : CANVAS.light, 1);
+        // the shaders are fixed and checked in development; skipping the info-log reads saves stalls
+        gl.debug.checkShaderErrors = process.env.NODE_ENV !== 'production';
+      }}
       aria-hidden
       tabIndex={-1}
     >
@@ -494,7 +510,14 @@ export default function EngineStage({ cueRef, meterRef, overlaysRef, dark, activ
         <Riser dark={dark} shadows={shadows} />
         <Lamp dark={dark} />
         {/* stepped frames are already on the round's (possibly slowed) clock: the cast takes them as they come */}
-        <Panel channelsRef={channelsRef} dark={dark} shadows={shadows} onReady={onCast} timeScale={stepping ? 1 : undefined} />
+        <StagePanel
+          channelsRef={channelsRef}
+          dark={dark}
+          shadows={shadows}
+          onReady={onCast}
+          timeScale={stepping ? 1 : undefined}
+          viaComposer={tier >= 2}
+        />
         <Reveal ready={panel && post} onReady={onReady} />
         {process.env.NODE_ENV !== 'production' && <DrawCounter tier={tier} />}
         {process.env.NODE_ENV !== 'production' && stepping && <Stepper />}

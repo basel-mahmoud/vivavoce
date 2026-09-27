@@ -14,7 +14,7 @@ The only external files are the OFL fonts already in `public/fonts` (licences ne
 
 | Path | Contents |
 | --- | --- |
-| `public/models/examiners.glb` | The cast and the bench. `KHR_mesh_quantization` only (no Draco, meshopt or KTX2), no images. 1,059,100 bytes raw, 510,114 bytes gzipped. |
+| `public/models/examiners.glb` | The cast and the bench. `KHR_mesh_quantization` plus `EXT_meshopt_compression` (lossless, no filters; no Draco or KTX2), no images. 560,176 bytes raw, about 275 KB with the CDN's brotli (1,059,100 and 497 KB before meshopt). The page decodes it with the plain-JavaScript meshopt decoder (`src/components/room/panel/meshopt.ts`), since the CSP rules out WebAssembly. |
 | `public/models/examiners-*.webp` | Five tiling detail maps, 60 KB in total, loaded with `TextureLoader` (`rig.ts` `DETAIL_TEXTURES`). |
 | `public/examiners/<key>-<state>.webp` | 30 head-and-shoulders sprites, 360 x 360, transparent, 14 to 22 KB each. States: neutral, listening, pleased, sceptical, speaking, marking. |
 | `public/examiners/<key>-raised.webp` | 5 half-body sprites with the paddle raised, 480 x 600, transparent, 26 to 38 KB. |
@@ -34,6 +34,11 @@ node scripts/examiners/textures.mjs
 #    @generated block of rig.ts. Add `-- --no-bake` for a quick look without baked AO.
 blender -b --factory-startup --python scripts/examiners/build_examiners.py
 
+# 2b. Compress the GLB's geometry in place (EXT_meshopt_compression, lossless and checked by a
+#     round trip), then refresh the asset versions the page caches it under.
+node scripts/examiners/compress.mjs
+node scripts/asset-versions.mjs
+
 # 3. Sprites and the PORTRAIT_COINS block of rig.ts (about 4 minutes in SwiftShader)
 PLAYWRIGHT_MODULE="$(npm root -g)/playwright/index.mjs" node scripts/examiners/render.mjs portraits
 
@@ -42,7 +47,7 @@ node scripts/examiners/render.mjs faces /tmp/faces.png        # 10 states x 5 ey
 node scripts/examiners/render.mjs sheet /tmp/sprites.png      # every sprite on both canvases
 ```
 
-Steps 1 and 2 are deterministic: a rebuild gives byte-identical maps, GLB and `rig.ts`.
+Steps 1, 2 and 2b are deterministic: a rebuild gives byte-identical maps, GLB and `rig.ts`.
 
 `render.mjs` bundles `faceMaterial.ts` and `rig.ts` with esbuild (installed with `tsx`), serves the
 `studio/` pages from a temporary folder on a local port and renders them in headless Chromium.
@@ -52,6 +57,8 @@ Playwright is not an app dependency. Point `PLAYWRIGHT_MODULE` at an installed c
 
 | File | Role |
 | --- | --- |
+| `label-fonts.mjs` | Cuts the 3D labels' fonts down to the glyphs they use (fontTools); `label-fonts.test.ts` checks the cut covers every label. |
+| `compress.mjs` | Step 2b: meshopt-encodes every buffer view of the GLB (vertex data byte for byte, triangles in the same winding) and checks the round trip before writing. |
 | `build_examiners.py` | The whole cast: lathed superellipse shells split into Body and Head pivots, SDF parts (`sdf.py`), the rest-pose contact solve for the hands, merging per pivot per material, a Cycles AO bake into `COLOR_0.a`, glTF export and the quantising packer. |
 | `sdf.py` | A small numpy SDF kit: smooth unions, surface nets and Newton projection. |
 | `textures.mjs` | Orange peel, grooves, grain, fibre and speckle, from a fixed integer hash. |
@@ -70,6 +77,9 @@ Playwright is not an app dependency. Point `PLAYWRIGHT_MODULE` at an installed c
   `createFaceMaterial(...)`. Share the returned map across the cast.
 - **Vertex colours.** `COLOR_0.rgb` is the accent albedo (or a multiplier on the shells' brand
   colour) and `COLOR_0.a` is baked ambient occlusion. The material patch applies it to indirect light.
+- **Compression.** Every buffer view is `EXT_meshopt_compression` (required): load the file with
+  `GLTFLoader.setMeshoptDecoder(...)`. The page passes `meshoptDecoder` from
+  `src/components/room/panel/meshopt.ts`; the studio pages use three's WebAssembly decoder.
 - **Quantisation.** Static positions are normalized SHORT with the dequantisation folded into each
   leaf node's scale and translation, normals are BYTE and colours UNSIGNED_BYTE. Read positions
   through the node transform, never as metres.
@@ -84,9 +94,11 @@ Playwright is not an app dependency. Point `PLAYWRIGHT_MODULE` at an installed c
 ## Runtime notes for the scene
 
 - troika-three-text must run with `configureTextBuilder({ useWorker: false })`: the site's CSP
-  blocks its blob worker. Paddle marks use `/fonts/jetbrains-mono-700.woff` on the `PaddleFront_`
-  anchors, axis names use `/fonts/archivo-900.woff` on `PaddleBack_` and the `BenchLabel_` anchors
-  (butter `#ffc838`, `curveRadius` from `BENCH_LABELS`).
+  blocks its blob worker. Paddle marks use `/fonts/jetbrains-mono-700-digits.woff` on the
+  `PaddleFront_` anchors, axis names use `/fonts/archivo-900-labels.woff` on `PaddleBack_` and the
+  `BenchLabel_` anchors (butter `#ffc838`, `curveRadius` from `BENCH_LABELS`). Those two are subsets
+  of the full fonts beside them (digits; A to Z and a to z), cut by `label-fonts.mjs` so the page
+  fetches and parses about 7 KB instead of 46 KB; a label with any other character needs a new cut.
 - N8AO: set `configuration.transparencyAware = false`. Otherwise it renders every transparent
   object (troika glyphs, the loupe lens) twice more per frame. In the hero that is 129 draw calls
   against 115.

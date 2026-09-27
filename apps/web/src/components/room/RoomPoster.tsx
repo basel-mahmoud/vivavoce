@@ -1,3 +1,4 @@
+import { asset } from '@/lib/assets';
 import { cn } from '@/lib/cn';
 import styles from './room.module.css';
 
@@ -8,9 +9,12 @@ const DARK_COMPACT = `${DARK} and (max-width: 599px), ${DARK} and (max-aspect-ra
 
 /** Rendered from the live scene by scripts/room/posters.mjs (see its header for provenance). */
 export const POSTERS = {
-  wide: { light: '/room/hero-light-1440', dark: '/room/hero-dark-1440', width: 1440, height: 900 },
-  compact: { light: '/room/hero-light-390', dark: '/room/hero-dark-390', width: 780, height: 1688 },
+  wide: { light: 'hero-light-1440', dark: 'hero-dark-1440', width: 1440, height: 900 },
+  compact: { light: 'hero-light-390', dark: 'hero-dark-390', width: 780, height: 1688 },
 } as const;
+
+/** A poster file (versioned, so it is cached for a year). */
+const src = (name: string, type: 'avif' | 'webp') => asset(`/room/${name}.${type}`);
 
 export const POSTER_ALT =
   'An example round: five examiners at a cobalt bench hold up their marks, 71, 66, 48, 62 and 54. Structure, the weakest at 48, leans in to ask the follow-up.';
@@ -26,15 +30,15 @@ export function RoomPoster({ hidden }: { hidden: boolean }) {
   const { wide, compact } = POSTERS;
   return (
     <picture>
-      <source media={DARK_COMPACT} type="image/avif" srcSet={`${compact.dark}.avif`} width={compact.width} height={compact.height} />
-      <source media={DARK_COMPACT} type="image/webp" srcSet={`${compact.dark}.webp`} width={compact.width} height={compact.height} />
-      <source media={COMPACT} type="image/avif" srcSet={`${compact.light}.avif`} width={compact.width} height={compact.height} />
-      <source media={COMPACT} type="image/webp" srcSet={`${compact.light}.webp`} width={compact.width} height={compact.height} />
-      <source media={DARK} type="image/avif" srcSet={`${wide.dark}.avif`} />
-      <source media={DARK} type="image/webp" srcSet={`${wide.dark}.webp`} />
-      <source type="image/avif" srcSet={`${wide.light}.avif`} />
+      <source media={DARK_COMPACT} type="image/avif" srcSet={src(compact.dark, 'avif')} width={compact.width} height={compact.height} />
+      <source media={DARK_COMPACT} type="image/webp" srcSet={src(compact.dark, 'webp')} width={compact.width} height={compact.height} />
+      <source media={COMPACT} type="image/avif" srcSet={src(compact.light, 'avif')} width={compact.width} height={compact.height} />
+      <source media={COMPACT} type="image/webp" srcSet={src(compact.light, 'webp')} width={compact.width} height={compact.height} />
+      <source media={DARK} type="image/avif" srcSet={src(wide.dark, 'avif')} />
+      <source media={DARK} type="image/webp" srcSet={src(wide.dark, 'webp')} />
+      <source type="image/avif" srcSet={src(wide.light, 'avif')} />
       <img
-        src={`${wide.light}.webp`}
+        src={src(wide.light, 'webp')}
         width={wide.width}
         height={wide.height}
         alt={POSTER_ALT}

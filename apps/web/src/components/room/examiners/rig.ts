@@ -10,6 +10,8 @@
  */
 import * as THREE from 'three';
 import type { FaceState } from './faceMaterial';
+import { DETAIL_TEXTURES } from '../assets';
+import { asset } from '../../../lib/assets';
 
 /* ── Names ────────────────────────────────────────────────────────────── */
 
@@ -1040,8 +1042,8 @@ export const PORTRAIT_STATES = ['neutral', 'listening', 'pleased', 'sceptical', 
 export type PortraitState = (typeof PORTRAIT_STATES)[number];
 /** Sprite sizes in px (width, height): head and shoulders, and the half body with the paddle raised. */
 export const PORTRAIT_SIZE = { head: [360, 360], raised: [480, 600] } as const;
-export const portraitSrc = (key: ExaminerKey, state: PortraitState) => `/examiners/${key}-${state}.webp`;
-export const raisedSrc = (key: ExaminerKey) => `/examiners/${key}-raised.webp`;
+export const portraitSrc = (key: ExaminerKey, state: PortraitState) => asset(`/examiners/${key}-${state}.webp`);
+export const raisedSrc = (key: ExaminerKey) => asset(`/examiners/${key}-raised.webp`);
 
 /**
  * The raised sprites hold a blank coin square to the camera: set the live mark over it in JetBrains
@@ -1082,19 +1084,8 @@ export const PORTRAIT_COINS: Record<ExaminerKey, { readonly x: number; readonly 
 
 export type Scheme = 'light' | 'dark';
 
-/** Tiling detail maps shipped as separate same-origin files (never inside the GLB). */
-export const DETAIL_TEXTURES = {
-  /** powder-coat orange peel with pinholes (normal) */
-  peel: '/models/examiners-peel-n.webp',
-  /** one smooth groove per tile along v (normal): machined grooves, page edges, conduit ribs */
-  grooves: '/models/examiners-grooves-n.webp',
-  /** fine isotropic grain (normal): ceramic, lacquer, bench */
-  grain: '/models/examiners-grain-n.webp',
-  /** paper fibre and velvet nap (normal) */
-  fibre: '/models/examiners-fibre-n.webp',
-  /** speckle (albedo multiplier, mean ~0.92): powder coat and stone */
-  speckle: '/models/examiners-speckle.webp',
-} as const;
+/** Tiling detail maps shipped as separate same-origin files (never inside the GLB); URLs in ../assets.ts. */
+export { DETAIL_TEXTURES };
 export type DetailName = keyof typeof DETAIL_TEXTURES;
 export type DetailTextures = Record<DetailName, THREE.Texture>;
 

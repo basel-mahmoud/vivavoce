@@ -25,6 +25,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { createFaceMaterial, lensOnFace, FACE_STATES } from './lib/faceMaterial.js';
 import * as RIG from './lib/rig.js';
 
@@ -82,7 +83,8 @@ const camera = new THREE.PerspectiveCamera(22, W / H, 0.3, 80);
 }
 
 /* Model, detail maps and the shared materials, exactly as the site loads them. */
-const gltf = await new GLTFLoader().loadAsync('models/examiners.glb');
+// the geometry is meshopt-compressed (compress.mjs); the studio has no CSP, so the WebAssembly decoder does
+const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync('models/examiners.glb');
 const root = gltf.scene;
 scene.add(root);
 const manager = new THREE.LoadingManager();

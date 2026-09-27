@@ -6,7 +6,7 @@ files involved are the OFL fonts in `public/fonts` (licences beside them).
 
 | Shipped file | Origin | Made by |
 | --- | --- | --- |
-| `public/models/examiners.glb` | The cast and the bench, modelled in code (lathed shells, SDF parts, a baked AO pass). | `scripts/examiners/build_examiners.py` (Blender 4.5, `blender -b --factory-startup --python ...`) |
+| `public/models/examiners.glb` | The cast and the bench, modelled in code (lathed shells, SDF parts, a baked AO pass), its geometry then meshopt-compressed without loss. | `scripts/examiners/build_examiners.py` (Blender 4.5, `blender -b --factory-startup --python ...`), then `scripts/examiners/compress.mjs` |
 | `public/models/examiners-*.webp` | Five tiling detail maps (peel, grooves, grain, fibre, speckle) from a fixed integer hash. A rebuild is byte-identical. | `scripts/examiners/textures.mjs` |
 | `public/examiners/<axis>-<state>.webp` | 35 sprites of the same cast: 30 heads (360 x 360) and 5 raised-paddle half bodies (480 x 600), rendered in headless Chromium from `examiners.glb` and encoded with sharp. | `scripts/examiners/render.mjs portraits` (`studio/portrait.html`) |
 | `public/room/hero-*.{avif,webp}` | Posters of the live room scene, captured with Playwright. | `scripts/room/posters.mjs` |

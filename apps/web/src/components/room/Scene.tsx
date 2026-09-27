@@ -7,11 +7,13 @@ import { PerformanceMonitor } from '@react-three/drei';
 import type { MotionValue } from 'motion/react';
 import { Panel } from './panel/Panel';
 import { createChannels, type PanelChannels } from './panel/channels';
-import type { Cast } from './panel/cast';
+import { warmLabels, type Cast } from './panel/cast';
+import { loadDetailTextures, loadModel } from './panel/load';
 import { Studio, type FocusLight } from './set/Studio';
 import { CANVAS, Cyclorama } from './set/Cyclorama';
 import { Lamp, Mic, Riser } from './set/Props';
 import { Director, type DofState, type RoomCue, type RoomOverlays, type RoundState } from './Director';
+import { precompile } from './compile';
 import type { Insets, ShotSet } from './camera';
 import { stillAt } from './story';
 
@@ -22,7 +24,9 @@ export type { RoomCue, RoomOverlays, RoundState } from './Director';
  * The post chain (N8AO, SMAA, depth of field) is its own chunk, fetched only on desktop tiers. If
  * it cannot be fetched the room goes on without it, as it does on phones.
  */
-const Post = lazy<ComponentType<PostProps>>(() => import('./Post').catch(() => ({ default: NoPost })));
+let postChunk: Promise<{ default: ComponentType<PostProps> }> | null = null;
+const loadPost = () => (postChunk ??= import('./Post').catch(() => ({ default: NoPost })));
+const Post = lazy<ComponentType<PostProps>>(loadPost);
 
 interface PostProps {
   tier: 2 | 3;
@@ -54,6 +58,15 @@ function guessTier(): Tier {
   const narrow = window.innerWidth < 768;
   const cores = navigator.hardwareConcurrency ?? 4;
   return coarse || narrow || cores <= 2 ? 1 : 2;
+}
+
+// As soon as this module runs (on desktops the page takes the room's code while the cast downloads),
+// not when the canvas mounts: parse the cast and wrap its maps (plain script, no GPU needed), and on
+// desktop tiers fetch the post chain.
+if (typeof window !== 'undefined') {
+  loadModel().catch(() => {});
+  loadDetailTextures().catch(() => {});
+  if (guessTier() > 1) void loadPost();
 }
 
 function forcedTier() {
@@ -185,6 +198,12 @@ function Room({
   const maskRef = useRef(new THREE.Vector4(-2, -1, -2, -1));
   const edgeRef = useRef(new THREE.Vector4(0.04, 0.04, 0.06, 0.06));
   const shadows = tier >= 2;
+  const gl = useThree((s) => s.gl);
+  const camera = useThree((s) => s.camera);
+  const scene = useThree((s) => s.scene);
+  // desktop tiers draw through the post chain (Post.tsx); phones straight to the screen
+  const viaComposer = tier >= 2;
+  const prepare = useCallback((root: THREE.Object3D) => precompile(gl, root, camera, scene, viaComposer), [gl, camera, scene, viaComposer]);
   const onCast = useCallback(
     (c: Cast) => {
       castRef.current = c;
@@ -218,26 +237,25 @@ function Room({
       <Riser dark={dark} shadows={shadows} />
       <Lamp dark={dark} />
       <Mic shotsRef={shotsRef} weightRef={micWeightRef} />
-      <Panel channelsRef={channelsRef} dark={dark} shadows={shadows} onReady={onCast} />
+      <Panel channelsRef={channelsRef} dark={dark} shadows={shadows} onReady={onCast} prepare={prepare} />
     </>
   );
 }
 
-/** Counts rendered frames after the panel is ready, then reveals the canvas. */
+/**
+ * Counts rendered frames after the panel is ready, then reveals the canvas. The cast's programs are
+ * compiled before it is drawn (Panel's `prepare`) and the set's in the frames before this, all
+ * behind the poster, in the variant the frames use.
+ */
 function Reveal({ ready, onReady }: { ready: boolean; onReady: () => void }) {
-  const gl = useThree((s) => s.gl);
-  const scene = useThree((s) => s.scene);
-  const camera = useThree((s) => s.camera);
   const invalidate = useThree((s) => s.invalidate);
   const frames = useRef(-1);
   const done = useRef(false);
   useEffect(() => {
     if (!ready) return;
-    // compile every program now, behind the poster, so the first visible frames do not hitch
-    gl.compile(scene, camera);
     frames.current = 0;
     invalidate();
-  }, [ready, gl, scene, camera, invalidate]);
+  }, [ready, invalidate]);
   useFrame(() => {
     if (done.current || frames.current < 0) return;
     frames.current += 1;
@@ -259,6 +277,13 @@ export default function Scene({ progress, active, playing, reduce, paused, dark,
   const [post, setPost] = useState(tier === 1);
   const onPanel = useCallback(() => setPanel(true), []);
   const onPost = useCallback(() => setPost(true), []);
+
+  // While the cast downloads: fetch the post chain (desktop tiers) and set the labels' glyphs, so
+  // neither waits for the model.
+  useEffect(() => {
+    if (startTier > 1) void loadPost();
+    warmLabels();
+  }, [startTier]);
 
   // if the post chunk is slow or fails, reveal without it rather than never
   useEffect(() => {
@@ -285,6 +310,8 @@ export default function Scene({ progress, active, playing, reduce, paused, dark,
       }}
       onCreated={({ gl }) => {
         gl.setClearColor(dark ? CANVAS.dark : CANVAS.light, 1);
+        // the shaders are fixed and checked in development; skipping the info-log reads saves stalls
+        gl.debug.checkShaderErrors = process.env.NODE_ENV !== 'production';
         // a lost context (a GPU reset, a phone reclaiming memory) hands the stage back to the poster
         gl.domElement.addEventListener('webglcontextlost', onLost, { once: true });
       }}

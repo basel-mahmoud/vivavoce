@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import assetVersions from './src/lib/asset-versions.json';
 
 /**
  * Security headers applied to every response. CSP is intentionally strict;
@@ -39,6 +40,23 @@ const securityHeaders = [
   },
 ];
 
+/**
+ * The public folders the pages reference through `asset()` (src/lib/assets.ts), which adds each
+ * folder's content version as `?v=`: those URLs change whenever a file does, so browsers and the CDN
+ * keep them for a year without asking again. A request without the version (an old link) gets an
+ * hour, refreshed in the background. Everything else in public/ keeps the platform default.
+ */
+const LONG_CACHE = 'public, max-age=31536000, immutable';
+const SHORT_CACHE = 'public, max-age=3600, stale-while-revalidate=86400';
+const assetHeaders = Object.keys(assetVersions).flatMap((folder) => [
+  { source: `/${folder}/:file*`, headers: [{ key: 'Cache-Control', value: SHORT_CACHE }] },
+  {
+    source: `/${folder}/:file*`,
+    has: [{ type: 'query' as const, key: 'v' }],
+    headers: [{ key: 'Cache-Control', value: LONG_CACHE }],
+  },
+]);
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -50,7 +68,8 @@ const nextConfig: NextConfig = {
     turbopackFileSystemCacheForBuild: false,
   },
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }];
+    // later entries win for the same header, so the versioned rule comes last
+    return [{ source: '/:path*', headers: securityHeaders }, ...assetHeaders];
   },
 };
 

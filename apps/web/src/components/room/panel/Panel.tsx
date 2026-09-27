@@ -1,8 +1,8 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import * as THREE from 'three';
-import { useFrame, useLoader } from '@react-three/fiber';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DETAIL_URLS, MODEL_URL, buildCast, detailMaps, type Cast } from './cast';
+import { use, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
+import { buildCast, detailMaps, type Cast } from './cast';
+import { loadDetailTextures, loadModel } from './load';
 import type { PanelChannels } from './channels';
 import { devTimeScale } from '../dev';
 
@@ -14,6 +14,11 @@ export interface PanelProps {
   shadows: boolean;
   /** Called once the cast is on screen with every mark and label set. */
   onReady?: (cast: Cast) => void;
+  /**
+   * Readies the cast's shader programs before it is first drawn (see room/compile.ts). The cast stays
+   * hidden until this settles, so no frame compiles it mid-draw.
+   */
+  prepare?: (root: THREE.Object3D) => Promise<unknown>;
   /**
    * Development review only: how fast the cast's clock runs against the frames it is given.
    * Defaults to the page's `?timescale`; a stage that steps its own frames on a slowed clock
@@ -30,9 +35,12 @@ const MAX_STEP = 0.1;
  * detail maps load (wrap it in Suspense). Reusable: any director that writes PanelChannels can
  * drive it, in this room or in a second, lighter canvas.
  */
-export function Panel({ channelsRef, dark, shadows, onReady, timeScale }: PanelProps) {
-  const gltf = useLoader(GLTFLoader, MODEL_URL);
-  const textures = useLoader(THREE.TextureLoader, DETAIL_URLS);
+export function Panel({ channelsRef, dark, shadows, onReady, prepare, timeScale }: PanelProps) {
+  // both downloads are usually under way already (assets.ts); ask for both before waiting on either
+  const model = loadModel();
+  const details = loadDetailTextures();
+  const gltf = use(model);
+  const textures = use(details);
   const maps = useMemo(() => detailMaps(textures), [textures]);
   // the cast is built once in the scheme it first meets; later scheme changes swap materials only
   const [initialScheme] = useState<'light' | 'dark'>(dark ? 'dark' : 'light');
@@ -50,11 +58,26 @@ export function Panel({ channelsRef, dark, shadows, onReady, timeScale }: PanelP
   useLayoutEffect(() => cast.setShadows(shadows), [cast, shadows]);
   useEffect(() => () => cast.dispose(), [cast]);
 
+  // the cast is drawn only once its programs are ready (a later tier change must not hide it again)
+  const prepareRef = useRef(prepare);
+  const prepared = useRef<Cast | null>(null);
+  useLayoutEffect(() => {
+    prepareRef.current = prepare;
+  });
+  useLayoutEffect(() => {
+    if (prepared.current !== cast && prepareRef.current) cast.setVisible(false);
+  }, [cast]);
   useEffect(() => {
     let alive = true;
-    void cast.ready.then(() => {
-      if (alive) onReady?.(cast);
-    });
+    void cast.ready
+      .then(() => (prepared.current === cast ? undefined : prepareRef.current?.(cast.root)))
+      .catch(() => {})
+      .then(() => {
+        if (!alive) return;
+        prepared.current = cast;
+        cast.setVisible(true);
+        onReady?.(cast);
+      });
     return () => {
       alive = false;
     };

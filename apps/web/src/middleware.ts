@@ -13,10 +13,11 @@ const configured = Boolean(
 
 export default configured ? clerkMiddleware() : () => NextResponse.next();
 
+/**
+ * Only where auth is read: the dashboard (its layout is the one place Clerk's provider loads, and
+ * its page calls getAuthContext) and the API routes. The marketing pages never ask who is signed
+ * in, so they are served straight from the CDN cache without running the middleware first.
+ */
 export const config = {
-  matcher: [
-    // Skip Next internals and static files; always run for API routes.
-    '/((?!_next|.*\\.(?:ico|png|jpg|jpeg|svg|css|js|woff2?|map)$).*)',
-    '/(api|trpc)(.*)',
-  ],
+  matcher: ['/dashboard(.*)', '/(api|trpc)(.*)'],
 };
