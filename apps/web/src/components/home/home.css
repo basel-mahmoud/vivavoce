@@ -7,9 +7,10 @@
   /* Paper stays paper at night, lit by the lamp. The slips and cards lying on
      the desk (the transcript, the admission slip, the follow-up cards) keep
      the daytime pen, grey and focus ink, mixed on their own paper, so their
-     small text stays legible in both schemes. */
+     small text stays legible in both schemes (the red pen is 4.8:1 on the
+     lamp-lit sheet, 6.2:1 by day). */
   :is(.vv-slip-face, .vv-admit-body, .vv-int-answer, .vv-int-card) {
-    --vv-verm-text: color-mix(in oklab, var(--color-verm) 72%, var(--color-coal));
+    --vv-verm-text: color-mix(in oklab, var(--color-verm) 66%, var(--color-coal));
     --color-verm-text: var(--vv-verm-text);
     --vv-ink-faint: color-mix(in oklab, var(--color-coal) 68%, var(--vv-paper-obj));
     --color-line: color-mix(in oklab, var(--color-coal) 24%, var(--vv-paper-obj));
@@ -586,7 +587,7 @@
     align-self: start;
   }
   .vv-round-card {
-    --vv-verm-text: color-mix(in oklab, var(--color-verm) 72%, var(--color-coal));
+    --vv-verm-text: color-mix(in oklab, var(--color-verm) 66%, var(--color-coal));
     --color-verm-text: var(--vv-verm-text);
     --vv-ink-blue: var(--color-cobalt-deep);
     --color-ink-blue: var(--color-cobalt-deep);
