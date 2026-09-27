@@ -45,14 +45,18 @@ export function PanelOfMarks({ averages, deal = false }: { averages: Readonly<Re
     }
     let parked = deal;
     const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry) return;
-        if (entry.isIntersecting) {
-          io.disconnect();
-          if (parked) setShown(true);
-        } else if (!parked) {
-          parked = true;
-          setShown(false);
+      (entries) => {
+        // Walk every entry in order (off, then on can arrive together), so the deal still plays.
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            io.disconnect();
+            if (parked) setShown(true);
+            return;
+          }
+          if (!parked) {
+            parked = true;
+            setShown(false);
+          }
         }
       },
       { rootMargin: '0px 0px -14% 0px' },

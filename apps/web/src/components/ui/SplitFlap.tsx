@@ -362,15 +362,20 @@ export function SplitFlap({
     }
     let blanked = false;
     const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry) return;
-        if (entry.isIntersecting) {
-          io.disconnect();
-          revealed.current = true;
-          if (blanked) turnTo(target.current, false);
-        } else if (!blanked) {
-          blanked = true;
-          blank();
+      (entries) => {
+        // Walk every entry in order: a busy page can deliver "off screen" and "arrived" in one
+        // callback, and acting on the first alone would blank the board for good.
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            io.disconnect();
+            revealed.current = true;
+            if (blanked) turnTo(target.current, false);
+            return;
+          }
+          if (!blanked) {
+            blanked = true;
+            blank();
+          }
         }
       },
       { rootMargin: '0px 0px -8% 0px' },

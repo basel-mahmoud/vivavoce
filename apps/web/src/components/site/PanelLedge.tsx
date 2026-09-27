@@ -86,14 +86,16 @@ export function PanelLedge() {
     if (!el || reduce) return;
     let raised = false;
     const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry) return;
-        if (entry.isIntersecting) {
-          raised = true;
-          setSunk(false);
-          io.disconnect();
-        } else if (!raised) {
-          setSunk(true);
+      (entries) => {
+        // Walk every entry in order (off, then on can arrive together), so they still rise.
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            raised = true;
+            setSunk(false);
+            io.disconnect();
+            return;
+          }
+          if (!raised) setSunk(true);
         }
       },
       { rootMargin: '0px 0px -6% 0px' },
@@ -108,8 +110,8 @@ export function PanelLedge() {
     const el = ledge.current;
     if (!el || !window.matchMedia(FINE).matches) return;
     const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) return;
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
         io.disconnect();
         for (const axis of PANEL_ORDER) new Image().src = portraitSrc(axis, 'pleased');
       },

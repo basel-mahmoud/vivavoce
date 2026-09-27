@@ -138,16 +138,20 @@ export function Marks({
 
     let parked = false;
     const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry) return;
-        if (entry.isIntersecting) {
-          io.disconnect();
-          entered.current = true;
-          // Already on screen at hydration: keep the value (tumble it if asked).
-          if (parked || scramble) land(scramble, delay);
-        } else if (!parked) {
-          parked = true;
-          park();
+      (entries) => {
+        // Walk every entry in order (off, then on can arrive together), so the marks still land.
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            io.disconnect();
+            entered.current = true;
+            // Already on screen at hydration: keep the value (tumble it if asked).
+            if (parked || scramble) land(scramble, delay);
+            return;
+          }
+          if (!parked) {
+            parked = true;
+            park();
+          }
         }
       },
       { rootMargin: '0px 0px -10% 0px' },

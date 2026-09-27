@@ -106,7 +106,8 @@ export function useSeen<T extends Element>(ref: React.RefObject<T | null>, margi
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver(([entry]) => setSeen(Boolean(entry?.isIntersecting)), {
+    // A callback can carry several entries (off, then on); the last one is the current state.
+    const io = new IntersectionObserver((entries) => setSeen(Boolean(entries[entries.length - 1]?.isIntersecting)), {
       rootMargin: margin,
     });
     io.observe(el);

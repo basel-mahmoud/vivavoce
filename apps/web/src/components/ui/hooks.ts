@@ -10,7 +10,8 @@ export function useOnScreen<T extends Element>(margin = '0px') {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => setOn(Boolean(e?.isIntersecting)), {
+    // A callback can carry several entries (off, then on); the last one is the current state.
+    const io = new IntersectionObserver((entries) => setOn(Boolean(entries[entries.length - 1]?.isIntersecting)), {
       rootMargin: margin,
     });
     io.observe(el);
