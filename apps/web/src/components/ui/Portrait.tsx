@@ -64,25 +64,58 @@ export function Portrait({
 }: PortraitProps) {
   const candidates = state === 'neutral' ? [portraitSrc(axis, 'neutral')] : [portraitSrc(axis, state), portraitSrc(axis, 'neutral')];
   const [failed, setFailed] = useState<readonly string[]>([]);
-  const [loaded, setLoaded] = useState<string | null>(null);
+  // The face on show at full strength, and whether it is fading off the new one.
+  const [shown, setShown] = useState<string | null>(null);
+  const [leaving, setLeaving] = useState(false);
   const active = candidates.find((c) => !failed.includes(c)) ?? null;
   const img = useRef<HTMLImageElement>(null);
+  const current = useRef<string | null>(null);
+  // A face that has loaded and is being faded onto (the old one fading off it).
+  const incoming = useRef<string | null>(null);
+  const fadeTimer = useRef(0);
 
-  // An image can finish (or fail) before hydration attaches onLoad/onError.
+  useEffect(() => () => window.clearTimeout(fadeTimer.current), []);
+
+  const settle = (src: string) => {
+    window.clearTimeout(fadeTimer.current);
+    incoming.current = null;
+    current.current = src;
+    setShown(src);
+    setLeaving(false);
+  };
+
+  /** The new face is in: fade the old one off it (never the other way round). */
+  const arrived = (src: string) => {
+    if (current.current === null || current.current === src) {
+      settle(src);
+      return;
+    }
+    window.clearTimeout(fadeTimer.current);
+    incoming.current = src;
+    setLeaving(true);
+    fadeTimer.current = window.setTimeout(() => settle(src), 240);
+  };
+
   useEffect(() => {
     const el = img.current;
-    if (!el || !active || !el.complete) return;
+    const came = incoming.current;
     const frame = requestAnimationFrame(() => {
-      if (el.naturalWidth > 0) setLoaded(active);
+      // Asked for another face mid-fade: the one that had just come in is on show now,
+      // so nothing fades to an empty frame while the next one loads.
+      if (came && came !== active) settle(came);
+      // An image can finish (or fail) before hydration attaches onLoad/onError.
+      if (!el || !active || !el.complete) return;
+      if (el.naturalWidth > 0) arrived(active);
       else setFailed((f) => (f.includes(active) ? f : [...f, active]));
     });
     return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
   const raised = state === 'raised';
   const height = Math.round(raised ? size * (4 / 3) : size);
   const description = alt ?? `The ${AXIS_LABEL[axis]} examiner, ${STATE_WORD[state]}`;
-  const swapping = loaded !== null && active !== null && loaded !== active;
+  const swapping = shown !== null && active !== null && shown !== active;
   const missing = active === null;
 
   return (
@@ -96,11 +129,8 @@ export function Portrait({
       aria-label={missing && !decorative ? description : undefined}
     >
       {missing ? <ExaminerSilhouette axis={axis} state={state} /> : null}
-      {swapping ? (
-        // eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP sprites; the fallback chain needs onError
-        <img src={loaded} alt="" aria-hidden="true" className="vv-portrait-img" width={size} height={height} />
-      ) : null}
       {active ? (
+        // The new face sits underneath at full strength from the start.
         // eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP sprites; the fallback chain needs onError
         <img
           key={active}
@@ -112,9 +142,21 @@ export function Portrait({
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
           className="vv-portrait-img"
-          data-entering={swapping ? '' : undefined}
-          onLoad={() => setLoaded(active)}
+          onLoad={() => arrived(active)}
           onError={() => setFailed((f) => (f.includes(active) ? f : [...f, active]))}
+        />
+      ) : null}
+      {swapping ? (
+        // The old face stays on top until the new one has loaded, then fades off it.
+        // eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP sprites
+        <img
+          src={shown}
+          alt=""
+          aria-hidden="true"
+          className="vv-portrait-img vv-portrait-old"
+          data-leaving={leaving ? '' : undefined}
+          width={size}
+          height={height}
         />
       ) : null}
     </span>

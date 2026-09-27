@@ -790,10 +790,16 @@
     height: 100%;
     object-fit: contain;
     object-position: 50% 100%;
-    transition: opacity 220ms var(--ease-out);
   }
-  .vv-portrait-img[data-entering] {
-    opacity: 0;
+  /* Swapping faces: the new one is underneath at full strength; the old one
+     on top fades out once the new has loaded (a keyframe, so it always runs). */
+  .vv-portrait-old[data-leaving] {
+    animation: vv-portrait-leave 220ms var(--ease-out) forwards;
+  }
+  @keyframes vv-portrait-leave {
+    to {
+      opacity: 0;
+    }
   }
   .vv-silhouette {
     position: absolute;
