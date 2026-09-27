@@ -48,7 +48,8 @@ export function Interrupts({ className }: { className?: string }) {
       aria-labelledby={`${uid}-title`}
       className={cn('vv-interrupts mx-auto w-full max-w-[1360px] px-3 py-10 sm:px-5 sm:py-16', className)}
     >
-      <div className="tile tile-ink grid gap-12 rounded-field px-5 py-10 sm:p-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16 lg:p-16">
+      {/* The cards land and leave inside the tile: nothing may widen a phone's page. */}
+      <div className="tile tile-ink grid gap-12 overflow-clip rounded-field px-5 py-10 sm:p-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16 lg:p-16">
         <div className="lg:pt-4">
           {/* The examiner cuts into the heading itself: a red caret between two
               words, and the question written over it. */}
