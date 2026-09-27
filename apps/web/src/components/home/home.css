@@ -669,8 +669,9 @@
     font-weight: 800;
   }
 
-  /* The transcript: exam paper with a red margin; who spoke sits in it. */
-  .vv-round-slip {
+  /* The transcript: exam paper with a red margin; who spoke sits in it.
+     (Two classes, so the card's own padding never takes the margin away.) */
+  .vv-round-card.vv-round-slip {
     --gap: 1.55rem;
     --margin-x: 2.7rem;
     padding: calc(var(--gap) * 0.45) 1rem calc(var(--gap) * 0.6) calc(var(--margin-x) + 0.6rem);
@@ -794,7 +795,7 @@
     .vv-round-question {
       font-size: 1.55rem;
     }
-    .vv-round-slip {
+    .vv-round-card.vv-round-slip {
       --gap: 1.8rem;
       --margin-x: 3.4rem;
       padding-right: 1.5rem;
