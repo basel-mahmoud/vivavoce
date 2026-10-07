@@ -50,6 +50,8 @@ export function RoomPoster({ hidden }: { hidden: boolean }) {
         width={wide.width}
         height={wide.height}
         alt={POSTER_ALT}
+        // the first-visit loader waits for this still (components/boot)
+        data-room-poster=""
         fetchPriority="high"
         className={cn(styles.poster, hidden && 'opacity-0')}
       />

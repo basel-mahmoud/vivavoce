@@ -50,7 +50,7 @@ export default function HomePage() {
       <Deferred height="1000px">
         <Close />
       </Deferred>
-      <WarmSections names={['engine', 'modes', 'subjects', 'rooms']} />
+      <WarmSections names={['engine', 'modes', 'subjects', 'rooms']} routes={[...site.nav.map((n) => n.href), '/waitlist']} />
     </>
   );
 }

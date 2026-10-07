@@ -17,7 +17,8 @@ import s from './heroTitle.module.css';
  * level as it reaches it; everything is still by 1.5s. Motion is CSS only and composited (the words
  * scale and slide, the band is uncovered by two opposed slides), so it plays before hydration and
  * holds its frame rate while the room boots. The entrance waits for the display face (the layout's
- * font gate) and shows the settled frame if the face is slow; reduced motion and `still` (the
+ * font gate), or on a first visit for the loader's portal to open onto it (components/boot, through
+ * data-crescendo), and shows the settled frame if the face is slow; reduced motion and `still` (the
  * room's fallback, which mounts late) show the settled frame too. The heading reads as one sentence.
  */
 
@@ -59,7 +60,8 @@ function Words({ i = 0 }: { i?: number }) {
 
 export function HeroTitle({ id, still = false, className }: { id?: string; still?: boolean; className?: string }) {
   return (
-    <h1 id={id} aria-label={HERO_SENTENCE} className={cn(s.title, still && s.still, className)}>
+    // data-crescendo: the first-visit loader holds this heading's entrance until its portal opens
+    <h1 id={id} aria-label={HERO_SENTENCE} data-crescendo="" className={cn(s.title, still && s.still, className)}>
       <span className={s.top}>
         <span className={s.loud}>
           <Words />
